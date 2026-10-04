@@ -1,0 +1,194 @@
+.staff-page {
+  max-width: 1320px;
+  margin: auto;
+  padding: 45px 35px 80px;
+}
+.staff-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+  align-items: center;
+  margin-bottom: 25px;
+}
+.staff-heading h1 {
+  font-size: 45px;
+  margin-bottom: 18px;
+}
+.staff-heading > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: 18px;
+}
+.staff-tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  padding: 15px 0;
+  margin-bottom: 30px;
+  overflow: auto;
+}
+.staff-tabs button {
+  border: 1px solid var(--border);
+  background: transparent;
+  padding: 12px 20px;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.staff-tabs button.active {
+  background: var(--red);
+  color: var(--cream);
+  border-color: var(--red);
+}
+.managed-order-grid,
+.staff-ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+.managed-order,
+.staff-ticket {
+  border: 1px solid var(--border);
+  padding: 24px;
+  background: #fffaf2;
+  min-width: 0;
+}
+.staff-order-form {
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.staff-ticket-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--red);
+  margin-bottom: 18px;
+  overflow-wrap: anywhere;
+}
+.staff-ticket-head > span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.staff-ticket > p {
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+.staff-ticket blockquote {
+  margin: 15px 0;
+  padding: 14px;
+  background: var(--paper);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+.staff-ticket blockquote small {
+  display: block;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.staff-admin-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+.staff-admin-section h2 {
+  font-size: 30px;
+  margin-bottom: 25px;
+}
+.staff-admin-section > form {
+  border: 1px solid var(--border);
+  background: var(--paper);
+  padding: 30px;
+}
+.table-scroll {
+  overflow: auto;
+}
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.table-scroll td,
+.table-scroll th {
+  padding: 15px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.campaign-card {
+  border: 1px solid var(--border);
+  padding: 20px;
+  margin: 15px 0;
+  font-size: 13px;
+}
+.campaign-card p {
+  margin: 12px 0;
+  font-size: 12px;
+}
+.campaign-card small {
+  color: var(--muted);
+}
+.staff-page .pagination {
+  display: flex;
+  gap: 15px;
+  margin: 25px 0;
+}
+@media (max-width: 850px) {
+  .managed-order-grid,
+  .staff-ticket-grid,
+  .staff-admin-section {
+    grid-template-columns: 1fr;
+  }
+  .staff-heading h1 {
+    font-size: 36px;
+  }
+}
+@media (max-width: 640px) {
+  .staff-page {
+    padding: 30px 20px 60px;
+  }
+  .staff-heading {
+    flex-direction: column;
+    align-items: start;
+  }
+  .staff-heading > div:last-child {
+    flex-direction: row;
+    align-items: center;
+  }
+  .managed-order,
+  .staff-ticket {
+    padding: 20px;
+  }
+  .staff-admin-section > form {
+    padding: 22px;
+  }
+  .staff-tabs button {
+    padding: 11px 14px;
+    font-size: 11px;
+  }
+  .staff-page h1 {
+    font-size: 33px;
+  }
+  .staff-page .order-summary {
+    overflow-wrap: anywhere;
+  }
+}
+.staff-order-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.staff-order-heading h2 {
+  font-size: 27px;
+  letter-spacing: -0.5px;
+  overflow-wrap: anywhere;
+}
+.staff-order-heading small {
+  font-size: 10px;
+  color: var(--muted);
+}

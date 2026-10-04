@@ -1,0 +1,77 @@
+{
+  "site": {
+    "name": "Hà Thành Vị",
+    "company": "Công ty TNHH Hà Thành Vị",
+    "tagline": "Vị xưa tinh hoa trong từng chiếc bánh",
+    "heroTitle": "Một thức quà nhỏ.\nCả Hà Nội thương.",
+    "heroDescription": "Bánh chả thân quen, chút trà thơm và những câu chuyện chưa kể. Hà Thành Vị gói ghém hương vị Hà Nội trong từng món quà dành cho bạn.",
+    "phone": "0973607163",
+    "email": "hathanhvi05@gmail.com",
+    "address": "Huyện Thạch Thất, Hà Nội, Việt Nam",
+    "facebook": "https://www.facebook.com/profile.php?id=61594593997653",
+    "zalo": "https://zalo.me/0973607163",
+    "story": "Có những hương vị không chỉ để thưởng thức, mà còn để nhớ. Hà Thành Vị bắt đầu từ tình yêu dành cho bánh chả và những nét đẹp rất đỗi thân quen của Hà Nội. Chúng tôi muốn đưa thức quà ấy đến gần hơn với nhịp sống hôm nay — qua một túi bánh dùng hằng ngày, hay một hộp quà gửi người thương."
+  },
+  "products": [
+    {
+      "id": "banh-cha-truyen-thong",
+      "slug": "banh-cha-truyen-thong",
+      "name": "Bánh chả truyền thống",
+      "category": "banh-cha",
+      "weight": "350g",
+      "flavor": "Truyền thống",
+      "description": "Vị bánh chả thân quen trong túi zip tiện lợi. Một thức quà nhỏ cho những phút nghỉ ngơi cùng tách trà.",
+      "image": "/brand/pastry.webp",
+      "price": 79000,
+      "featured": true
+    },
+    {
+      "id": "banh-cha-socola",
+      "slug": "banh-cha-socola",
+      "name": "Bánh chả socola",
+      "category": "banh-cha",
+      "weight": "350g",
+      "flavor": "Socola",
+      "description": "Một cách thưởng thức bánh chả mới mẻ với vị socola, dành cho những cuộc hẹn và buổi chiều thảnh thơi.",
+      "image": "/brand/pastry.webp",
+      "price": 89000,
+      "featured": false
+    },
+    {
+      "id": "banh-cha-matcha",
+      "slug": "banh-cha-matcha",
+      "name": "Bánh chả matcha",
+      "category": "banh-cha",
+      "weight": "350g",
+      "flavor": "Matcha",
+      "description": "Bánh chả kết hợp vị matcha, được gói trong túi zip 350g để cùng bạn chia sẻ những khoảnh khắc thường ngày.",
+      "image": "/brand/pastry.webp",
+      "price": 89000,
+      "featured": false
+    },
+    {
+      "id": "set-qua-thuong",
+      "slug": "set-qua-thuong",
+      "name": "Hộp quà Hà Nội",
+      "category": "qua-tang",
+      "weight": "500g + trà sen",
+      "flavor": "Mix 3 vị",
+      "description": "Hộp bánh chả mix 500g cùng 1 búp sen trong hộp trà. Lời quan tâm được gửi gắm qua một món quà tinh tế.",
+      "image": "/brand/gift.webp",
+      "price": 249000,
+      "featured": true
+    },
+    {
+      "id": "set-qua-cao-cap",
+      "slug": "set-qua-cao-cap",
+      "name": "Hộp quà Tinh Hoa",
+      "category": "qua-tang",
+      "weight": "500g + trà sen + đĩa sứ",
+      "flavor": "Mix 3 vị",
+      "description": "Hộp bánh chả mix 500g, 2 búp sen trong hộp trà và 1 đĩa sứ gốm cao cấp. Một trải nghiệm biếu tặng mang cảm hứng văn hóa Hà Nội.",
+      "image": "/brand/gift-premium.webp",
+      "price": 399000,
+      "featured": true
+    }
+  ]
+}

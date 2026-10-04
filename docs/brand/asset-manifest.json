@@ -1,0 +1,583 @@
+[
+  {
+    "id": "1QWIxMG_SRv5d6oEkX6CqebbM6lHpTpQS",
+    "name": "Hà Thành Vị.ai",
+    "path": "assets/originals/social/Hà Thành Vị.ai",
+    "url": "https://drive.google.com/file/d/1QWIxMG_SRv5d6oEkX6CqebbM6lHpTpQS/view?usp=drivesdk",
+    "bytes": 10400511
+  },
+  {
+    "id": "1FTomW069ylVUVp09YiQZbDI04iCNB5zr",
+    "name": "Illustrations.ai",
+    "path": "assets/originals/elements/Illustrations.ai",
+    "url": "https://drive.google.com/file/d/1FTomW069ylVUVp09YiQZbDI04iCNB5zr/view?usp=drivesdk",
+    "bytes": 4071579
+  },
+  {
+    "id": "1b81wSbY2kLZ5rdZRPVAlyLFJHIzZ2gYg",
+    "name": "Archivo_Expanded-Black.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-Black.ttf",
+    "url": "https://drive.google.com/file/d/1b81wSbY2kLZ5rdZRPVAlyLFJHIzZ2gYg/view?usp=drivesdk",
+    "bytes": 120728
+  },
+  {
+    "id": "1So5pFQjG4ILlMIh5V9XmjEmR9zkurYqw",
+    "name": "Archivo_Expanded-BlackItalic.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-BlackItalic.ttf",
+    "url": "https://drive.google.com/file/d/1So5pFQjG4ILlMIh5V9XmjEmR9zkurYqw/view?usp=drivesdk",
+    "bytes": 133856
+  },
+  {
+    "id": "1eipPthjALxh1wiUJ1YEU-990Y4ExpXaE",
+    "name": "Archivo_Expanded-Bold.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-Bold.ttf",
+    "url": "https://drive.google.com/file/d/1eipPthjALxh1wiUJ1YEU-990Y4ExpXaE/view?usp=drivesdk",
+    "bytes": 121136
+  },
+  {
+    "id": "1ZJdZEtydYx8bXd1qaGuu2nEbCxATTSM2",
+    "name": "Archivo_Expanded-BoldItalic.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-BoldItalic.ttf",
+    "url": "https://drive.google.com/file/d/1ZJdZEtydYx8bXd1qaGuu2nEbCxATTSM2/view?usp=drivesdk",
+    "bytes": 133984
+  },
+  {
+    "id": "1y9Vm_4U6sKH94zws1HbkMxh2ioEm_KrK",
+    "name": "Archivo_Expanded-ExtraBold.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-ExtraBold.ttf",
+    "url": "https://drive.google.com/file/d/1y9Vm_4U6sKH94zws1HbkMxh2ioEm_KrK/view?usp=drivesdk",
+    "bytes": 121024
+  },
+  {
+    "id": "1w0OzLZfcImBukUqD9uWtl42d8KgKz71u",
+    "name": "Archivo_Expanded-ExtraBoldItalic.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-ExtraBoldItalic.ttf",
+    "url": "https://drive.google.com/file/d/1w0OzLZfcImBukUqD9uWtl42d8KgKz71u/view?usp=drivesdk",
+    "bytes": 134032
+  },
+  {
+    "id": "1VFV0Hb1IIlBBMotlBQLxjgp0jgCUVTlR",
+    "name": "Archivo_Expanded-ExtraLight.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-ExtraLight.ttf",
+    "url": "https://drive.google.com/file/d/1VFV0Hb1IIlBBMotlBQLxjgp0jgCUVTlR/view?usp=drivesdk",
+    "bytes": 119728
+  },
+  {
+    "id": "1Fw00co0oQp9xV5AeSYsTUAs-qUdUImut",
+    "name": "Archivo_Expanded-ExtraLightItalic.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-ExtraLightItalic.ttf",
+    "url": "https://drive.google.com/file/d/1Fw00co0oQp9xV5AeSYsTUAs-qUdUImut/view?usp=drivesdk",
+    "bytes": 132684
+  },
+  {
+    "id": "12i4NNv4-dXEs4KlrRX1W5FRsWaa8SHdA",
+    "name": "Archivo_Expanded-Italic.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-Italic.ttf",
+    "url": "https://drive.google.com/file/d/12i4NNv4-dXEs4KlrRX1W5FRsWaa8SHdA/view?usp=drivesdk",
+    "bytes": 132408
+  },
+  {
+    "id": "1WStGOIQKSL8RFKdtUlSn5sNKmveiPD-4",
+    "name": "Archivo_Expanded-Light.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-Light.ttf",
+    "url": "https://drive.google.com/file/d/1WStGOIQKSL8RFKdtUlSn5sNKmveiPD-4/view?usp=drivesdk",
+    "bytes": 119804
+  },
+  {
+    "id": "1yHQH46gUGSVhlg6zy1qLI7dlDaMaOq-b",
+    "name": "Archivo_Expanded-LightItalic.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-LightItalic.ttf",
+    "url": "https://drive.google.com/file/d/1yHQH46gUGSVhlg6zy1qLI7dlDaMaOq-b/view?usp=drivesdk",
+    "bytes": 132576
+  },
+  {
+    "id": "1ZMBfgTRL8K15AccjzQvnHA7sK50JF-Fy",
+    "name": "Archivo_Expanded-Medium.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-Medium.ttf",
+    "url": "https://drive.google.com/file/d/1ZMBfgTRL8K15AccjzQvnHA7sK50JF-Fy/view?usp=drivesdk",
+    "bytes": 121168
+  },
+  {
+    "id": "1fbcpr5VaZdvkH0QrbUXL5W1C-0fbXENP",
+    "name": "Archivo_Expanded-MediumItalic.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-MediumItalic.ttf",
+    "url": "https://drive.google.com/file/d/1fbcpr5VaZdvkH0QrbUXL5W1C-0fbXENP/view?usp=drivesdk",
+    "bytes": 134184
+  },
+  {
+    "id": "1Sgj4Pwb94CvMVx6hnfBj8cHprMmPmgKe",
+    "name": "Archivo_Expanded-Regular.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-Regular.ttf",
+    "url": "https://drive.google.com/file/d/1Sgj4Pwb94CvMVx6hnfBj8cHprMmPmgKe/view?usp=drivesdk",
+    "bytes": 119776
+  },
+  {
+    "id": "1ti_nApYb8oD-h5kPxnER5p7uQeqAPwzA",
+    "name": "Archivo_Expanded-SemiBold.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-SemiBold.ttf",
+    "url": "https://drive.google.com/file/d/1ti_nApYb8oD-h5kPxnER5p7uQeqAPwzA/view?usp=drivesdk",
+    "bytes": 121024
+  },
+  {
+    "id": "1HxaEXAKk_IZlRamQnbR-w-kNPQr0fo04",
+    "name": "Archivo_Expanded-SemiBoldItalic.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-SemiBoldItalic.ttf",
+    "url": "https://drive.google.com/file/d/1HxaEXAKk_IZlRamQnbR-w-kNPQr0fo04/view?usp=drivesdk",
+    "bytes": 133996
+  },
+  {
+    "id": "1Nhze-vL1y8_voBg4dK-pdGOs3Q718pWk",
+    "name": "Archivo_Expanded-Thin.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-Thin.ttf",
+    "url": "https://drive.google.com/file/d/1Nhze-vL1y8_voBg4dK-pdGOs3Q718pWk/view?usp=drivesdk",
+    "bytes": 119748
+  },
+  {
+    "id": "119iBy-u_eaxYn9RrkEU5THWRv4zBMPkr",
+    "name": "Archivo_Expanded-ThinItalic.ttf",
+    "path": "assets/originals/typeface/Archivo_Expanded-ThinItalic.ttf",
+    "url": "https://drive.google.com/file/d/119iBy-u_eaxYn9RrkEU5THWRv4zBMPkr/view?usp=drivesdk",
+    "bytes": 132528
+  },
+  {
+    "id": "1a_icBPy_U86RLBJDTq1yPkBq_ot1fQdA",
+    "name": "Hà Thành Vị.ai",
+    "path": "assets/originals/logo/Hà Thành Vị.ai",
+    "url": "https://drive.google.com/file/d/1a_icBPy_U86RLBJDTq1yPkBq_ot1fQdA/view?usp=drivesdk",
+    "bytes": 704873
+  },
+  {
+    "id": "1HDBQWLo2VFp-AO5kUVewIdCoCOjLaYYH",
+    "name": "Artboard 2 copy 2.png",
+    "path": "assets/originals/social/png/Artboard 2 copy 2.png",
+    "url": "https://drive.google.com/file/d/1HDBQWLo2VFp-AO5kUVewIdCoCOjLaYYH/view?usp=drivesdk",
+    "bytes": 3643250
+  },
+  {
+    "id": "1FIe_pIWu_epCq-GZsQwMI1GwqGNE2lEK",
+    "name": "Artboard 3 copy.png",
+    "path": "assets/originals/social/png/Artboard 3 copy.png",
+    "url": "https://drive.google.com/file/d/1FIe_pIWu_epCq-GZsQwMI1GwqGNE2lEK/view?usp=drivesdk",
+    "bytes": 4237235
+  },
+  {
+    "id": "1ucAd2ANxSWcDtMjl8qnQ8pjF75KRWpyA",
+    "name": "Artboard 3.png",
+    "path": "assets/originals/social/png/Artboard 3.png",
+    "url": "https://drive.google.com/file/d/1ucAd2ANxSWcDtMjl8qnQ8pjF75KRWpyA/view?usp=drivesdk",
+    "bytes": 4961495
+  },
+  {
+    "id": "1xoOcXur6iY-JwXJ6Uwg4bYb86psET_1_",
+    "name": "Artboard 2.png",
+    "path": "assets/originals/social/png/Artboard 2.png",
+    "url": "https://drive.google.com/file/d/1xoOcXur6iY-JwXJ6Uwg4bYb86psET_1_/view?usp=drivesdk",
+    "bytes": 4462950
+  },
+  {
+    "id": "1OFdC_zpMpHPmFjux15GcCsTSLKE9fB8-",
+    "name": "Artboard 9 copy 4.png",
+    "path": "assets/originals/elements/png/Artboard 9 copy 4.png",
+    "url": "https://drive.google.com/file/d/1OFdC_zpMpHPmFjux15GcCsTSLKE9fB8-/view?usp=drivesdk",
+    "bytes": 1182008
+  },
+  {
+    "id": "1ozNH3Bwc47nsSHKH8hCC3vxlMNq7JC0Y",
+    "name": "Artboard 9 copy 3.png",
+    "path": "assets/originals/elements/png/Artboard 9 copy 3.png",
+    "url": "https://drive.google.com/file/d/1ozNH3Bwc47nsSHKH8hCC3vxlMNq7JC0Y/view?usp=drivesdk",
+    "bytes": 1203540
+  },
+  {
+    "id": "10xQqhe6DgtCU_hWW6FdhnTdLl35lhm5F",
+    "name": "Artboard 9 copy 2.png",
+    "path": "assets/originals/elements/png/Artboard 9 copy 2.png",
+    "url": "https://drive.google.com/file/d/10xQqhe6DgtCU_hWW6FdhnTdLl35lhm5F/view?usp=drivesdk",
+    "bytes": 1201942
+  },
+  {
+    "id": "1OT4BIXSEXccXe-hi95r3x4kwT87Ob7kM",
+    "name": "Artboard 9 copy.png",
+    "path": "assets/originals/elements/png/Artboard 9 copy.png",
+    "url": "https://drive.google.com/file/d/1OT4BIXSEXccXe-hi95r3x4kwT87Ob7kM/view?usp=drivesdk",
+    "bytes": 1202946
+  },
+  {
+    "id": "1fI-u4-syvdkAZcrGXl3qSWus3RdZExIo",
+    "name": "Artboard 9.png",
+    "path": "assets/originals/elements/png/Artboard 9.png",
+    "url": "https://drive.google.com/file/d/1fI-u4-syvdkAZcrGXl3qSWus3RdZExIo/view?usp=drivesdk",
+    "bytes": 1198483
+  },
+  {
+    "id": "1eqQJdp0A9IXX52YUNS63ZS0ip5aeKD8T",
+    "name": "Artboard 8 copy 4.png",
+    "path": "assets/originals/elements/png/Artboard 8 copy 4.png",
+    "url": "https://drive.google.com/file/d/1eqQJdp0A9IXX52YUNS63ZS0ip5aeKD8T/view?usp=drivesdk",
+    "bytes": 221146
+  },
+  {
+    "id": "1BfVGqcVv65Kg0bWdNSE6jqRKgdnc916O",
+    "name": "Artboard 7 copy 4.png",
+    "path": "assets/originals/elements/png/Artboard 7 copy 4.png",
+    "url": "https://drive.google.com/file/d/1BfVGqcVv65Kg0bWdNSE6jqRKgdnc916O/view?usp=drivesdk",
+    "bytes": 258782
+  },
+  {
+    "id": "1GI9tQh-vpfmTdNHXYwLQJ7OqFea_KDKO",
+    "name": "Artboard 6 copy 4.png",
+    "path": "assets/originals/elements/png/Artboard 6 copy 4.png",
+    "url": "https://drive.google.com/file/d/1GI9tQh-vpfmTdNHXYwLQJ7OqFea_KDKO/view?usp=drivesdk",
+    "bytes": 217923
+  },
+  {
+    "id": "191P7_7BSjIDa4pvQ8z_Fu5Icp3E8ccBu",
+    "name": "Artboard 5 copy 7.png",
+    "path": "assets/originals/elements/png/Artboard 5 copy 7.png",
+    "url": "https://drive.google.com/file/d/191P7_7BSjIDa4pvQ8z_Fu5Icp3E8ccBu/view?usp=drivesdk",
+    "bytes": 333849
+  },
+  {
+    "id": "1raMhO5Nrm4S0frggCbz2WUQDGvSeKm1F",
+    "name": "Artboard 8 copy 3.png",
+    "path": "assets/originals/elements/png/Artboard 8 copy 3.png",
+    "url": "https://drive.google.com/file/d/1raMhO5Nrm4S0frggCbz2WUQDGvSeKm1F/view?usp=drivesdk",
+    "bytes": 221506
+  },
+  {
+    "id": "1f1yXK9mMzJ29trMzfL5BZUZ6YoOEeisq",
+    "name": "Artboard 7 copy 3.png",
+    "path": "assets/originals/elements/png/Artboard 7 copy 3.png",
+    "url": "https://drive.google.com/file/d/1f1yXK9mMzJ29trMzfL5BZUZ6YoOEeisq/view?usp=drivesdk",
+    "bytes": 258372
+  },
+  {
+    "id": "19JAmM1ceK92tYif7A9OypBaUneUfQuO0",
+    "name": "Artboard 6 copy 3.png",
+    "path": "assets/originals/elements/png/Artboard 6 copy 3.png",
+    "url": "https://drive.google.com/file/d/19JAmM1ceK92tYif7A9OypBaUneUfQuO0/view?usp=drivesdk",
+    "bytes": 218085
+  },
+  {
+    "id": "1DWZvnh1p2_su2IncGZ40WIDRRnDDvEft",
+    "name": "Artboard 5 copy 6.png",
+    "path": "assets/originals/elements/png/Artboard 5 copy 6.png",
+    "url": "https://drive.google.com/file/d/1DWZvnh1p2_su2IncGZ40WIDRRnDDvEft/view?usp=drivesdk",
+    "bytes": 333410
+  },
+  {
+    "id": "1K0OzCnW5-SXLB7vpILHQrz5bTd6sGYCf",
+    "name": "Artboard 8 copy 2.png",
+    "path": "assets/originals/elements/png/Artboard 8 copy 2.png",
+    "url": "https://drive.google.com/file/d/1K0OzCnW5-SXLB7vpILHQrz5bTd6sGYCf/view?usp=drivesdk",
+    "bytes": 221441
+  },
+  {
+    "id": "1j2BhrkU6frrD_QXRWQd6h6diVCUUjPmb",
+    "name": "Artboard 7 copy 2.png",
+    "path": "assets/originals/elements/png/Artboard 7 copy 2.png",
+    "url": "https://drive.google.com/file/d/1j2BhrkU6frrD_QXRWQd6h6diVCUUjPmb/view?usp=drivesdk",
+    "bytes": 259207
+  },
+  {
+    "id": "13C-eZuc26lvEe3nTuLSWnuH_O1zDEAKm",
+    "name": "Artboard 6 copy 2.png",
+    "path": "assets/originals/elements/png/Artboard 6 copy 2.png",
+    "url": "https://drive.google.com/file/d/13C-eZuc26lvEe3nTuLSWnuH_O1zDEAKm/view?usp=drivesdk",
+    "bytes": 218556
+  },
+  {
+    "id": "1AHp0rNm5ef5lr_6OT8YPmQ_wqEvaNAUh",
+    "name": "Artboard 5 copy 5.png",
+    "path": "assets/originals/elements/png/Artboard 5 copy 5.png",
+    "url": "https://drive.google.com/file/d/1AHp0rNm5ef5lr_6OT8YPmQ_wqEvaNAUh/view?usp=drivesdk",
+    "bytes": 333400
+  },
+  {
+    "id": "1dz-6rPqtkRjP8IkH-XApk0W7pj1mbONH",
+    "name": "Artboard 8 copy.png",
+    "path": "assets/originals/elements/png/Artboard 8 copy.png",
+    "url": "https://drive.google.com/file/d/1dz-6rPqtkRjP8IkH-XApk0W7pj1mbONH/view?usp=drivesdk",
+    "bytes": 218130
+  },
+  {
+    "id": "1w-ia1mRjqu_SotnXFy8weZiOUbUWDSqL",
+    "name": "Artboard 7 copy.png",
+    "path": "assets/originals/elements/png/Artboard 7 copy.png",
+    "url": "https://drive.google.com/file/d/1w-ia1mRjqu_SotnXFy8weZiOUbUWDSqL/view?usp=drivesdk",
+    "bytes": 253836
+  },
+  {
+    "id": "1yLNa_pYMMkZTJ1Sr-t8ZqX1roqP_kWSw",
+    "name": "Artboard 6 copy.png",
+    "path": "assets/originals/elements/png/Artboard 6 copy.png",
+    "url": "https://drive.google.com/file/d/1yLNa_pYMMkZTJ1Sr-t8ZqX1roqP_kWSw/view?usp=drivesdk",
+    "bytes": 214555
+  },
+  {
+    "id": "1WcwRhvADVttwwlD9LEk1th3oPjaIbjxP",
+    "name": "Artboard 5 copy 4.png",
+    "path": "assets/originals/elements/png/Artboard 5 copy 4.png",
+    "url": "https://drive.google.com/file/d/1WcwRhvADVttwwlD9LEk1th3oPjaIbjxP/view?usp=drivesdk",
+    "bytes": 325113
+  },
+  {
+    "id": "1IHHBAaIAaFwekACY7dL-WL3y55YXeiH_",
+    "name": "Artboard 8.png",
+    "path": "assets/originals/elements/png/Artboard 8.png",
+    "url": "https://drive.google.com/file/d/1IHHBAaIAaFwekACY7dL-WL3y55YXeiH_/view?usp=drivesdk",
+    "bytes": 221085
+  },
+  {
+    "id": "1IczCZ7nSkcCoPy-caqrfDj77UkXcLr94",
+    "name": "Artboard 7.png",
+    "path": "assets/originals/elements/png/Artboard 7.png",
+    "url": "https://drive.google.com/file/d/1IczCZ7nSkcCoPy-caqrfDj77UkXcLr94/view?usp=drivesdk",
+    "bytes": 258998
+  },
+  {
+    "id": "1_YPNeGnJW5khMEsJcim7rUu-Uzq_yjo0",
+    "name": "Artboard 6.png",
+    "path": "assets/originals/elements/png/Artboard 6.png",
+    "url": "https://drive.google.com/file/d/1_YPNeGnJW5khMEsJcim7rUu-Uzq_yjo0/view?usp=drivesdk",
+    "bytes": 218073
+  },
+  {
+    "id": "1r1BQQ3uJ_KiwN32BPcMM-x6alJlitbZs",
+    "name": "Artboard 5 copy 3.png",
+    "path": "assets/originals/elements/png/Artboard 5 copy 3.png",
+    "url": "https://drive.google.com/file/d/1r1BQQ3uJ_KiwN32BPcMM-x6alJlitbZs/view?usp=drivesdk",
+    "bytes": 333889
+  },
+  {
+    "id": "1kJ3EOeOIKVtd4mLFl3NFITm_c7o3FRNb",
+    "name": "Artboard 5 copy 2.png",
+    "path": "assets/originals/elements/png/Artboard 5 copy 2.png",
+    "url": "https://drive.google.com/file/d/1kJ3EOeOIKVtd4mLFl3NFITm_c7o3FRNb/view?usp=drivesdk",
+    "bytes": 195747
+  },
+  {
+    "id": "1bzt1EjQ6rdoBPEt3AqEnxa6UXra_gVZR",
+    "name": "Artboard 5 copy.png",
+    "path": "assets/originals/elements/png/Artboard 5 copy.png",
+    "url": "https://drive.google.com/file/d/1bzt1EjQ6rdoBPEt3AqEnxa6UXra_gVZR/view?usp=drivesdk",
+    "bytes": 192402
+  },
+  {
+    "id": "18e_oxXzjcvsFdtYBdYkgXGVQvUi59zrE",
+    "name": "Artboard 5.png",
+    "path": "assets/originals/elements/png/Artboard 5.png",
+    "url": "https://drive.google.com/file/d/18e_oxXzjcvsFdtYBdYkgXGVQvUi59zrE/view?usp=drivesdk",
+    "bytes": 201135
+  },
+  {
+    "id": "1W7ohwFw0G2Jp0YJwJ_XMiIWjvYu4kh1u",
+    "name": "Artboard 4.png",
+    "path": "assets/originals/elements/png/Artboard 4.png",
+    "url": "https://drive.google.com/file/d/1W7ohwFw0G2Jp0YJwJ_XMiIWjvYu4kh1u/view?usp=drivesdk",
+    "bytes": 697426
+  },
+  {
+    "id": "1OWynOvvtdq-l7EpdE6bxcVeQd6UleLyO",
+    "name": "Artboard 3.png",
+    "path": "assets/originals/elements/png/Artboard 3.png",
+    "url": "https://drive.google.com/file/d/1OWynOvvtdq-l7EpdE6bxcVeQd6UleLyO/view?usp=drivesdk",
+    "bytes": 619919
+  },
+  {
+    "id": "1AAaLsWECY3d21N1QsObZk9kNQpxSWJ0S",
+    "name": "Artboard 2.png",
+    "path": "assets/originals/elements/png/Artboard 2.png",
+    "url": "https://drive.google.com/file/d/1AAaLsWECY3d21N1QsObZk9kNQpxSWJ0S/view?usp=drivesdk",
+    "bytes": 656291
+  },
+  {
+    "id": "1ozwUaB12j2OkelIVPD-YRyzCqLu87oWw",
+    "name": "Artboard 1.png",
+    "path": "assets/originals/elements/png/Artboard 1.png",
+    "url": "https://drive.google.com/file/d/1ozwUaB12j2OkelIVPD-YRyzCqLu87oWw/view?usp=drivesdk",
+    "bytes": 669177
+  },
+  {
+    "id": "1-_MCF0686jJhh2q7aNADeJVVOZQ0n5V9",
+    "name": "Artboard 1 copy 14.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 14.png",
+    "url": "https://drive.google.com/file/d/1-_MCF0686jJhh2q7aNADeJVVOZQ0n5V9/view?usp=drivesdk",
+    "bytes": 130930
+  },
+  {
+    "id": "1hmFS9EbPLS2vUhsz84u3qBeF0ozcW3A_",
+    "name": "Artboard 1 copy 13.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 13.png",
+    "url": "https://drive.google.com/file/d/1hmFS9EbPLS2vUhsz84u3qBeF0ozcW3A_/view?usp=drivesdk",
+    "bytes": 124551
+  },
+  {
+    "id": "1gkb3FSWXqNCXr755SjXNs5-hyx13hyst",
+    "name": "Artboard 1 copy 12.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 12.png",
+    "url": "https://drive.google.com/file/d/1gkb3FSWXqNCXr755SjXNs5-hyx13hyst/view?usp=drivesdk",
+    "bytes": 138800
+  },
+  {
+    "id": "1xRFyk10RYHLZKs2JwL9S-z82mkHdz8yJ",
+    "name": "Artboard 1 copy 11.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 11.png",
+    "url": "https://drive.google.com/file/d/1xRFyk10RYHLZKs2JwL9S-z82mkHdz8yJ/view?usp=drivesdk",
+    "bytes": 138645
+  },
+  {
+    "id": "1-bR6XrSPqgRu131tY0DO5cOzajZJiDU5",
+    "name": "Artboard 1 copy 10.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 10.png",
+    "url": "https://drive.google.com/file/d/1-bR6XrSPqgRu131tY0DO5cOzajZJiDU5/view?usp=drivesdk",
+    "bytes": 130072
+  },
+  {
+    "id": "1A9PHpUbtYQh5Ad8v2YrjYDsfHiZ4I9fv",
+    "name": "Artboard 1 copy 9.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 9.png",
+    "url": "https://drive.google.com/file/d/1A9PHpUbtYQh5Ad8v2YrjYDsfHiZ4I9fv/view?usp=drivesdk",
+    "bytes": 131629
+  },
+  {
+    "id": "1LuHC3QUpFvzLRJtqhGorW-bKDh6DY7Xb",
+    "name": "Artboard 1 copy 8.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 8.png",
+    "url": "https://drive.google.com/file/d/1LuHC3QUpFvzLRJtqhGorW-bKDh6DY7Xb/view?usp=drivesdk",
+    "bytes": 130911
+  },
+  {
+    "id": "1IGtIcyg_-WeEjX6H0_92giFFaV9AqAeP",
+    "name": "Artboard 1 copy 7.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 7.png",
+    "url": "https://drive.google.com/file/d/1IGtIcyg_-WeEjX6H0_92giFFaV9AqAeP/view?usp=drivesdk",
+    "bytes": 131715
+  },
+  {
+    "id": "1Yn-FN-Pesh82UB8FwbC6h186FnrXCata",
+    "name": "Artboard 1 copy 6.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 6.png",
+    "url": "https://drive.google.com/file/d/1Yn-FN-Pesh82UB8FwbC6h186FnrXCata/view?usp=drivesdk",
+    "bytes": 131432
+  },
+  {
+    "id": "13vxSTWZwuNwZABY7NmFy1o0NgpA0GYcb",
+    "name": "Artboard 1 copy 5.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 5.png",
+    "url": "https://drive.google.com/file/d/13vxSTWZwuNwZABY7NmFy1o0NgpA0GYcb/view?usp=drivesdk",
+    "bytes": 148271
+  },
+  {
+    "id": "1rwHE_osAA45YuLIb6v_fwKgbTIeX1T3F",
+    "name": "Artboard 1 copy 4.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 4.png",
+    "url": "https://drive.google.com/file/d/1rwHE_osAA45YuLIb6v_fwKgbTIeX1T3F/view?usp=drivesdk",
+    "bytes": 140629
+  },
+  {
+    "id": "1z4Gg5Ki8TkcK8SqpYWGY29f_sWhygyFz",
+    "name": "Artboard 1 copy 3.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 3.png",
+    "url": "https://drive.google.com/file/d/1z4Gg5Ki8TkcK8SqpYWGY29f_sWhygyFz/view?usp=drivesdk",
+    "bytes": 147967
+  },
+  {
+    "id": "1Z7ACOYVOk5O0A5P1jFV0T2MY5vjcR3WK",
+    "name": "Artboard 1 copy 2.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy 2.png",
+    "url": "https://drive.google.com/file/d/1Z7ACOYVOk5O0A5P1jFV0T2MY5vjcR3WK/view?usp=drivesdk",
+    "bytes": 147578
+  },
+  {
+    "id": "1X1moynAv206ir0qOH3mnE7hTUprgJFZy",
+    "name": "Artboard 1 copy.png",
+    "path": "assets/originals/logo/png/Artboard 1 copy.png",
+    "url": "https://drive.google.com/file/d/1X1moynAv206ir0qOH3mnE7hTUprgJFZy/view?usp=drivesdk",
+    "bytes": 149252
+  },
+  {
+    "id": "1T1WdSYppdKCmuKgchJy2CYSQjwTG-w9W",
+    "name": "Artboard 1 copy 14.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 14.png",
+    "url": "https://drive.google.com/file/d/1T1WdSYppdKCmuKgchJy2CYSQjwTG-w9W/view?usp=drivesdk",
+    "bytes": 130930
+  },
+  {
+    "id": "1fR-zNc5sC4PJWJXy0dfTWxpk_tXCaqVr",
+    "name": "Artboard 1 copy 12.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 12.png",
+    "url": "https://drive.google.com/file/d/1fR-zNc5sC4PJWJXy0dfTWxpk_tXCaqVr/view?usp=drivesdk",
+    "bytes": 138800
+  },
+  {
+    "id": "1rq1Kz61Obm8iV1f3ZwExOzYj5WwppN0w",
+    "name": "Artboard 1 copy 11.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 11.png",
+    "url": "https://drive.google.com/file/d/1rq1Kz61Obm8iV1f3ZwExOzYj5WwppN0w/view?usp=drivesdk",
+    "bytes": 138645
+  },
+  {
+    "id": "1UKtb2zCzI6SGwBa5RJK2EOmm8VtcbDiG",
+    "name": "Artboard 1 copy 9.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 9.png",
+    "url": "https://drive.google.com/file/d/1UKtb2zCzI6SGwBa5RJK2EOmm8VtcbDiG/view?usp=drivesdk",
+    "bytes": 131629
+  },
+  {
+    "id": "1T0oBSONmih79ZDxyTONVzeUoU8N_ZKQc",
+    "name": "Artboard 1 copy 8.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 8.png",
+    "url": "https://drive.google.com/file/d/1T0oBSONmih79ZDxyTONVzeUoU8N_ZKQc/view?usp=drivesdk",
+    "bytes": 130911
+  },
+  {
+    "id": "11SxuAZedkVTsDLsxnOy6Zm-IUStYWvNe",
+    "name": "Artboard 1 copy 7.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 7.png",
+    "url": "https://drive.google.com/file/d/11SxuAZedkVTsDLsxnOy6Zm-IUStYWvNe/view?usp=drivesdk",
+    "bytes": 131715
+  },
+  {
+    "id": "19IKnpIKAolCXYFzpzBtLv3h6u3GujOJu",
+    "name": "Artboard 1 copy 6.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 6.png",
+    "url": "https://drive.google.com/file/d/19IKnpIKAolCXYFzpzBtLv3h6u3GujOJu/view?usp=drivesdk",
+    "bytes": 131432
+  },
+  {
+    "id": "1s6xiBA5-TeHdKkjGfXipAAcwaGny3u7r",
+    "name": "Artboard 1 copy 5.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 5.png",
+    "url": "https://drive.google.com/file/d/1s6xiBA5-TeHdKkjGfXipAAcwaGny3u7r/view?usp=drivesdk",
+    "bytes": 148271
+  },
+  {
+    "id": "1iwXbjtawIsh2zvtdnNu-NnUva3nKYjmI",
+    "name": "Artboard 1 copy 4.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 4.png",
+    "url": "https://drive.google.com/file/d/1iwXbjtawIsh2zvtdnNu-NnUva3nKYjmI/view?usp=drivesdk",
+    "bytes": 140629
+  },
+  {
+    "id": "1vHtXis6doqLFWbQgnLq6A_GVJrSM0xFL",
+    "name": "Artboard 1 copy 3.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 3.png",
+    "url": "https://drive.google.com/file/d/1vHtXis6doqLFWbQgnLq6A_GVJrSM0xFL/view?usp=drivesdk",
+    "bytes": 147967
+  },
+  {
+    "id": "1HvHeHhoRpK6tJtPbd6HWl9PfWeabQTZS",
+    "name": "Artboard 1 copy 2.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy 2.png",
+    "url": "https://drive.google.com/file/d/1HvHeHhoRpK6tJtPbd6HWl9PfWeabQTZS/view?usp=drivesdk",
+    "bytes": 147578
+  },
+  {
+    "id": "1TjUPkRcrI1iCopumY9QuFd_JnXCWRpOV",
+    "name": "Artboard 1 copy.png",
+    "path": "assets/originals/logo/jpg/Artboard 1 copy.png",
+    "url": "https://drive.google.com/file/d/1TjUPkRcrI1iCopumY9QuFd_JnXCWRpOV/view?usp=drivesdk",
+    "bytes": 149252
+  }
+]

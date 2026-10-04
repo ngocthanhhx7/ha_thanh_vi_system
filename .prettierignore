@@ -1,0 +1,6 @@
+package-lock.json
+assets/originals/
+.local/
+node_modules/
+dist/
+frontend/public/brand/

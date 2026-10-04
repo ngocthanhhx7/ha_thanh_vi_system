@@ -1,0 +1,44 @@
+{
+  "name": "ha-thanh-vi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hà Thành Vị — website thương hiệu và nền tảng quản lý nội dung",
+  "author": "Ngọc Thành",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n web,api -c yellow,cyan \"npm run dev -w frontend\" \"npm run dev -w backend\"",
+    "dev:web": "npm run dev -w frontend",
+    "dev:api": "npm run dev -w backend",
+    "build": "npm run build --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint frontend/src backend/src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run build",
+    "dev:api:demo": "node scripts/dev-api.mjs",
+    "dev:demo": "concurrently -n web,api -c yellow,cyan \"npm run dev:web\" \"npm run dev:api:demo\"",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/js": "^9.39.0",
+    "@playwright/test": "^1.56.0",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.39.0",
+    "globals": "^16.4.0",
+    "husky": "^9.1.7",
+    "mongodb-memory-server": "^11.3.0",
+    "prettier": "^3.6.0",
+    "sharp": "^0.35.5",
+    "typescript-eslint": "^8.46.0"
+  }
+}

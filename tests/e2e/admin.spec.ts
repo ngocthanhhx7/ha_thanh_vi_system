@@ -161,10 +161,16 @@ test('admin statistics applies date filters and reports failures without stale t
   });
   await page.goto('/admin');
   await page.getByRole('link', { name: 'Báo cáo', exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\?tab=stats$/);
+  await expect(
+    page.getByRole('heading', { name: 'Báo cáo theo khoảng thời gian', exact: true }),
+  ).toBeVisible();
   await expect(page.locator('.admin-stat-cards')).toContainText('158.000');
   await expect(page.locator('.admin-chart-products')).toContainText('Vị Truyền');
   await page.getByLabel('Từ ngày', { exact: true }).fill('2026-10-01');
   await page.getByLabel('Đến ngày', { exact: true }).fill('2026-10-04');
+  await expect(page.getByLabel('Từ ngày', { exact: true })).toHaveValue('2026-10-01');
+  await expect(page.getByLabel('Đến ngày', { exact: true })).toHaveValue('2026-10-04');
   await page.getByRole('button', { name: 'Cập nhật' }).click();
   await expect(page).toHaveURL(/\/loi\/503$/);
   await expect(page.getByText('503', { exact: true })).toBeVisible();

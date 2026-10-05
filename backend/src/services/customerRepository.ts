@@ -48,7 +48,7 @@ type VoucherRecord = {
   maxDiscount: number;
   startsAt: Date;
   expiresAt: Date;
-  distribution: 'automatic' | 'code';
+  distribution: 'automatic' | 'code' | 'targeted';
   totalLimit: number;
   perUserLimit: number;
   active: boolean;
@@ -184,7 +184,14 @@ export class CustomerRepository {
     for (const voucher of automatic)
       await CustomerWallet.updateOne(
         { userId, voucherId: voucher._id },
-        { $setOnInsert: { userId, voucherId: voucher._id, code: voucher.code } },
+        {
+          $setOnInsert: {
+            userId,
+            voucherId: voucher._id,
+            code: voucher.code,
+            grantSource: 'automatic',
+          },
+        },
         { upsert: true },
       );
     const entries = await CustomerWallet.find({ userId }).lean();
@@ -193,9 +200,22 @@ export class CustomerRepository {
     }).lean();
     return vouchers.map((raw) => {
       const voucher = raw as unknown as VoucherRecord;
-      const used =
-        voucher.reservations.filter((item) => item.userId === userId).length >=
-        voucher.perUserLimit;
+      const userReservations = voucher.reservations.filter((item) => item.userId === userId);
+      const usedByUser = userReservations.filter((item) => item.state === 'used').length;
+      const reservedByUser = userReservations.some((item) => item.state === 'reserved');
+      const status = !voucher.active
+        ? 'inactive'
+        : voucher.expiresAt <= now
+          ? 'expired'
+          : voucher.startsAt > now
+            ? 'scheduled'
+            : usedByUser >= voucher.perUserLimit
+              ? 'used'
+              : reservedByUser
+                ? 'reserved'
+                : voucher.reservations.length >= voucher.totalLimit
+                  ? 'exhausted'
+                  : 'available';
       return {
         id: String(voucher._id),
         code: voucher.code,
@@ -206,27 +226,34 @@ export class CustomerRepository {
         maxDiscount: voucher.maxDiscount,
         startsAt: voucher.startsAt,
         expiresAt: voucher.expiresAt,
-        status:
-          !voucher.active || voucher.expiresAt <= now ? 'expired' : used ? 'used' : 'available',
+        status,
       };
     });
   }
   async claim(userId: string, code: string) {
-    const voucher = await CustomerVoucher.findOne({
-      code,
-      active: true,
-      startsAt: { $lte: new Date() },
-      expiresAt: { $gt: new Date() },
-    }).lean();
-    if (!voucher) throw new CustomerError(404, 'Voucher không tồn tại hoặc đã hết hạn.');
+    const normalizedCode = code.trim().toUpperCase();
+    const voucher = await CustomerVoucher.findOne({ code: normalizedCode, active: true }).lean();
+    if (!voucher) throw new CustomerError(404, 'Voucher không tồn tại hoặc đang tạm ngưng.');
+    const record = voucher as unknown as VoucherRecord;
+    if (!(record.expiresAt instanceof Date) || record.expiresAt <= new Date())
+      throw new CustomerError(409, 'Voucher đã hết hạn và không thể thêm vào ví.');
+    const alreadyGranted = await CustomerWallet.exists({ userId, voucherId: record._id });
+    if (record.distribution === 'automatic') return this.wallet(userId);
     if (
-      code.startsWith('REVIEW_') &&
-      !(await CustomerWallet.exists({ userId, voucherId: voucher._id }))
+      (record.distribution === 'targeted' || normalizedCode.startsWith('REVIEW_')) &&
+      !alreadyGranted
     )
       throw new CustomerError(404, 'Voucher không tồn tại hoặc đã hết hạn.');
     await CustomerWallet.updateOne(
-      { userId, voucherId: voucher._id },
-      { $setOnInsert: { userId, voucherId: voucher._id, code } },
+      { userId, voucherId: record._id },
+      {
+        $setOnInsert: {
+          userId,
+          voucherId: record._id,
+          code: record.code,
+          grantSource: 'claim',
+        },
+      },
       { upsert: true },
     );
     return this.wallet(userId);
@@ -234,20 +261,20 @@ export class CustomerRepository {
   private async validVoucher(code: string, userId: string, subtotal: number) {
     this.requireAvailable();
     const now = new Date();
+    const normalizedCode = code.trim().toUpperCase();
     const raw = await CustomerVoucher.findOne({
-      code,
+      code: normalizedCode,
       active: true,
-      startsAt: { $lte: now },
-      expiresAt: { $gt: now },
     }).lean();
-    if (!raw) throw new CustomerError(409, 'Voucher chưa có hiệu lực hoặc đã hết hạn.');
+    if (!raw) throw new CustomerError(409, 'Voucher không tồn tại hoặc đang tạm ngưng.');
     const voucher = raw as unknown as VoucherRecord;
-    // Reward codes must exist in the owner's wallet; ordinary public codes can be entered directly.
+    if (voucher.startsAt > now) throw new CustomerError(409, 'Voucher chưa đến thời gian áp dụng.');
+    if (voucher.expiresAt <= now) throw new CustomerError(409, 'Voucher đã hết hạn.');
     if (
-      code.startsWith('REVIEW_') &&
+      (voucher.distribution === 'targeted' || normalizedCode.startsWith('REVIEW_')) &&
       !(await CustomerWallet.exists({ userId, voucherId: voucher._id }))
     )
-      throw new CustomerError(409, 'Voucher không thuộc tài khoản này.');
+      throw new CustomerError(409, 'Voucher chưa được cấp cho tài khoản này.');
     return { voucher, discount: discountFor(voucher, subtotal) };
   }
   async quote(code: string, userId: string, subtotal: number) {
@@ -263,7 +290,14 @@ export class CustomerRepository {
     const { voucher, discount } = await this.validVoucher(code, userId, subtotal);
     await CustomerWallet.updateOne(
       { userId, voucherId: voucher._id },
-      { $setOnInsert: { userId, voucherId: voucher._id, code } },
+      {
+        $setOnInsert: {
+          userId,
+          voucherId: voucher._id,
+          code: voucher.code,
+          grantSource: 'checkout',
+        },
+      },
       { upsert: true },
     );
     const existing = voucher.reservations.find((item) => item.orderId === orderId);
@@ -310,7 +344,7 @@ export class CustomerRepository {
       });
       if (!replay) throw new CustomerError(409, 'Voucher đã hết lượt sử dụng.');
     }
-    return { code, discount };
+    return { code: voucher.code, discount };
   }
   async release(orderId: string) {
     await CustomerVoucher.updateMany(
@@ -353,7 +387,15 @@ export class CustomerRepository {
     if (voucher)
       await CustomerWallet.updateOne(
         { rewardOrderId: orderId },
-        { $setOnInsert: { rewardOrderId: orderId, userId, voucherId: voucher._id, code } },
+        {
+          $setOnInsert: {
+            rewardOrderId: orderId,
+            userId,
+            voucherId: voucher._id,
+            code,
+            grantSource: 'reward',
+          },
+        },
         { upsert: true },
       );
   }

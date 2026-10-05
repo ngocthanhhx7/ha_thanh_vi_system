@@ -55,6 +55,12 @@ const labels: Record<string, string> = {
   returned: 'Đã trả hàng',
 };
 const dateLabel = (value: string) => new Date(value).toLocaleDateString('vi-VN');
+const voucherDateLabel = (value: string) =>
+  new Intl.DateTimeFormat('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value));
 const messageOf = (error: unknown) =>
   error instanceof Error ? error.message : 'Chưa thể hoàn tất. Vui lòng thử lại.';
 const emptyAddress = (): Omit<Address, 'id'> => ({
@@ -673,16 +679,21 @@ export function Account() {
                           </p>
                           <p className="account-voucher-code">{voucher.code}</p>
                           <small>
-                            {dateLabel(voucher.startsAt)} – {dateLabel(voucher.expiresAt)}
+                            {voucherDateLabel(voucher.startsAt)} –{' '}
+                            {voucherDateLabel(voucher.expiresAt)} (GMT+7)
                           </small>
                           <p className="account-badge">
-                            {voucher.status === 'used'
-                              ? 'Đã sử dụng'
-                              : voucher.status === 'expired'
-                                ? 'Hết hạn'
-                                : new Date(voucher.startsAt).getTime() > Date.now()
-                                  ? 'Sắp áp dụng'
-                                  : 'Có thể sử dụng'}
+                            {
+                              {
+                                available: 'Có thể sử dụng',
+                                scheduled: 'Sắp áp dụng',
+                                reserved: 'Đang giữ cho đơn hàng',
+                                used: 'Đã sử dụng',
+                                exhausted: 'Đã hết lượt',
+                                expired: 'Hết hạn',
+                                inactive: 'Đang tạm ngưng',
+                              }[voucher.status]
+                            }
                           </p>
                         </div>
                       </article>

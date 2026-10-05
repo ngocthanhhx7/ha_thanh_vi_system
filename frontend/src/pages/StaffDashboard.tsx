@@ -24,7 +24,7 @@ import {
 import './staff.css';
 
 type Campaign = {
-  id?: string;
+  id: string;
   code: string;
   name: string;
   type: 'fixed' | 'percent';
@@ -33,11 +33,27 @@ type Campaign = {
   maxDiscount: number;
   startsAt: string;
   expiresAt: string;
-  distribution: 'automatic' | 'code';
+  distribution: 'automatic' | 'code' | 'targeted';
   totalLimit: number;
   perUserLimit: number;
   active: boolean;
+  walletCount: number;
 };
+const campaignDateTimeToIso = (value: string) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+  if (!match) throw new Error('Vui lòng nhập đầy đủ thời gian áp dụng.');
+  const [, year, month, day, hour, minute] = match;
+  return new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute)) -
+      7 * 60 * 60 * 1000,
+  ).toISOString();
+};
+const campaignDateLabel = (value: string) =>
+  new Intl.DateTimeFormat('vi-VN', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value));
 const nextStates: Record<string, string[]> = {
   pending: ['confirmed', 'cancelled'],
   confirmed: ['shipping', 'cancelled'],
@@ -91,6 +107,124 @@ type StaffDashboardData = {
   support: { open: number };
   chat: { waiting: number; assignedToMe: number };
 };
+
+function VoucherRecipientPicker({
+  selected,
+  onChange,
+}: {
+  selected: CustomerUser[];
+  onChange: (users: CustomerUser[]) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [matches, setMatches] = useState<CustomerUser[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const search = query.trim();
+    if (search.length < 2) {
+      setMatches([]);
+      setLoading(false);
+      setError('');
+      return;
+    }
+    let active = true;
+    setMatches([]);
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      setError('');
+      customerApi
+        .adminUsers({
+          page: 1,
+          limit: 10,
+          q: search,
+          role: 'customer',
+          accountStatus: 'active',
+          sort: 'name',
+          direction: 'asc',
+        })
+        .then((result) => {
+          if (active) setMatches(result.users);
+        })
+        .catch((reason) => {
+          if (active) setError(errorText(reason));
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    }, 250);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [query]);
+
+  return (
+    <div className="campaign-recipient-picker">
+      <label className="field">
+        Tìm khách nhận ưu đãi
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Nhập tên, email hoặc số điện thoại"
+          autoComplete="off"
+        />
+      </label>
+      <small className="fine-print">
+        Nhập ít nhất 2 ký tự; chỉ tìm tài khoản khách đang hoạt động.
+      </small>
+      {loading && <p role="status">Đang tìm khách hàng…</p>}
+      {error && (
+        <p role="alert" className="form-status">
+          {error}
+        </p>
+      )}
+      {matches.length > 0 && (
+        <div className="campaign-recipient-results">
+          {matches.map((customer) => {
+            const alreadySelected = selected.some((entry) => entry.id === customer.id);
+            return (
+              <button
+                className="campaign-recipient-option"
+                type="button"
+                key={customer.id}
+                disabled={alreadySelected}
+                onClick={() => onChange([...selected, customer])}
+              >
+                <span>{customer.name}</span>
+                <small>
+                  {customer.email} · {alreadySelected ? 'Đã chọn' : 'Thêm khách'}
+                </small>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {query.trim().length >= 2 && !loading && !error && matches.length === 0 && (
+        <p className="fine-print">Không tìm thấy khách hàng phù hợp.</p>
+      )}
+      {selected.length > 0 && (
+        <ul className="campaign-recipient-selected" aria-label="Khách đã chọn nhận voucher">
+          {selected.map((customer) => (
+            <li key={customer.id}>
+              <span>
+                {customer.name} · {customer.email}
+              </span>
+              <button
+                type="button"
+                aria-label={`Bỏ chọn ${customer.email}`}
+                onClick={() => onChange(selected.filter((entry) => entry.id !== customer.id))}
+              >
+                Bỏ chọn
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function ManagedOrder({
   order,
@@ -593,6 +727,8 @@ export function StaffDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [vouchers, setVouchers] = useState<Campaign[]>([]);
+  const [voucherDistribution, setVoucherDistribution] = useState<Campaign['distribution']>('code');
+  const [voucherRecipients, setVoucherRecipients] = useState<CustomerUser[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [orderQueue, setOrderQueue] = useState<OrderQueue>('needs_action');
@@ -765,30 +901,62 @@ export function StaffDashboard() {
     e.preventDefault();
     const f = e.currentTarget;
     const d = new FormData(f);
-    const body = {
-      code: d.get('code'),
-      name: d.get('name'),
-      type: d.get('type'),
-      value: Number(d.get('value')),
-      minOrder: Number(d.get('minOrder')),
-      maxDiscount: Number(d.get('maxDiscount')),
-      startsAt: new Date(String(d.get('startsAt'))).toISOString(),
-      expiresAt: new Date(String(d.get('expiresAt'))).toISOString(),
-      distribution: d.get('distribution'),
-      totalLimit: Number(d.get('totalLimit')),
-      perUserLimit: Number(d.get('perUserLimit')),
-      active: true,
-    };
+    const distribution = String(d.get('distribution')) as Campaign['distribution'];
+    if (distribution === 'targeted' && !voucherRecipients.length) {
+      setError('Hãy chọn ít nhất một khách hàng nhận voucher.');
+      return;
+    }
     setBusy(true);
     setNotice('');
     setError('');
     try {
+      const body = {
+        code: d.get('code'),
+        name: d.get('name'),
+        type: d.get('type'),
+        value: Number(d.get('value')),
+        minOrder: Number(d.get('minOrder')),
+        maxDiscount: Number(d.get('maxDiscount')),
+        startsAt: campaignDateTimeToIso(String(d.get('startsAt'))),
+        expiresAt: campaignDateTimeToIso(String(d.get('expiresAt'))),
+        distribution,
+        customerIds:
+          distribution === 'targeted' ? voucherRecipients.map((recipient) => recipient.id) : [],
+        totalLimit: Number(d.get('totalLimit')),
+        perUserLimit: Number(d.get('perUserLimit')),
+        active: true,
+      };
       await request('/admin/vouchers', { method: 'POST', body: JSON.stringify(body) });
-      setNotice('Đã phát hành voucher.');
+      setNotice(
+        distribution === 'targeted'
+          ? `Đã phát hành và cấp voucher vào ví của ${voucherRecipients.length} khách hàng.`
+          : distribution === 'automatic'
+            ? 'Đã phát hành ưu đãi tự động cho khách hàng.'
+            : 'Đã phát hành mã ưu đãi.',
+      );
       f.reset();
+      setVoucherDistribution('code');
+      setVoucherRecipients([]);
       setVersion((v) => v + 1);
     } catch (error) {
       setError(errorText(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function toggleVoucher(voucher: Campaign) {
+    setBusy(true);
+    setNotice('');
+    setError('');
+    try {
+      await request(`/admin/vouchers/${encodeURIComponent(voucher.id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ active: !voucher.active }),
+      });
+      setNotice(voucher.active ? 'Voucher đã được tạm ngưng.' : 'Voucher đã được kích hoạt lại.');
+      setVersion((value) => value + 1);
+    } catch (reason) {
+      setError(errorText(reason));
     } finally {
       setBusy(false);
     }
@@ -1260,15 +1428,47 @@ export function StaffDashboard() {
             <div>
               <h2>Ưu đãi đã phát hành</h2>
               {vouchers.map((v) => (
-                <article className="campaign-card" key={v.id || v.code}>
-                  <strong>
-                    {v.code} · {v.name}
-                  </strong>
+                <article className="campaign-card" key={v.id}>
+                  <div className="campaign-card-heading">
+                    <strong>
+                      {v.code} · {v.name}
+                    </strong>
+                    <span className={'campaign-status' + (!v.active ? ' is-paused' : '')}>
+                      {!v.active
+                        ? 'Tạm ngưng'
+                        : new Date(v.expiresAt).getTime() <= Date.now()
+                          ? 'Hết hạn'
+                          : new Date(v.startsAt).getTime() > Date.now()
+                            ? 'Sắp diễn ra'
+                            : 'Đang hoạt động'}
+                    </span>
+                  </div>
                   <p>
-                    {v.type === 'percent' ? v.value + '%' : v.value.toLocaleString('vi-VN') + 'đ'} ·{' '}
-                    {v.distribution === 'automatic' ? 'Tự động vào ví' : 'Khách nhập mã'}
+                    {v.type === 'percent' ? v.value + '%' : v.value.toLocaleString('vi-VN') + 'đ'}
+                    {' · '}
+                    {v.distribution === 'automatic'
+                      ? 'Tự động cho khách'
+                      : v.distribution === 'targeted'
+                        ? 'Cấp đích danh'
+                        : 'Mã công khai'}
+                    {' · '}
+                    {v.distribution === 'automatic'
+                      ? `${v.walletCount} ví đã đồng bộ; khách mới tự nhận khi mở ví`
+                      : `${v.walletCount} lượt cấp vào ví`}
                   </p>
-                  <small>Hạn dùng: {new Date(v.expiresAt).toLocaleDateString('vi-VN')}</small>
+                  <small>
+                    Hiệu lực: {campaignDateLabel(v.startsAt)} – {campaignDateLabel(v.expiresAt)}
+                    {' (GMT+7) · '}
+                    {v.totalLimit} lượt dùng tối đa · {v.perUserLimit} lượt/khách
+                  </small>
+                  <button
+                    className="button button-outline"
+                    type="button"
+                    disabled={busy || new Date(v.expiresAt).getTime() <= Date.now()}
+                    onClick={() => void toggleVoucher(v)}
+                  >
+                    {v.active ? 'Tạm ngưng voucher' : 'Kích hoạt lại'}
+                  </button>
                 </article>
               ))}
               {!vouchers.length && !busy && <p>Chưa có chiến dịch.</p>}
@@ -1315,21 +1515,40 @@ export function StaffDashboard() {
               </div>
               <div className="form-row">
                 <label className="field">
-                  Bắt đầu
+                  Bắt đầu (giờ Việt Nam)
                   <input name="startsAt" type="datetime-local" required />
                 </label>
                 <label className="field">
-                  Kết thúc
+                  Kết thúc (giờ Việt Nam)
                   <input name="expiresAt" type="datetime-local" required />
                 </label>
               </div>
+              <p className="fine-print campaign-timezone-note">
+                Mốc thời gian được nhập và hiển thị theo giờ Việt Nam (Asia/Ho_Chi_Minh, GMT+7).
+                Thời điểm kết thúc không còn hiệu lực.
+              </p>
               <label className="field">
                 Cách nhận
-                <select name="distribution">
-                  <option value="code">Nhập mã để nhận</option>
-                  <option value="automatic">Tự động vào ví khách</option>
+                <select
+                  name="distribution"
+                  value={voucherDistribution}
+                  onChange={(event) => {
+                    const distribution = event.target.value as Campaign['distribution'];
+                    setVoucherDistribution(distribution);
+                    if (distribution !== 'targeted') setVoucherRecipients([]);
+                  }}
+                >
+                  <option value="code">Mã công khai — khách nhập khi thanh toán</option>
+                  <option value="automatic">Tự động — mọi khách thấy trong ví</option>
+                  <option value="targeted">Cấp đích danh — chọn khách nhận</option>
                 </select>
               </label>
+              {voucherDistribution === 'targeted' && (
+                <VoucherRecipientPicker
+                  selected={voucherRecipients}
+                  onChange={setVoucherRecipients}
+                />
+              )}
               <div className="form-row">
                 <label className="field">
                   Tổng lượt dùng

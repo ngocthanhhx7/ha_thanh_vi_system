@@ -200,12 +200,99 @@
   margin: 15px 0;
   font-size: 13px;
 }
+.campaign-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.campaign-status {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #eaf1e6;
+  color: #36543a;
+  font-size: 11px;
+  font-weight: 700;
+}
+.campaign-status.is-paused {
+  background: #f4e8df;
+  color: #8c4c2e;
+}
 .campaign-card p {
   margin: 12px 0;
   font-size: 12px;
 }
 .campaign-card small {
   color: var(--muted);
+}
+.campaign-card .button {
+  margin-top: 14px;
+  padding: 9px 14px;
+  font-size: 12px;
+}
+.campaign-timezone-note {
+  margin: -4px 0 18px;
+}
+.campaign-recipient-picker {
+  margin: 4px 0 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fffdf8;
+}
+.campaign-recipient-results {
+  display: grid;
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.campaign-recipient-option {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.campaign-recipient-option:last-child {
+  border-bottom: 0;
+}
+.campaign-recipient-option:hover:not(:disabled) {
+  background: #f6efe3;
+}
+.campaign-recipient-option:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+.campaign-recipient-option small {
+  color: var(--muted);
+}
+.campaign-recipient-selected {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.campaign-recipient-selected li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+.campaign-recipient-selected button {
+  border: 0;
+  background: transparent;
+  color: #8c4c2e;
+  text-decoration: underline;
+  cursor: pointer;
 }
 .staff-page .pagination {
   display: flex;
@@ -220,6 +307,14 @@
   }
   .staff-heading h1 {
     font-size: 36px;
+  }
+}
+@media (max-width: 600px) {
+  .campaign-card-heading {
+    flex-direction: column;
+  }
+  .campaign-card small {
+    display: block;
   }
 }
 @media (max-width: 640px) {

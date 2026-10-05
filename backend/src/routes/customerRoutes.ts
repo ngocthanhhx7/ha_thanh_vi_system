@@ -160,6 +160,7 @@ export function createCustomerModule(options: {
   router.post('/admin/staff', auth, requireRole('admin'), h.staff);
   router.get('/admin/vouchers', auth, requireRole('admin'), h.adminVouchers);
   router.post('/admin/vouchers', auth, requireRole('admin'), h.createVoucher);
+  router.patch('/admin/vouchers/:id', auth, requireRole('admin'), h.updateVoucherStatus);
   return {
     repository,
     router,

@@ -258,7 +258,7 @@ test('admin creates staff credentials and issues an automatic voucher with exact
   await page.route('**/api/admin/vouchers', (route) => {
     if (route.request().method() === 'POST') {
       voucherBody = route.request().postDataJSON();
-      vouchers.push({ id: 'campaign-1', ...voucherBody });
+      vouchers.push({ id: 'campaign-1', walletCount: 0, ...voucherBody });
       return route.fulfill(json({ voucher: vouchers[0] }, 201));
     }
     return route.fulfill(json({ vouchers }));
@@ -287,15 +287,17 @@ test('admin creates staff credentials and issues an automatic voucher with exact
   await page.getByLabel('Giá trị', { exact: true }).fill('10');
   await page.getByLabel('Đơn tối thiểu', { exact: true }).fill('150000');
   await page.getByLabel('Giảm tối đa (0: không giới hạn)', { exact: true }).fill('50000');
-  await page.getByLabel('Bắt đầu', { exact: true }).fill('2026-10-04T10:00');
-  await page.getByLabel('Kết thúc', { exact: true }).fill('2026-10-20T23:59');
+  await page.getByLabel('Bắt đầu (giờ Việt Nam)', { exact: true }).fill('2026-10-04T10:00');
+  await page.getByLabel('Kết thúc (giờ Việt Nam)', { exact: true }).fill('2026-10-20T23:59');
   await page.getByRole('combobox', { name: 'Cách nhận', exact: true }).selectOption('automatic');
   await page.getByLabel('Tổng lượt dùng', { exact: true }).fill('200');
   await page.getByLabel('Lượt mỗi khách', { exact: true }).fill('1');
   await page.getByRole('button', { name: 'Phát hành ưu đãi', exact: true }).click();
-  await expect(page.locator('.staff-page .form-status')).toContainText('Đã phát hành voucher.');
+  await expect(page.locator('.staff-page .form-status')).toContainText(
+    'Đã phát hành ưu đãi tự động cho khách hàng.',
+  );
   await expect(page.locator('.campaign-card')).toContainText('HATHANH10');
-  await expect(page.locator('.campaign-card')).toContainText('Tự động vào ví');
+  await expect(page.locator('.campaign-card')).toContainText('Tự động cho khách');
   expect(voucherBody).toMatchObject({
     code: 'HATHANH10',
     name: 'Ưu đãi khai trương',
@@ -304,6 +306,9 @@ test('admin creates staff credentials and issues an automatic voucher with exact
     minOrder: 150000,
     maxDiscount: 50000,
     distribution: 'automatic',
+    customerIds: [],
+    startsAt: '2026-10-04T03:00:00.000Z',
+    expiresAt: '2026-10-20T16:59:00.000Z',
     totalLimit: 200,
     perUserLimit: 1,
     active: true,
@@ -312,6 +317,66 @@ test('admin creates staff credentials and issues an automatic voucher with exact
   expect(Date.parse(String(voucherBody?.expiresAt))).toBeGreaterThan(
     Date.parse(String(voucherBody?.startsAt)),
   );
+});
+
+test('admin grants a targeted voucher and can pause and reactivate it', async ({ page }) => {
+  await prepare(page, 'admin');
+  const recipient = {
+    id: '507f1f77bcf86cd799439011',
+    name: 'Khách nhận quà',
+    email: 'gift@example.com',
+    role: 'customer',
+  };
+  let campaign: Record<string, unknown> | undefined;
+  const changes: boolean[] = [];
+  await page.route('**/api/admin/users**', (route) => {
+    const url = new URL(route.request().url());
+    expect(url.searchParams.get('role')).toBe('customer');
+    expect(url.searchParams.get('accountStatus')).toBe('active');
+    return route.fulfill(json({ users: [recipient], total: 1, page: 1, limit: 10 }));
+  });
+  await page.route('**/api/admin/vouchers', (route) => {
+    if (route.request().method() === 'POST') {
+      campaign = { id: 'target-campaign', walletCount: 1, ...route.request().postDataJSON() };
+      return route.fulfill(json({ voucher: campaign, assignedCount: 1 }, 201));
+    }
+    return route.fulfill(json({ vouchers: campaign ? [campaign] : [] }));
+  });
+  await page.route('**/api/admin/vouchers/target-campaign', (route) => {
+    expect(route.request().method()).toBe('PATCH');
+    const { active } = route.request().postDataJSON();
+    changes.push(active);
+    campaign = { ...campaign, active };
+    return route.fulfill(json({ voucher: campaign }));
+  });
+  await page.goto('/quan-tri?tab=vouchers');
+  await page.getByLabel('Mã ưu đãi', { exact: true }).fill('GIFT20');
+  await page.getByLabel('Tên chiến dịch', { exact: true }).fill('Quà cho khách');
+  await page.getByLabel('Giá trị', { exact: true }).fill('20000');
+  await page.getByLabel('Bắt đầu (giờ Việt Nam)', { exact: true }).fill('2030-10-04T10:00');
+  await page.getByLabel('Kết thúc (giờ Việt Nam)', { exact: true }).fill('2030-10-20T23:59');
+  await page.getByRole('combobox', { name: 'Cách nhận', exact: true }).selectOption('targeted');
+  await page.getByRole('button', { name: 'Phát hành ưu đãi', exact: true }).click();
+  await expect(page.locator('.form-status')).toContainText('Hãy chọn ít nhất một khách hàng');
+  expect(campaign).toBeUndefined();
+  await page.getByLabel('Tìm khách nhận ưu đãi').fill('gift');
+  await page.getByRole('button', { name: /Khách nhận quà.*Thêm khách/ }).click();
+  await expect(page.getByRole('list', { name: 'Khách đã chọn nhận voucher' })).toContainText(
+    recipient.email,
+  );
+  await page.getByRole('button', { name: 'Phát hành ưu đãi', exact: true }).click();
+  await expect(page.locator('.campaign-card')).toContainText('GIFT20');
+  expect(campaign).toMatchObject({
+    distribution: 'targeted',
+    customerIds: [recipient.id],
+    startsAt: '2030-10-04T03:00:00.000Z',
+  });
+  await page.getByRole('button', { name: 'Tạm ngưng voucher', exact: true }).click();
+  await expect(page.locator('.campaign-status')).toHaveText('Tạm ngưng');
+  await page.getByRole('button', { name: 'Kích hoạt lại', exact: true }).click();
+  await expect(page.locator('.campaign-status')).toHaveText('Sắp diễn ra');
+  expect(changes).toEqual([false, true]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test('customers cannot see or request management data; staff sees only order and support tabs', async ({

@@ -5,6 +5,7 @@ import {
   CustomerReview,
   CustomerTicket,
   CustomerVoucher,
+  CustomerWallet,
 } from '../models/customer.js';
 import { CustomerAccountAudit } from '../models/accountManagement.js';
 import { Notification, SystemAuditLog } from '../models/operations.js';
@@ -334,11 +335,15 @@ export function customerControllers(
       });
     }),
     wallet: run(async (req, res) => res.json({ vouchers: await repository.wallet(req.user!.id) })),
-    claim: run(async (req, res) =>
-      res.json({
-        vouchers: await repository.claim(req.user!.id, parse(claimSchema, req.body).code),
-      }),
-    ),
+    claim: run(async (req, res) => {
+      const parsed = claimSchema.safeParse(req.body);
+      if (!parsed.success)
+        throw new CustomerError(
+          400,
+          'Mã ưu đãi cần từ 3–80 ký tự, chỉ gồm chữ cái, số, dấu gạch ngang hoặc gạch dưới.',
+        );
+      res.json({ vouchers: await repository.claim(req.user!.id, parsed.data.code) });
+    }),
     quote: run(async (req, res) => {
       const data = parse(quoteSchema, req.body);
       if (new Set(data.items.map((item) => item.productId)).size !== data.items.length)
@@ -731,19 +736,96 @@ export function customerControllers(
       });
       res.status(201).json({ user: userView(user.toObject()) });
     }),
-    adminVouchers: run(async (_req, res) =>
+    adminVouchers: run(async (_req, res) => {
+      const [records, walletCounts] = await Promise.all([
+        CustomerVoucher.find().sort({ createdAt: -1 }).limit(200).lean(),
+        CustomerWallet.aggregate([{ $group: { _id: '$voucherId', count: { $sum: 1 } } }]),
+      ]);
+      const counts = new Map(walletCounts.map((item) => [String(item._id), item.count]));
       res.json({
-        vouchers: (await CustomerVoucher.find().sort({ createdAt: -1 }).limit(200).lean()).map(
-          present,
-        ),
-      }),
-    ),
+        vouchers: records.map((voucher) => ({
+          ...present(voucher),
+          walletCount: counts.get(String(voucher._id)) ?? 0,
+        })),
+      });
+    }),
     createVoucher: run(async (req, res) => {
       const data = parse(voucherInputSchema, req.body);
       if (data.code.startsWith('REVIEW_'))
         throw new CustomerError(400, 'Tiền tố REVIEW_ dành cho voucher thưởng.');
-      const voucher = await CustomerVoucher.create(data);
-      res.status(201).json({ voucher: present(voucher.toObject()) });
+      const { customerIds, ...voucherData } = data;
+      const recipients = customerIds.length
+        ? await CustomerUser.find({
+            _id: { $in: customerIds },
+            role: 'customer',
+            accountStatus: { $ne: 'suspended' },
+          })
+            .select('_id')
+            .lean()
+        : [];
+      if (recipients.length !== customerIds.length)
+        throw new CustomerError(400, 'Một số khách nhận không tồn tại hoặc không đủ điều kiện.');
+
+      const session = await CustomerVoucher.startSession();
+      let voucher: InstanceType<typeof CustomerVoucher> | null = null;
+      try {
+        await session.withTransaction(async () => {
+          const [created] = await CustomerVoucher.create([voucherData], { session });
+          voucher = created;
+          if (recipients.length)
+            await CustomerWallet.insertMany(
+              recipients.map((recipient) => ({
+                userId: String(recipient._id),
+                voucherId: created._id,
+                code: created.code,
+                grantSource: 'admin',
+                grantedBy: req.user!.id,
+              })),
+              { session, ordered: true },
+            );
+        });
+      } catch (error) {
+        if (isDuplicate(error)) throw new CustomerError(409, 'Mã voucher này đã được phát hành.');
+        throw error;
+      } finally {
+        await session.endSession();
+      }
+      if (!voucher) throw new CustomerError(503, 'Chưa thể phát hành voucher. Vui lòng thử lại.');
+      const issuedVoucher = voucher as InstanceType<typeof CustomerVoucher>;
+      const notification = {
+        category: 'system' as const,
+        title: 'Bạn vừa nhận được ưu đãi',
+        message: `${issuedVoucher.name} · Mã ${issuedVoucher.code}`,
+        href: '/tai-khoan?section=vouchers',
+      };
+      if (issuedVoucher.distribution === 'automatic')
+        await notificationService.safeRoles(['customer'], {
+          ...notification,
+          eventKey: `voucher:${String(issuedVoucher._id)}:automatic`,
+        });
+      else if (issuedVoucher.distribution === 'targeted')
+        await Promise.all(
+          recipients.map((recipient) =>
+            notificationService.safeUser(String(recipient._id), {
+              ...notification,
+              eventKey: `voucher:${String(issuedVoucher._id)}:granted:${String(recipient._id)}`,
+            }),
+          ),
+        );
+      res.status(201).json({
+        voucher: present(issuedVoucher.toObject()),
+        assignedCount: recipients.length,
+      });
+    }),
+    updateVoucherStatus: run(async (req, res) => {
+      const { active } = parse(z.object({ active: z.boolean() }).strict(), req.body);
+      const voucher = await CustomerVoucher.findByIdAndUpdate(
+        parse(objectId, req.params.id),
+        { $set: { active } },
+        { new: true, runValidators: true },
+      ).lean();
+      if (!voucher) throw new CustomerError(404, 'Không tìm thấy voucher.');
+      res.json({ voucher: present(voucher) });
     }),
   };
 }

@@ -89,7 +89,7 @@ export type VoucherWalletItem = {
   maxDiscount?: number;
   startsAt: string;
   expiresAt: string;
-  status: 'available' | 'used' | 'expired';
+  status: 'available' | 'scheduled' | 'reserved' | 'used' | 'exhausted' | 'expired' | 'inactive';
 };
 export type SupportTicket = {
   id: string;

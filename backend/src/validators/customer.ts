@@ -68,7 +68,8 @@ export const voucherInputSchema = z
     maxDiscount: z.number().int().min(0).default(0),
     startsAt: z.coerce.date(),
     expiresAt: z.coerce.date(),
-    distribution: z.enum(['automatic', 'code']),
+    distribution: z.enum(['automatic', 'code', 'targeted']),
+    customerIds: z.array(objectId).max(500).default([]),
     totalLimit: z.number().int().min(1).max(100000),
     perUserLimit: z.number().int().min(1).max(100),
     active: z.boolean(),
@@ -77,6 +78,17 @@ export const voucherInputSchema = z
   .refine(
     (v) => v.expiresAt > v.startsAt && !(v.type === 'percent' && v.value > 100),
     'Thời hạn hoặc mức giảm chưa hợp lệ.',
+  )
+  .refine((v) => v.expiresAt > new Date(), 'Thời điểm kết thúc phải ở tương lai.')
+  .refine(
+    (v) =>
+      (v.distribution === 'targeted' && v.customerIds.length > 0) ||
+      (v.distribution !== 'targeted' && v.customerIds.length === 0),
+    'Hãy chọn khách nhận voucher đích danh.',
+  )
+  .refine(
+    (v) => new Set(v.customerIds).size === v.customerIds.length,
+    'Danh sách khách nhận không được trùng lặp.',
   );
 export const claimSchema = z
   .object({

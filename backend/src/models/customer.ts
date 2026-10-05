@@ -50,7 +50,7 @@ const voucherSchema = new Schema(
     maxDiscount: { type: Number, default: 0 },
     startsAt: Date,
     expiresAt: Date,
-    distribution: { type: String, enum: ['automatic', 'code'] },
+    distribution: { type: String, enum: ['automatic', 'code', 'targeted'] },
     totalLimit: Number,
     perUserLimit: Number,
     active: Boolean,
@@ -78,6 +78,8 @@ const walletSchema = new Schema(
     voucherId: { type: Schema.Types.ObjectId, ref: 'CustomerVoucher', required: true },
     rewardOrderId: { type: String },
     code: String,
+    grantSource: { type: String, enum: ['automatic', 'claim', 'admin', 'reward', 'checkout'] },
+    grantedBy: { type: String, ref: 'CustomerUser' },
   },
   options,
 );

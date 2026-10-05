@@ -101,6 +101,45 @@ test('customer signs in, adds a default address, sees it at checkout and signs o
   await expect(page.getByRole('heading', { name: 'Xin chào, Khách Hà Nội.' })).toHaveCount(0);
 });
 
+test('voucher wallet displays each lifecycle state with Vietnam time', async ({ page }) => {
+  await page.route('**/api/content', (route) => route.fulfill(json(content)));
+  await page.route('**/api/auth/me', (route) => route.fulfill(json({ user })));
+  const labels = {
+    available: 'Có thể sử dụng',
+    scheduled: 'Sắp áp dụng',
+    reserved: 'Đang giữ cho đơn hàng',
+    used: 'Đã sử dụng',
+    exhausted: 'Đã hết lượt',
+    expired: 'Hết hạn',
+    inactive: 'Đang tạm ngưng',
+  };
+  await page.route('**/api/account/vouchers', (route) =>
+    route.fulfill(
+      json({
+        vouchers: Object.keys(labels).map((status) => ({
+          id: status,
+          code: status.toUpperCase(),
+          name: `Ưu đãi ${status}`,
+          status,
+          type: 'fixed',
+          value: 20000,
+          minOrder: 0,
+          startsAt: '2030-10-04T03:00:00.000Z',
+          expiresAt: '2030-10-20T16:59:00.000Z',
+        })),
+      }),
+    ),
+  );
+  await page.goto('/tai-khoan?section=vouchers');
+  await expect(page.locator('.account-voucher')).toHaveCount(7);
+  for (const [status, label] of Object.entries(labels)) {
+    const card = page.locator('.account-voucher').filter({ hasText: `Ưu đãi ${status}` });
+    await expect(card.locator('.account-badge')).toHaveText(label);
+    await expect(card.locator('small')).toContainText('10:00');
+    await expect(card.locator('small')).toContainText('GMT+7');
+  }
+});
+
 test('address save failures remain visible and retain entered data', async ({ page }) => {
   await page.route('**/api/content', (route) => route.fulfill(json(content)));
   await page.route('**/api/auth/me', (route) => route.fulfill(json({ user })));

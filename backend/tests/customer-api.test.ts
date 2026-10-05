@@ -447,7 +447,9 @@ test('voucher checkout validates price server-side, automatic wallet grants, cap
   assert.equal(quote.status, 200);
   assert.equal(quote.body.discount, 20000);
   assert.equal((await checkout(undefined, { voucherCode: 'CAP1' })).status, 401);
-  assert.equal((await checkout(customerCookie, { voucherCode: 'EXPIRED1' })).status, 409);
+  const expired = await checkout(customerCookie, { voucherCode: 'EXPIRED1' });
+  assert.equal(expired.status, 409);
+  assert.match(expired.body.message, /Voucher đã hết hạn/);
   assert.equal(
     (await checkout(customerCookie, { voucherCode: 'CAP1', discount: 1000000 })).status,
     400,
@@ -480,6 +482,151 @@ test('voucher checkout validates price server-side, automatic wallet grants, cap
   ]);
   assert.equal(perUser.filter((result) => result.status === 201).length, 1);
   assert.equal(perUser.filter((result) => result.status === 409).length, 1);
+});
+
+test('admin voucher grants are visible only to intended customers and scheduled vouchers report their effective time', async () => {
+  const create = (code: string, extra: Record<string, unknown> = {}) =>
+    request(app)
+      .post('/api/admin/vouchers')
+      .set(csrf)
+      .set('Cookie', adminCookie)
+      .send({ ...campaign(code), ...extra });
+  const claimable = await create('CLAIM1');
+  assert.equal(claimable.status, 201, claimable.body.message);
+  const savedClaim = await request(app)
+    .post('/api/account/vouchers/claim')
+    .set(csrf)
+    .set('Cookie', customerCookie)
+    .send({ code: ' claim1 ' });
+  assert.equal(savedClaim.status, 200, savedClaim.body.message);
+  assert.ok(
+    savedClaim.body.vouchers.some((voucher: { code: string }) => voucher.code === 'CLAIM1'),
+  );
+  const repeatedSavedClaim = await request(app)
+    .post('/api/account/vouchers/claim')
+    .set(csrf)
+    .set('Cookie', customerCookie)
+    .send({ code: 'CLAIM1' });
+  assert.equal(repeatedSavedClaim.status, 200, repeatedSavedClaim.body.message);
+  const claimableId = claimable.body.voucher.id;
+  assert.equal(
+    await CustomerWallet.countDocuments({ userId: customerId, voucherId: claimableId }),
+    1,
+  );
+
+  const issued = await create('TARGET1', {
+    distribution: 'targeted',
+    customerIds: [customerId],
+  });
+  assert.equal(issued.status, 201, issued.body.message);
+  assert.equal(issued.body.assignedCount, 1);
+  const voucherId = issued.body.voucher.id;
+  const grant = await CustomerWallet.findOne({ userId: customerId, voucherId }).lean();
+  assert.equal(grant?.grantSource, 'admin');
+  assert.ok(
+    await Notification.exists({
+      userId: customerId,
+      eventKey: `voucher:${voucherId}:granted:${customerId}`,
+    }),
+  );
+
+  const customerWallet = await request(app)
+    .get('/api/account/vouchers')
+    .set('Cookie', customerCookie);
+  const targeted = customerWallet.body.vouchers.find(
+    (voucher: { code: string }) => voucher.code === 'TARGET1',
+  );
+  assert.equal(targeted.status, 'available');
+  const otherWallet = await request(app).get('/api/account/vouchers').set('Cookie', otherCookie);
+  assert.equal(
+    otherWallet.body.vouchers.some((voucher: { code: string }) => voucher.code === 'TARGET1'),
+    false,
+  );
+
+  const repeatClaim = await request(app)
+    .post('/api/account/vouchers/claim')
+    .set(csrf)
+    .set('Cookie', customerCookie)
+    .send({ code: ' target1 ' });
+  assert.equal(repeatClaim.status, 200, repeatClaim.body.message);
+  assert.equal(await CustomerWallet.countDocuments({ userId: customerId, voucherId }), 1);
+  const outsiderClaim = await request(app)
+    .post('/api/account/vouchers/claim')
+    .set(csrf)
+    .set('Cookie', otherCookie)
+    .send({ code: 'TARGET1' });
+  assert.equal(outsiderClaim.status, 404);
+
+  const targetedQuote = await request(app)
+    .post('/api/account/vouchers/quote')
+    .set(csrf)
+    .set('Cookie', customerCookie)
+    .send({ code: 'TARGET1', items: checkoutBody.items });
+  assert.equal(targetedQuote.status, 200);
+  const outsiderQuote = await request(app)
+    .post('/api/account/vouchers/quote')
+    .set(csrf)
+    .set('Cookie', otherCookie)
+    .send({ code: 'TARGET1', items: checkoutBody.items });
+  assert.equal(outsiderQuote.status, 409);
+  const ordered = await checkout(customerCookie, { voucherCode: 'TARGET1' });
+  assert.equal(ordered.status, 201, ordered.body.message);
+  assert.equal(ordered.body.order.discount, 20000);
+
+  const paused = await request(app)
+    .patch('/api/admin/vouchers/' + voucherId)
+    .set(csrf)
+    .set('Cookie', adminCookie)
+    .send({ active: false });
+  assert.equal(paused.status, 200);
+  const pausedWallet = await request(app)
+    .get('/api/account/vouchers')
+    .set('Cookie', customerCookie);
+  assert.equal(
+    pausedWallet.body.vouchers.find((voucher: { code: string }) => voucher.code === 'TARGET1')
+      .status,
+    'inactive',
+  );
+
+  const scheduledAt = new Date(Date.now() + 60 * 60 * 1000);
+  const upcoming = await create('UPCOMING1', {
+    startsAt: scheduledAt,
+    expiresAt: new Date(scheduledAt.getTime() + 24 * 60 * 60 * 1000),
+  });
+  assert.equal(upcoming.status, 201, upcoming.body.message);
+  const claimUpcoming = await request(app)
+    .post('/api/account/vouchers/claim')
+    .set(csrf)
+    .set('Cookie', customerCookie)
+    .send({ code: 'UPCOMING1' });
+  assert.equal(claimUpcoming.status, 200, claimUpcoming.body.message);
+  assert.equal(
+    claimUpcoming.body.vouchers.find((voucher: { code: string }) => voucher.code === 'UPCOMING1')
+      .status,
+    'scheduled',
+  );
+  const unavailableQuote = await request(app)
+    .post('/api/account/vouchers/quote')
+    .set(csrf)
+    .set('Cookie', customerCookie)
+    .send({ code: 'UPCOMING1', items: checkoutBody.items });
+  assert.equal(unavailableQuote.status, 409);
+  assert.match(unavailableQuote.body.message, /chưa đến thời gian áp dụng/);
+  const unavailableCheckout = await checkout(customerCookie, { voucherCode: 'UPCOMING1' });
+  assert.equal(unavailableCheckout.status, 409);
+  assert.match(unavailableCheckout.body.message, /chưa đến thời gian áp dụng/);
+
+  const malformedClaim = await request(app)
+    .post('/api/account/vouchers/claim')
+    .set(csrf)
+    .set('Cookie', customerCookie)
+    .send({ code: '!!' });
+  assert.equal(malformedClaim.status, 400);
+  assert.match(malformedClaim.body.message, /3–80 ký tự/);
+  const expiredIssue = await create('PASTEND1', {
+    expiresAt: new Date(Date.now() - 60 * 1000),
+  });
+  assert.equal(expiredIssue.status, 400);
 });
 
 test('delivery events, purchased-product reviews, one reward per order, customer returns and staff ticket reply follow order workflow', async () => {

@@ -166,9 +166,10 @@
 }
 .workspace-page-heading h1 {
   margin: 3px 0 8px;
-  font-family: Georgia, serif;
+  font-family: var(--font-display, Georgia, serif);
   font-size: clamp(26px, 3vw, 38px);
   font-weight: 500;
+  letter-spacing: 0;
 }
 .workspace-page-heading p:not(.eyebrow) {
   margin: 0;

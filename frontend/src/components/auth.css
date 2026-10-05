@@ -2,6 +2,27 @@
   display: grid;
   gap: 16px;
 }
+.account-auth > .auth-panel--credentials > form > .field {
+  gap: 8px;
+  margin-bottom: 0;
+}
+.account-auth > .auth-panel--credentials > .account-auth-tabs {
+  margin-bottom: 20px;
+}
+.account-auth > .auth-panel--credentials > h2 {
+  margin-bottom: 18px;
+}
+.account-auth > .auth-panel--credentials > .fine-print {
+  margin: 16px 0 0;
+}
+.account-auth > .auth-panel--credentials > .account-error,
+.account-auth > .auth-panel--credentials > [role='status'] {
+  margin: 12px 0 0;
+}
+.auth-forgot-password {
+  display: inline-block;
+  margin-top: 12px;
+}
 .auth-remember {
   display: flex;
   align-items: center;

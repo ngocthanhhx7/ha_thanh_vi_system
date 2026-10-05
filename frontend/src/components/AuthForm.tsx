@@ -127,7 +127,7 @@ export function AuthForm({
     }
   }
   return (
-    <div className="account-panel auth-panel">
+    <div className={`account-panel auth-panel${!step ? ' auth-panel--credentials' : ''}`}>
       {!step && (
         <div className="account-auth-tabs" aria-label="Tài khoản">
           {(['login', 'register'] as const).map((value) => (
@@ -266,7 +266,9 @@ export function AuthForm({
           </button>
         </div>
       ) : (
-        <Link to="/quen-mat-khau">Quên mật khẩu?</Link>
+        <Link className="auth-forgot-password" to="/quen-mat-khau">
+          Quên mật khẩu?
+        </Link>
       )}
       <p className="fine-print">
         Bạn vẫn có thể <Link to="/tra-cuu-don-hang">tra cứu đơn mua không cần tài khoản</Link> bằng

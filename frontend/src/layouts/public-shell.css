@@ -30,6 +30,50 @@ body {
   backdrop-filter: blur(16px) saturate(1.12);
   -webkit-backdrop-filter: blur(16px) saturate(1.12);
 }
+.header::before,
+.header::after {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  display: none;
+  height: calc(100% - 1px);
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+  content: '';
+  pointer-events: none;
+}
+.header::before {
+  left: 0;
+  width: 112px;
+  background-position: left center;
+  background-image: url('/brand/decor/header-left-lotus.svg');
+}
+.header::after {
+  right: 0;
+  width: 120px;
+  background-position: right center;
+  background-image: url('/brand/decor/header-right-cloud.svg');
+}
+.header > .brand,
+.header > .desktop-nav,
+.header > .header-actions {
+  z-index: 1;
+}
+@media (min-width: 1280px) {
+  header.header {
+    padding-left: max(5%, 132px);
+    padding-right: max(5%, 140px);
+  }
+  .header::before,
+  .header::after {
+    display: block;
+  }
+}
+@media (min-width: 1600px) {
+  header.header {
+    padding-inline: max(140px, calc((100vw - 1300px) / 2));
+  }
+}
 .desktop-nav a {
   transition: color 180ms ease;
 }

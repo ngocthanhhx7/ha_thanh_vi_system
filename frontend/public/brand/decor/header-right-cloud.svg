@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 112" fill="none">
+  <!-- Asymmetric vertical group of overlapping traditional Vietnamese cloud scrolls (vân mây cổ) cropped at right edge (x=120) -->
+
+  <defs>
+    <!-- Translucent cream/tan fills for layered cloud vellum depth -->
+    <linearGradient id="cloudGrad1" x1="120" y1="15" x2="65" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EEDFCA" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#FAF4EA" stop-opacity="0.72" />
+    </linearGradient>
+    <linearGradient id="cloudGrad2" x1="120" y1="52" x2="38" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E8D5BC" stop-opacity="0.94" />
+      <stop offset="100%" stop-color="#FAF3E6" stop-opacity="0.75" />
+    </linearGradient>
+    <linearGradient id="cloudGrad3" x1="120" y1="92" x2="60" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EBDBC5" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#FAF4EA" stop-opacity="0.72" />
+    </linearGradient>
+  </defs>
+
+  <!-- CLOUD CLUSTER 1 (TOP: y=0 to 38) -->
+  <!-- Top billowing cloud lobe fill -->
+  <path d="M120 0 H100 C88 0 80 8 78 17 C76 25 81 32 89 33 C96 34 102 30 102 24 C102 18 97 15 92 16 C88 17 87 20 89 22 C91 24 93 24 94 23 C95 21 94 20 93 20 M120 22 C114 23 107 27 106 34 C105 40 110 44 116 44 C118 44 120 42 120 40 Z" fill="url(#cloudGrad1)" />
+
+  <!-- Substantial warm gold contours (width 1.7) -->
+  <path d="M120 2 H100 C89 2 81 9 79 18 C77 26 82 33 90 34 C97 35 103 31 103 24 C103 17 97 14 91 15 C87 16 86 20 89 23 C91 25 94 25 95 23 C96 21 95 19 93 19" stroke="#C38A36" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Secondary underside curl of top cluster -->
+  <path d="M102 33 C101 38 105 44 112 44 C116 44 119 42 120 40" stroke="#C38A36" stroke-width="1.6" stroke-linecap="round" />
+
+  <!-- Burgundy inner detail in top spiral center eye -->
+  <path d="M90 19 C91 18 93 18 94 19 C95 21 94 22 93 22 C91 22 90 20 90 19 Z" fill="#791F2A" />
+
+  <!-- Cream highlight stroke tracing top lobe crest -->
+  <path d="M104 4 C94 5 86 11 83 18 C81 24 85 29 89 30" stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="1.2" stroke-linecap="round" />
+  <path d="M104 36 C105 40 109 42 114 42" stroke="#FFFFFF" stroke-opacity="0.8" stroke-width="1.0" stroke-linecap="round" />
+
+
+  <!-- CLOUD CLUSTER 2 (MAIN MIDDLE: y=24 to 84 - reaches boldly to x=40) -->
+  <!-- Billowing organic traditional cloud lobes fill -->
+  <path d="M120 38 C108 38 98 34 88 38 C75 42 68 50 58 52 C48 54 40 60 42 70 C44 80 54 84 64 82 C72 80 76 73 74 66 C72 59 64 57 59 60 C54 63 55 69 58 71 C61 73 64 72 65 69 C66 67 64 65 62 65 M88 38 C80 43 75 52 77 62 C79 71 87 76 96 75 C104 74 110 67 109 59 C108 51 100 47 94 49 C89 50 88 54 91 57 C93 59 96 59 98 57 C99 55 98 53 96 53 M120 58 C114 58 108 63 107 70 C106 77 111 82 118 82 H120 Z" fill="url(#cloudGrad2)" />
+
+  <!-- Substantial warm gold contours defining the traditional scalloped cloud heads -->
+  <!-- Primary sweeping contour into majestic inward swirl -->
+  <path d="M120 40 C109 40 99 36 89 40 C77 44 69 51 60 53 C50 55 42 61 44 71 C46 81 56 85 66 83 C74 81 78 74 76 67 C73 59 64 57 59 61 C54 64 55 70 59 72 C63 74 66 72 67 69 C67 67 65 65 63 65" stroke="#C38A36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Interlocking secondary swell & swirl -->
+  <path d="M88 40 C80 45 75 54 77 63 C79 73 88 77 97 76 C106 75 111 68 110 60 C109 52 101 48 95 50 C90 51 89 55 92 58 C94 60 97 60 99 58 C100 56 99 54 97 54" stroke="#C38A36" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Underside supporting cloud lobe -->
+  <path d="M103 72 C101 78 106 83 113 83 C116 83 118 82 120 81" stroke="#C38A36" stroke-width="1.5" stroke-linecap="round" />
+
+  <!-- Burgundy inner details (lacquer eyes and accent clefts) -->
+  <path d="M60 66 C61 65 63 65 64 66 C65 68 64 70 62 70 C60 70 59 68 60 66 Z" fill="#791F2A" />
+  <path d="M93 54 C94 53 96 53 97 55 C97 56 96 58 94 58 C93 58 92 56 93 54 Z" fill="#791F2A" />
+  <path d="M74 48 C71 46 67 49 69 52 C71 51 73 50 74 48 Z" fill="#791F2A" />
+
+  <!-- Cream highlight strokes on middle cloud lobes -->
+  <path d="M112 42 C102 42 94 38 85 41 C76 45 69 51 61 54 C53 56 46 62 47 69" stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="1.25" stroke-linecap="round" />
+  <path d="M84 49 C80 56 81 65 87 72 C93 75 99 74 105 71" stroke="#FFFFFF" stroke-opacity="0.8" stroke-width="1.05" stroke-linecap="round" />
+
+
+  <!-- CLOUD CLUSTER 3 (BOTTOM: y=70 to 112) -->
+  <!-- Bottom cloud lobe fill -->
+  <path d="M120 78 C110 78 101 82 94 88 C87 94 83 101 86 107 C89 112 96 112 102 110 C109 107 111 100 108 95 C104 90 98 90 95 93 C92 95 93 98 95 100 C97 101 99 100 100 98 C101 96 99 95 98 95 M120 100 C114 100 109 104 108 109 C108 111 110 112 112 112 H120 Z" fill="url(#cloudGrad3)" />
+
+  <!-- Substantial warm gold contours -->
+  <path d="M120 80 C111 80 102 84 95 90 C88 96 84 103 87 108 C90 112 97 112 103 110 C110 107 112 100 109 95 C105 89 98 89 95 92 C92 94 92 98 95 100 C97 102 100 101 101 98 C102 96 100 94 98 94" stroke="#C38A36" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M111 103 C108 106 107 109 108 112" stroke="#C38A36" stroke-width="1.4" stroke-linecap="round" />
+
+  <!-- Burgundy inner detail in bottom spiral eye -->
+  <path d="M95 94 C96 93 98 94 98 95 C98 97 97 98 96 98 C94 98 94 96 95 94 Z" fill="#791F2A" />
+
+  <!-- Cream highlight on bottom cloud lobe -->
+  <path d="M114 82 C106 82 99 86 94 91 C89 96 86 103 88 107" stroke="#FFFFFF" stroke-opacity="0.88" stroke-width="1.15" stroke-linecap="round" />
+
+
+  <!-- SPARSE GOLD DOTS & AUSPICIOUS DEW (Traditional Vietnamese scroll accents) -->
+  <circle cx="72" cy="26" r="1.7" fill="#C38A36" />
+  <circle cx="72" cy="26" r="0.8" fill="#FFFDF8" />
+
+  <circle cx="36" cy="58" r="1.9" fill="#C38A36" />
+  <circle cx="36" cy="58" r="0.9" fill="#FFFDF8" />
+
+  <circle cx="48" cy="84" r="1.6" fill="#C38A36" />
+  <circle cx="48" cy="84" r="0.7" fill="#FFFDF8" />
+
+  <circle cx="76" cy="85" r="1.4" fill="#C38A36" />
+  <circle cx="76" cy="85" r="0.6" fill="#FFFDF8" />
+
+  <circle cx="78" cy="108" r="1.5" fill="#C38A36" />
+  <circle cx="78" cy="108" r="0.7" fill="#FFFDF8" />
+</svg>

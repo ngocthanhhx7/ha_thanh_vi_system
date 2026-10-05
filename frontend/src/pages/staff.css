@@ -975,6 +975,10 @@
   font-size: clamp(20px, 2vw, 26px);
   font-weight: 500;
 }
+.admin-account-page-heading h2 {
+  font-family: var(--font-display, Georgia, serif);
+  letter-spacing: 0;
+}
 .admin-account-page-heading > div > p:last-child,
 .admin-appeal-overview > div:first-child > p:last-child,
 .admin-staff-create-heading > p {

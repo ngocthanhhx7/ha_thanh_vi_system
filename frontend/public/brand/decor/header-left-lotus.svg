@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112" fill="none">
+  <!-- Corner decorative panel in deep burgundy (#461F21) with an organic curved inner edge -->
+  <path d="M0 0 H88 C80 14 74 26 66 40 C58 56 56 68 63 82 C69 94 75 104 78 112 H0 V0 Z" fill="#461F21" />
+
+  <!-- Subtle warm gold inner contour along the panel edge -->
+  <path d="M86 0 C78 14 72 26 64 40 C56 56 54 68 61 82 C67 94 73 104 76 112" stroke="#C38A36" stroke-opacity="0.8" stroke-width="1.3" stroke-linecap="round" />
+  <path d="M82 0 C74 15 68 27 60 41 C52 57 50 69 57 83 C63 95 69 105 72 112" stroke="#C38A36" stroke-opacity="0.32" stroke-width="0.8" stroke-dasharray="2 3" />
+
+  <!-- Lotus Stem: graceful curved stem with warm gold linework -->
+  <path d="M12 112 C22 96 32 80 42 66 C46 60 48 55 49 50" stroke="#C38A36" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M12 112 C22 96 32 80 42 66 C46 60 48 55 49 50" stroke="#E2B25E" stroke-opacity="0.75" stroke-width="0.9" stroke-linecap="round" />
+  <!-- Stem thorns / nodes -->
+  <path d="M22 97 L18 96 M30 85 L26 83 M38 73 L42 70" stroke="#C38A36" stroke-width="1.4" stroke-linecap="round" />
+
+  <!-- Muted Olive Leaves outlined in warm gold with delicate inner veins -->
+  <!-- Leaf 1: Lower left broad lotus pad curving outward -->
+  <path d="M24 96 C13 97 5 91 3 80 C12 78 21 82 28 89 Z" fill="#586746" stroke="#C38A36" stroke-width="1.35" stroke-linejoin="round" />
+  <path d="M5 81 C14 83 20 86 26 92 M11 81 C15 85 18 89 21 92 M7 87 C12 88 17 90 22 94" stroke="#C38A36" stroke-opacity="0.7" stroke-width="0.8" stroke-linecap="round" />
+
+  <!-- Leaf 2: Right-extending folded leaf -->
+  <path d="M35 79 C47 85 58 84 69 76 C60 72 50 71 39 74 Z" fill="#526141" stroke="#C38A36" stroke-width="1.35" stroke-linejoin="round" />
+  <path d="M38 75 C48 74 58 75 66 76 M46 76 C52 79 58 81 63 80" stroke="#C38A36" stroke-opacity="0.75" stroke-width="0.8" stroke-linecap="round" />
+
+  <!-- Leaf 3: Upper-right cupped lotus leaf supporting the bloom -->
+  <path d="M43 66 C53 65 63 61 71 52 C64 49 54 51 46 58 Z" fill="#64754F" stroke="#C38A36" stroke-width="1.35" stroke-linejoin="round" />
+  <path d="M47 59 C55 55 62 53 69 53" stroke="#C38A36" stroke-opacity="0.8" stroke-width="0.8" stroke-linecap="round" />
+
+  <!-- Leaf 4: Left-curling young leaf blade -->
+  <path d="M29 83 C20 80 14 73 13 63 C21 66 27 73 33 79 Z" fill="#5D6D49" stroke="#C38A36" stroke-width="1.35" stroke-linejoin="round" />
+  <path d="M15 66 C20 71 25 76 31 80" stroke="#C38A36" stroke-opacity="0.7" stroke-width="0.8" stroke-linecap="round" />
+
+  <!-- Calyx / Receptacle base beneath flower -->
+  <path d="M43 51 C46 54 52 54 55 51 C53 48 45 48 43 51 Z" fill="#791F2A" stroke="#C38A36" stroke-width="1.3" />
+
+  <!-- LAYERED LOTUS BLOOM -->
+  <!-- Layer 1: Back tier spreading petals (deep crimson / wine red) -->
+  <!-- Far left outer petal -->
+  <path d="M43 47 C30 43 20 32 20 20 C31 22 41 32 45 42 Z" fill="#7D1D27" stroke="#C38A36" stroke-width="1.4" stroke-linejoin="round" />
+  <path d="M22 22 C29 27 36 34 43 43" stroke="#FBF5E9" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" />
+  <path d="M25 28 C30 32 35 37 40 43" stroke="#FBF5E9" stroke-opacity="0.5" stroke-width="0.7" stroke-linecap="round" />
+
+  <!-- Far right outer petal -->
+  <path d="M55 47 C68 43 78 32 78 20 C67 22 57 32 53 42 Z" fill="#7D1D27" stroke="#C38A36" stroke-width="1.4" stroke-linejoin="round" />
+  <path d="M76 22 C69 27 62 34 55 43" stroke="#FBF5E9" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" />
+  <path d="M73 28 C68 32 63 37 58 43" stroke="#FBF5E9" stroke-opacity="0.5" stroke-width="0.7" stroke-linecap="round" />
+
+  <!-- Center-top back petal -->
+  <path d="M43 43 C41 29 44 16 49 8 C54 16 57 29 55 43 Z" fill="#92252E" stroke="#C38A36" stroke-width="1.4" stroke-linejoin="round" />
+  <path d="M49 10 V40" stroke="#FBF5E9" stroke-opacity="0.95" stroke-width="1.1" stroke-linecap="round" />
+  <path d="M46 16 C47 22 48 30 48 37" stroke="#FBF5E9" stroke-opacity="0.55" stroke-width="0.7" stroke-linecap="round" />
+  <path d="M52 16 C51 22 50 30 50 37" stroke="#FBF5E9" stroke-opacity="0.55" stroke-width="0.7" stroke-linecap="round" />
+
+  <!-- Layer 2: Mid-tier overlapping petals (warm rich coral red) -->
+  <!-- Left mid-petal -->
+  <path d="M44 46 C34 38 29 25 34 14 C41 21 47 32 48 43 Z" fill="#B74737" stroke="#C38A36" stroke-width="1.45" stroke-linejoin="round" />
+  <path d="M35 17 C39 24 43 33 46 42" stroke="#FBF5E9" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" />
+  <path d="M33 24 C37 28 41 34 43 40" stroke="#FBF5E9" stroke-opacity="0.5" stroke-width="0.7" stroke-linecap="round" />
+
+  <!-- Right mid-petal -->
+  <path d="M54 46 C64 38 69 25 64 14 C57 21 51 32 50 43 Z" fill="#B74737" stroke="#C38A36" stroke-width="1.45" stroke-linejoin="round" />
+  <path d="M63 17 C59 24 55 33 52 42" stroke="#FBF5E9" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" />
+  <path d="M65 24 C61 28 57 34 55 40" stroke="#FBF5E9" stroke-opacity="0.5" stroke-width="0.7" stroke-linecap="round" />
+
+  <!-- Mid-back upright petal left -->
+  <path d="M44 47 C42 34 45 22 47 16 C50 22 51 34 49 46 Z" fill="#C5503D" stroke="#C38A36" stroke-width="1.4" stroke-linejoin="round" />
+  <path d="M47 18 V44" stroke="#FBF5E9" stroke-opacity="0.9" stroke-width="0.9" stroke-linecap="round" />
+
+  <!-- Mid-back upright petal right -->
+  <path d="M54 47 C56 34 53 22 51 16 C48 22 47 34 49 46 Z" fill="#C5503D" stroke="#C38A36" stroke-width="1.4" stroke-linejoin="round" />
+  <path d="M51 18 V44" stroke="#FBF5E9" stroke-opacity="0.9" stroke-width="0.9" stroke-linecap="round" />
+
+  <!-- Outer flank petals -->
+  <path d="M42 49 C30 46 23 39 25 29 C32 33 39 40 44 47 Z" fill="#A83931" stroke="#C38A36" stroke-width="1.35" stroke-linejoin="round" />
+  <path d="M26 31 C32 35 37 40 42 46" stroke="#FBF5E9" stroke-opacity="0.8" stroke-width="0.8" stroke-linecap="round" />
+
+  <path d="M56 49 C68 46 75 39 73 29 C66 33 59 40 54 47 Z" fill="#A83931" stroke="#C38A36" stroke-width="1.35" stroke-linejoin="round" />
+  <path d="M72 31 C66 35 61 40 56 46" stroke="#FBF5E9" stroke-opacity="0.8" stroke-width="0.8" stroke-linecap="round" />
+
+  <!-- Golden Center Carpel / Stamen core -->
+  <ellipse cx="49" cy="35" rx="7.5" ry="6" fill="#E2B25E" stroke="#C38A36" stroke-width="1.3" />
+  <!-- Stamen seed dots on carpel -->
+  <circle cx="46.5" cy="33" r="0.9" fill="#8C5E1E" />
+  <circle cx="49" cy="32" r="0.9" fill="#8C5E1E" />
+  <circle cx="51.5" cy="33" r="0.9" fill="#8C5E1E" />
+  <circle cx="45.5" cy="36" r="0.9" fill="#8C5E1E" />
+  <circle cx="49" cy="35.5" r="0.9" fill="#8C5E1E" />
+  <circle cx="52.5" cy="36" r="0.9" fill="#8C5E1E" />
+  <circle cx="47.5" cy="38" r="0.9" fill="#8C5E1E" />
+  <circle cx="50.5" cy="38" r="0.9" fill="#8C5E1E" />
+
+  <!-- Layer 3: Foreground cupping petals cradling the gold center (luminous coral) -->
+  <!-- Left foreground cupping petal -->
+  <path d="M42 49 C36 45 35 36 42 30 C45 34 47 43 45 50 Z" fill="#D35743" stroke="#C38A36" stroke-width="1.4" stroke-linejoin="round" />
+  <path d="M39 33 C42 37 44 43 44 48" stroke="#FBF5E9" stroke-opacity="0.9" stroke-width="0.9" stroke-linecap="round" />
+
+  <!-- Right foreground cupping petal -->
+  <path d="M56 49 C62 45 63 36 56 30 C53 34 51 43 53 50 Z" fill="#D35743" stroke="#C38A36" stroke-width="1.4" stroke-linejoin="round" />
+  <path d="M59 33 C56 37 54 43 54 48" stroke="#FBF5E9" stroke-opacity="0.9" stroke-width="0.9" stroke-linecap="round" />
+
+  <!-- Center foreground cupping petal -->
+  <path d="M43 50 C40 44 44 37 49 36 C54 37 58 44 55 50 C52 52 46 52 43 50 Z" fill="#E2654F" stroke="#C38A36" stroke-width="1.45" stroke-linejoin="round" />
+  <path d="M49 37 V49" stroke="#FBF5E9" stroke-opacity="0.95" stroke-width="1.1" stroke-linecap="round" />
+  <path d="M45 40 C46 43 48 47 48 48" stroke="#FBF5E9" stroke-opacity="0.65" stroke-width="0.75" stroke-linecap="round" />
+  <path d="M53 40 C52 43 50 47 50 48" stroke="#FBF5E9" stroke-opacity="0.65" stroke-width="0.75" stroke-linecap="round" />
+
+  <!-- Small Gold Star in the burgundy field -->
+  <path d="M19 23 Q19 29 13 29 Q19 29 19 35 Q19 29 25 29 Q19 29 19 23 Z" fill="#E2B25E" stroke="#C38A36" stroke-width="0.7" />
+  <circle cx="19" cy="29" r="1.1" fill="#FFF9ED" />
+  <!-- Small micro star accent -->
+  <circle cx="12" cy="44" r="1.2" fill="#E2B25E" stroke="#C38A36" stroke-width="0.4" />
+</svg>

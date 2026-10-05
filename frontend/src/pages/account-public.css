@@ -102,6 +102,62 @@
   letter-spacing: -0.025em;
 }
 
+/* Only the account credentials view: shared account and OTP forms retain their spacing. */
+.account-auth:has(> .auth-panel--credentials) {
+  min-height: 0;
+  align-items: start;
+  gap: 32px;
+  padding: 32px;
+}
+
+.account-auth > .auth-panel--credentials {
+  margin-bottom: 0;
+  padding: 32px;
+}
+
+.account-auth:has(> .auth-panel--credentials) > .account-welcome {
+  align-self: stretch;
+  justify-content: flex-start;
+  min-height: 0;
+  padding: 32px;
+}
+
+.account-auth:has(> .auth-panel--credentials) .account-welcome .eyebrow {
+  margin-bottom: 0;
+}
+
+.account-auth:has(> .auth-panel--credentials) .account-welcome h1 {
+  max-width: 14ch;
+  margin-block: 16px;
+  font-size: clamp(36px, 3.2vw, 46px);
+}
+
+.account-auth:has(> .auth-panel--credentials) .account-welcome-city {
+  white-space: nowrap;
+}
+
+.account-auth:has(> .auth-panel--credentials) .account-welcome p:not(.eyebrow) {
+  margin-bottom: 8px;
+}
+
+.account-auth:has(> .auth-panel--credentials) .account-welcome .text-link {
+  margin-top: 8px;
+}
+
+.account-welcome-visual {
+  display: none;
+}
+
+.account-auth:has(> .auth-panel--credentials) .account-welcome-visual {
+  display: block;
+  flex: 1;
+  min-height: 190px;
+  margin-top: 26px;
+  border: 1px solid rgba(160, 111, 66, 0.24);
+  border-radius: 18px 18px 18px 4px;
+  background: #e6d4b7 url('/brand/pastry.webp') center 58% / cover no-repeat;
+}
+
 .account-heading {
   align-items: flex-end;
   padding: 0 0 26px;
@@ -461,6 +517,26 @@
     border-radius: 18px;
   }
 
+  .account-auth:has(> .auth-panel--credentials) {
+    gap: 20px;
+    padding: 24px;
+  }
+
+  .account-auth > .auth-panel--credentials,
+  .account-auth:has(> .auth-panel--credentials) > .account-welcome {
+    padding: 24px;
+  }
+
+  .account-auth:has(> .auth-panel--credentials) .account-welcome h1 {
+    max-width: 18ch;
+    margin-block: 12px;
+    font-size: clamp(30px, 6vw, 38px);
+  }
+
+  .account-auth:has(> .auth-panel--credentials) .account-welcome-visual {
+    display: none;
+  }
+
   .account-heading {
     padding-bottom: 20px;
   }
@@ -507,6 +583,15 @@
 
   .account-auth > :last-child {
     padding: 20px 16px;
+  }
+
+  .account-auth:has(> .auth-panel--credentials) {
+    padding-inline: 16px;
+  }
+
+  .account-auth > .auth-panel--credentials,
+  .account-auth:has(> .auth-panel--credentials) > .account-welcome {
+    padding: 20px;
   }
 
   .auth-reset,

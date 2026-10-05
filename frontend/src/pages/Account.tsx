@@ -217,7 +217,7 @@ export function Account() {
           <h1>
             Chào bạn,
             <br />
-            người thương vị Hà Nội.
+            người thương vị <span className="account-welcome-city">Hà Nội.</span>
           </h1>
           <p>
             Giữ lại những thức quà yêu thích, dõi theo đơn hàng và nhận những ưu đãi dành riêng cho
@@ -226,6 +226,7 @@ export function Account() {
           <Link className="text-link" to="/san-pham">
             Khám phá thức quà <ArrowUpRight size={16} />
           </Link>
+          <div className="account-welcome-visual" aria-hidden="true" />
         </div>
         <AuthForm
           initialError={error}

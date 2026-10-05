@@ -1,0 +1,51 @@
+{
+  "brand": {
+    "name": "Hà Thành Vị",
+    "source": "Thông tin công khai của thương hiệu; danh mục hiện tại là nguồn sản phẩm và giá chính thức."
+  },
+  "categories": {
+    "traditional": {
+      "name": "Bánh chả truyền thống",
+      "packaging": "Túi zip 350g",
+      "flavor": "Lá chanh, ngọt dịu, béo bùi"
+    },
+    "chocolate": {
+      "name": "Bánh chả socola trứng muối",
+      "packaging": "Túi zip 350g",
+      "flavor": "Socola ngọt kết hợp trứng muối mặn béo"
+    },
+    "matcha": {
+      "name": "Bánh chả matcha trứng muối",
+      "packaging": "Túi zip 350g",
+      "flavor": "Matcha thanh nhẹ kết hợp trứng muối béo bùi"
+    },
+    "gifts": {
+      "items": [
+        {
+          "name": "Nhã Sắc Hà Thành",
+          "tier": "Tiêu chuẩn",
+          "tagline": "Gánh chút hương Hà Thành, gửi trao chút tình."
+        },
+        {
+          "name": "Nhã Vị Kinh Kỳ",
+          "tier": "Cao cấp",
+          "tagline": "Gánh vị quê nhà, trao trọn tình thân."
+        }
+      ]
+    },
+    "tea": {
+      "pairing": "Có thể gợi ý thưởng thức bánh chả cùng trà như một lựa chọn khẩu vị; không cam kết tác dụng sức khỏe."
+    }
+  },
+  "unknownFacts": [
+    "Người sáng lập và mốc lịch sử chưa công bố",
+    "Bảng thành phần đầy đủ, thông tin dị ứng và dinh dưỡng",
+    "Hạn sử dụng",
+    "Thành phần và trọng lượng chính xác của set quà",
+    "Phí vận chuyển và chính sách đổi trả cụ thể"
+  ],
+  "provenance": {
+    "productFacts": "Chủ thương hiệu xác nhận trong phiên làm việc 2026-10-04",
+    "catalog": "ContentService.getPublicContent lấy danh mục công khai hiện tại mỗi lượt chat"
+  }
+}

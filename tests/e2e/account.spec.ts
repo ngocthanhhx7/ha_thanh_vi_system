@@ -27,6 +27,7 @@ test('customer signs in, adds a default address, sees it at checkout and signs o
     expect(route.request().postDataJSON()).toEqual({
       email: user.email,
       password: 'customerPassword123',
+      rememberDevice: false,
     });
     signedIn = true;
     return route.fulfill(json({ user }));
@@ -60,7 +61,13 @@ test('customer signs in, adds a default address, sees it at checkout and signs o
   if (await page.getByRole('button', { name: 'Mở menu', exact: true }).isVisible()) {
     await page.getByRole('button', { name: 'Mở menu', exact: true }).click();
     await page.getByRole('dialog').getByRole('link', { name: 'Tài khoản', exact: true }).click();
-  } else await page.getByRole('link', { name: 'Tài khoản', exact: true }).click();
+  } else {
+    await page.getByRole('button', { name: 'Mở menu tài khoản', exact: true }).click();
+    await page
+      .getByRole('navigation', { name: 'Truy cập tài khoản' })
+      .getByRole('link', { name: 'Đăng nhập hoặc tạo tài khoản' })
+      .click();
+  }
   await page.getByLabel('Email', { exact: true }).fill(user.email);
   await page.getByLabel('Mật khẩu', { exact: true }).fill('customerPassword123');
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).last().click();
@@ -76,7 +83,7 @@ test('customer signs in, adds a default address, sees it at checkout and signs o
   await expect(page.locator('.account-content')).toContainText('Người nhận quà');
   await page.goto('/san-pham');
   await page
-    .getByRole('button', { name: 'Thêm vào giỏ Bánh chả truyền thống', exact: true })
+    .getByRole('button', { name: 'Thêm vào giỏ ' + content.products[0].name, exact: true })
     .click();
   await page.goto('/thanh-toan');
   await expect(page.getByLabel('Họ và tên người nhận')).toHaveValue('Người nhận quà');

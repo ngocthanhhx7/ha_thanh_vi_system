@@ -1,14 +1,17 @@
-import { ArrowDown, ArrowRight, Flower2, Gift, Coffee } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowDown, ArrowRight, Flower2, Gift, Coffee, Pause, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useShop } from '../hooks/useShop';
 import { ProductCard, TextLink } from '../components/ProductCard';
+import './home-public.css';
 export function Home() {
+  const [valuesRibbonPaused, setValuesRibbonPaused] = useState(false);
   const {
     content: { site, products },
   } = useShop();
   return (
     <>
-      <section className="hero">
+      <section className="hero home-hero">
         <div className="hero-copy">
           <div className="eyebrow">
             <span className="tiny-line" />
@@ -76,23 +79,53 @@ export function Home() {
           CHẬM MỘT CHÚT, THƯƠNG NHIỀU HƠN
         </a>
       </section>
-      <div className="values-ribbon">
-        <span>
-          <Flower2 />
-          Hương vị Hà Nội
-        </span>
-        <i />
-        <span>
-          <Coffee />
-          Thức quà cho mỗi ngày
-        </span>
-        <i />
-        <span>
-          <Gift />
-          Trao gửi điều thân thương
-        </span>
+      <div
+        className={'home-values-ribbon' + (valuesRibbonPaused ? ' is-paused' : '')}
+        role="region"
+        aria-label="Điều làm nên Hà Thành Vị"
+      >
+        <div className="home-values-ribbon-viewport">
+          <div className="home-values-ribbon-track">
+            {[0, 1].map((copy) => (
+              <div
+                className="home-values-ribbon-group"
+                aria-hidden={copy === 1 || undefined}
+                key={copy}
+              >
+                <span className="home-values-ribbon-item">
+                  <Flower2 aria-hidden="true" />
+                  <span className="home-values-ribbon-item-label">Hương vị Hà Nội</span>
+                </span>
+                <i aria-hidden="true" />
+                <span className="home-values-ribbon-item">
+                  <Coffee aria-hidden="true" />
+                  <span className="home-values-ribbon-item-label">Thức quà cho mỗi ngày</span>
+                </span>
+                <i aria-hidden="true" />
+                <span className="home-values-ribbon-item">
+                  <Gift aria-hidden="true" />
+                  <span className="home-values-ribbon-item-label">Trao gửi điều thân thương</span>
+                </span>
+                <i aria-hidden="true" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <button
+          className="home-values-ribbon-toggle"
+          type="button"
+          aria-label={valuesRibbonPaused ? 'Tiếp tục dải thông điệp' : 'Tạm dừng dải thông điệp'}
+          aria-pressed={valuesRibbonPaused}
+          onClick={() => setValuesRibbonPaused((paused) => !paused)}
+        >
+          {valuesRibbonPaused ? (
+            <Play size={14} aria-hidden="true" />
+          ) : (
+            <Pause size={14} aria-hidden="true" />
+          )}
+        </button>
       </div>
-      <section className="section intro-section" id="loi-ngo">
+      <section className="section intro-section home-intro" id="loi-ngo">
         <div>
           <p className="eyebrow">CHÚT TÂM TÌNH TỪ HÀ THÀNH VỊ</p>
           <h2>
@@ -113,7 +146,7 @@ export function Home() {
           <TextLink to="/cau-chuyen">Đọc câu chuyện của chúng mình</TextLink>
         </div>
       </section>
-      <section className="section collection-section">
+      <section className="section collection-section home-collection">
         <div className="section-heading">
           <div>
             <p className="eyebrow">THỨC QUÀ ĐƯỢC CHĂM CHÚT</p>
@@ -135,7 +168,7 @@ export function Home() {
           tế sẽ được cập nhật.
         </p>
       </section>
-      <section className="story-feature">
+      <section className="story-feature home-story-feature">
         <div className="story-feature-art">
           <img className="story-pattern" src="/brand/pattern.webp" alt="" />
           <img
@@ -164,7 +197,7 @@ export function Home() {
           </Link>
         </div>
       </section>
-      <section className="section gift-callout">
+      <section className="section gift-callout home-gift-callout">
         <img src="/brand/ornament.webp" alt="" />
         <p className="eyebrow">MÓN QUÀ NHỎ, TẤM LÒNG LỚN</p>
         <h2>

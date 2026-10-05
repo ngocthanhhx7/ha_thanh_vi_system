@@ -15,6 +15,12 @@ Các tài khoản admin, staff, customer cùng nằm trong collection `users`, p
 
 GET/PUT `/api/admin/content` dùng cookie admin, trả/thay thế toàn bộ site/products sau khi kiểm tra schema. Giá dùng số nguyên VND; `null` vẫn hiển thị sản phẩm nhưng không cho mua. Chỉ sử dụng ảnh `/brand/...` hợp lệ hoặc URL HTTP(S) được kiểm tra. Khi sửa, đọc bản mới nhất trước khi lưu. Nội dung trong MongoDB có ưu tiên so với file seed; seed chỉ khởi tạo khi chưa có tài liệu.
 
+## Thông tin chi tiết sản phẩm
+
+CMS cho phép cập nhật thông điệp, đóng gói, danh sách món trong pack (mỗi dòng một món và số lượng), thành phần, ảnh bảng thành phần, dị ứng và bảo quản. Các trường này không bắt buộc để tương thích nội dung cũ; trang chi tiết hiển thị thông báo đang cập nhật khi chưa có thông tin. Ảnh bảng thành phần chỉ sử dụng nhãn chính thức, không tạo thông số dinh dưỡng hoặc thành phần bằng AI. Ảnh sản phẩm minh họa AI phải tiếp tục ghi rõ là hình minh họa.
+
+Danh mục có ba túi zip 350g: truyền thống, socola trứng muối, matcha trứng muối. Hai set là **Nhã Sắc Hà Thành** (thường) và **Nhã Vị Kinh Kỳ** (cao cấp). Danh sách trong set và bảng thành phần chờ shop xác nhận; giá hiện tại là giá tạm.
+
 ## Đơn, vận chuyển và hỗ trợ
 
 Đơn đi theo pending → confirmed → shipping → delivered; khiếu nại trả hàng chuyển return_requested → returned. Có thể hủy đơn pending/confirmed khi điều kiện thanh toán cho phép. COD chỉ xác nhận đã thu ở delivered. Đơn payOS chưa được webhook xác nhận paid không được xuất/giao hàng. Chỉ admin ghi nhận refund_pending/refunded sau đối soát và hoàn tiền thực tế; thao tác trên web chỉ ghi nhận trạng thái, không chuyển tiền.

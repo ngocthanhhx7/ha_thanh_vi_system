@@ -1,9 +1,26 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { customerApi, type CustomerUser, type SupportTicket } from '../services/customerApi';
+import { chatApi, type ChatHandoff } from '../services/chatApi';
 import { request } from '../services/api';
-import { type Order, orderStatuses } from '../constants/commerce';
+import { priceLabel } from '../utils/format';
+import { type Order, orderStatuses, paymentStatuses } from '../constants/commerce';
 import { OrderSummary } from './Orders';
+import { AdminAccountManagement } from '../components/AdminAccountManagement';
+import { useNotificationCenter } from '../components/NotificationCenter';
+import { AdminSystemLogs, WorkspaceFrame, WorkspaceNotifications } from '../components/Workspace';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import './staff.css';
 
 type Campaign = {
@@ -37,8 +54,43 @@ const stateLabels: Record<string, string> = {
   return_requested: 'Yêu cầu trả hàng',
   returned: 'Đã trả hàng',
 };
+type OrderQueue =
+  'needs_action' | 'awaiting_payment' | 'fulfillment' | 'shipping' | 'closed' | 'all';
+function orderPriority(order: Order) {
+  if (order.status === 'return_requested') return { label: 'Yêu cầu trả hàng', tone: 'urgent' };
+  if (
+    order.payOsException ||
+    order.paymentReviewAt ||
+    ['refund_pending', 'failed'].includes(order.paymentStatus)
+  )
+    return { label: 'Cần đối soát', tone: 'urgent' };
+  if (
+    order.status === 'pending' &&
+    (order.paymentMethod === 'cod' || order.paymentStatus === 'paid')
+  )
+    return { label: 'Cần xác nhận', tone: 'action' };
+  if (order.status === 'confirmed') return { label: 'Cần chuẩn bị', tone: 'action' };
+  if (
+    order.status === 'pending' &&
+    order.paymentMethod === 'payos' &&
+    order.paymentStatus !== 'paid'
+  )
+    return { label: 'Chờ khách thanh toán', tone: 'waiting' };
+  if (order.status === 'shipping') return { label: 'Đang giao', tone: 'shipping' };
+  return { label: 'Đã hoàn tất', tone: 'closed' };
+}
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : 'Chưa thể thực hiện. Vui lòng thử lại.';
+type StaffDashboardData = {
+  orders: {
+    pending: number;
+    returnRequested: number;
+    byStatus: { status: string; count: number }[];
+    daily: { date: string; orders: number; paid: number }[];
+  };
+  support: { open: number };
+  chat: { waiting: number; assignedToMe: number };
+};
 
 function ManagedOrder({
   order,
@@ -49,6 +101,7 @@ function ManagedOrder({
   onSaved: () => void;
   isAdmin: boolean;
 }) {
+  const { notify } = useNotificationCenter();
   const [status, setStatus] = useState(order.status);
   const [carrier, setCarrier] = useState(order.carrier || '');
   const [tracking, setTracking] = useState(order.trackingNumber || '');
@@ -72,6 +125,13 @@ function ManagedOrder({
           ...(paid && order.paymentMethod === 'cod' ? { paymentStatus: 'paid' } : {}),
           ...(refund ? { paymentStatus: refund } : {}),
         }),
+      });
+      notify({
+        title: 'Đơn hàng đã được cập nhật',
+        message: `${order.code} · ${stateLabels[status] || status}`,
+        href: '/quan-tri?tab=orders',
+        actionLabel: 'Quay lại hàng đợi',
+        tone: 'success',
       });
       onSaved();
     } catch (e) {
@@ -97,93 +157,99 @@ function ManagedOrder({
           Đơn VietQR cần xác nhận thanh toán trước khi chuẩn bị hoặc giao hàng.
         </p>
       )}
-      <form onSubmit={save} className="staff-order-form">
-        <label className="field">
-          Bước xử lý
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value={order.status}>{stateLabels[order.status]}</option>
-            {(nextStates[order.status] || [])
-              .filter(
-                (s) =>
-                  order.paymentMethod !== 'payos' ||
-                  order.paymentStatus === 'paid' ||
-                  !['confirmed', 'shipping', 'delivered'].includes(s),
-              )
-              .map((s) => (
-                <option key={s} value={s}>
-                  {stateLabels[s]}
-                </option>
-              ))}
-          </select>
-        </label>
-        <label className="field">
-          Đơn vị vận chuyển
-          <input
-            value={carrier}
-            onChange={(e) => setCarrier(e.target.value)}
-            maxLength={80}
-            placeholder="GHN, GHTK hoặc đối tác khác"
-          />
-        </label>
-        <label className="field">
-          Mã vận đơn
-          <input
-            value={tracking}
-            onChange={(e) => setTracking(e.target.value)}
-            maxLength={100}
-            placeholder="Mã do đối tác cấp"
-          />
-        </label>
-        <label className="field">
-          Cập nhật hành trình
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={500}
-            rows={2}
-            placeholder="Thông tin thực tế gửi đến người mua"
-          />
-        </label>
-        {order.paymentMethod === 'cod' &&
-          status === 'delivered' &&
-          order.paymentStatus !== 'paid' && (
-            <label className="consent">
-              <input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} />
-              Đã đối soát và thu đủ tiền COD
-            </label>
+      {order.isOwnOrder ? (
+        <p className="notice" role="note">
+          Bạn không thể xử lý đơn hàng do chính mình đặt.
+        </p>
+      ) : (
+        <form onSubmit={save} className="staff-order-form">
+          <label className="field">
+            Bước xử lý
+            <select value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value={order.status}>{stateLabels[order.status]}</option>
+              {(nextStates[order.status] || [])
+                .filter(
+                  (s) =>
+                    order.paymentMethod !== 'payos' ||
+                    order.paymentStatus === 'paid' ||
+                    !['confirmed', 'shipping', 'delivered'].includes(s),
+                )
+                .map((s) => (
+                  <option key={s} value={s}>
+                    {stateLabels[s]}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label className="field">
+            Đơn vị vận chuyển
+            <input
+              value={carrier}
+              onChange={(e) => setCarrier(e.target.value)}
+              maxLength={80}
+              placeholder="GHN, GHTK hoặc đối tác khác"
+            />
+          </label>
+          <label className="field">
+            Mã vận đơn
+            <input
+              value={tracking}
+              onChange={(e) => setTracking(e.target.value)}
+              maxLength={100}
+              placeholder="Mã do đối tác cấp"
+            />
+          </label>
+          <label className="field">
+            Cập nhật hành trình
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={500}
+              rows={2}
+              placeholder="Thông tin thực tế gửi đến người mua"
+            />
+          </label>
+          {order.paymentMethod === 'cod' &&
+            status === 'delivered' &&
+            order.paymentStatus !== 'paid' && (
+              <label className="consent">
+                <input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} />
+                Đã đối soát và thu đủ tiền COD
+              </label>
+            )}
+          {isAdmin &&
+            (order.status === 'returned' ||
+              status === 'returned' ||
+              (order.status === 'cancelled' &&
+                order.paymentMethod === 'payos' &&
+                order.paymentStatus === 'refund_pending')) &&
+            ['paid', 'refund_pending'].includes(order.paymentStatus) && (
+              <label className="field">
+                Đối soát hoàn tiền
+                <select value={refund} onChange={(event) => setRefund(event.target.value)}>
+                  <option value="">Giữ trạng thái hiện tại</option>
+                  {order.paymentStatus === 'paid' && (
+                    <option value="refund_pending">Ghi nhận cần hoàn tiền</option>
+                  )}
+                  {order.paymentStatus === 'refund_pending' && (
+                    <option value="refunded">Đã chuyển tiền hoàn thực tế</option>
+                  )}
+                </select>
+                <small>
+                  Chỉ xác nhận sau khi kiểm tra thực tế; thao tác này không chuyển tiền tự động.
+                </small>
+              </label>
+            )}
+          <button className="button" disabled={busy}>
+            {busy ? 'Đang lưu…' : 'Cập nhật đơn'}
+          </button>
+          {error && (
+            <p role="alert" className="form-status">
+              {error}
+            </p>
           )}
-        {isAdmin &&
-          (order.status === 'returned' ||
-            status === 'returned' ||
-            (order.status === 'cancelled' &&
-              order.paymentMethod === 'payos' &&
-              order.paymentStatus === 'refund_pending')) &&
-          ['paid', 'refund_pending'].includes(order.paymentStatus) && (
-            <label className="field">
-              Đối soát hoàn tiền
-              <select value={refund} onChange={(event) => setRefund(event.target.value)}>
-                <option value="">Giữ trạng thái hiện tại</option>
-                {order.paymentStatus === 'paid' && (
-                  <option value="refund_pending">Ghi nhận cần hoàn tiền</option>
-                )}
-                {order.paymentStatus === 'refund_pending' && (
-                  <option value="refunded">Đã chuyển tiền hoàn thực tế</option>
-                )}
-              </select>
-              <small>
-                Chỉ xác nhận sau khi kiểm tra thực tế; thao tác này không chuyển tiền tự động.
-              </small>
-            </label>
-          )}
-        <button className="button" disabled={busy}>
-          {busy ? 'Đang lưu…' : 'Cập nhật đơn'}
-        </button>
-        {error && (
-          <p role="alert" className="form-status">
-            {error}
-          </p>
-        )}
-      </form>
+        </form>
+      )}
     </article>
   );
 }
@@ -255,20 +321,324 @@ function TicketEditor({ ticket, onSaved }: { ticket: SupportTicket; onSaved: () 
     </article>
   );
 }
+function StaffChatInbox({ currentUser }: { currentUser: CustomerUser }) {
+  const [handoffs, setHandoffs] = useState<ChatHandoff[]>([]);
+  const [selected, setSelected] = useState<ChatHandoff | null>(null);
+  const [reply, setReply] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      try {
+        const result = await chatApi.staffHandoffs();
+        if (alive) setHandoffs(result.handoffs);
+      } catch (reason) {
+        if (alive) setError(errorText(reason));
+      }
+    };
+    void load();
+    const timer = window.setInterval(() => void load(), 15000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [version]);
+
+  useEffect(() => {
+    if (!selected || selected.status === 'resolved') return;
+    let alive = true;
+    const load = async () => {
+      try {
+        const result = await chatApi.staffHandoff(selected.id);
+        if (alive && result.handoff.updatedAt !== selected.updatedAt) setSelected(result.handoff);
+      } catch (reason) {
+        if (alive) setError(errorText(reason));
+      }
+    };
+    const timer = window.setInterval(() => void load(), 7000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [selected?.id, selected?.updatedAt]);
+
+  async function openHandoff(id: string) {
+    setError('');
+    try {
+      const result = await chatApi.staffHandoff(id);
+      setSelected(result.handoff);
+    } catch (reason) {
+      setError(errorText(reason));
+    }
+  }
+
+  async function claim() {
+    if (!selected) return;
+    setBusy(true);
+    setError('');
+    try {
+      const result = await chatApi.claimHandoff(selected.id);
+      setSelected(result.handoff);
+      setNotice('Bạn đã tiếp nhận yêu cầu tư vấn.');
+      setVersion((value) => value + 1);
+    } catch (reason) {
+      setError(errorText(reason));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendReply(event: FormEvent) {
+    event.preventDefault();
+    if (!selected || !reply.trim()) return;
+    setBusy(true);
+    setError('');
+    try {
+      const result = await chatApi.replyHandoff(selected.id, reply.trim());
+      setSelected(result.handoff);
+      setReply('');
+      setNotice('Đã gửi phản hồi cho khách.');
+      setVersion((value) => value + 1);
+    } catch (reason) {
+      setError(errorText(reason));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resolve() {
+    if (!selected) return;
+    setBusy(true);
+    setError('');
+    try {
+      const result = await chatApi.resolveHandoff(selected.id);
+      setSelected(result.handoff);
+      setNotice('Đã kết thúc cuộc tư vấn.');
+      setVersion((value) => value + 1);
+    } catch (reason) {
+      setError(errorText(reason));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const canWork = Boolean(
+    selected &&
+    selected.status !== 'resolved' &&
+    (currentUser.role === 'admin' ||
+      !selected.assignedStaffId ||
+      selected.assignedStaffId === currentUser.id),
+  );
+  return (
+    <section className="staff-chat-workspace" aria-label="Hộp thư tư vấn Vị Ơi">
+      <div className="staff-chat-inbox">
+        <header>
+          <div>
+            <p className="eyebrow">HỖ TRỢ TRỰC TIẾP</p>
+            <h2>Khách đang chờ</h2>
+          </div>
+          <span>{handoffs.filter((item) => item.status === 'waiting').length} mới</span>
+        </header>
+        <div className="staff-chat-list">
+          {handoffs.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={'staff-chat-list-item' + (selected?.id === item.id ? ' is-selected' : '')}
+              onClick={() => void openHandoff(item.id)}
+            >
+              <span className="staff-chat-list-top">
+                <strong>
+                  {item.customerType === 'guest' ? 'Khách vãng lai' : 'Khách thành viên'}
+                </strong>
+                <time>
+                  {new Date(item.lastMessageAt).toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </time>
+              </span>
+              <span className="staff-chat-preview">
+                {item.lastMessagePreview || 'Khách muốn được tư vấn trực tiếp'}
+              </span>
+              <span className="staff-chat-list-bottom">
+                <span className={'staff-chat-status is-' + item.status}>
+                  {item.status === 'waiting'
+                    ? 'Chờ tiếp nhận'
+                    : `Đang xử lý · ${item.assignedStaffName || ''}`}
+                </span>
+                {item.staffUnreadCount > 0 && <span className="staff-chat-unread">Mới</span>}
+              </span>
+            </button>
+          ))}
+          {!handoffs.length && <p className="staff-chat-empty">Chưa có khách nào chờ tư vấn.</p>}
+        </div>
+      </div>
+      <div className="staff-chat-conversation">
+        {!selected ? (
+          <div className="staff-chat-placeholder">
+            <span>✦</span>
+            <h2>Chọn một yêu cầu</h2>
+            <p>Hội thoại và các phản hồi sẽ hiện tại đây để bạn tiếp tục hỗ trợ khách.</p>
+          </div>
+        ) : (
+          <>
+            <header className="staff-chat-conversation-head">
+              <div>
+                <p className="eyebrow">
+                  {selected.customerType === 'guest' ? 'KHÁCH VÃNG LAI' : 'KHÁCH THÀNH VIÊN'}
+                </p>
+                <h2>Tư vấn trực tiếp</h2>
+                <small>Tiếp nhận lúc {new Date(selected.createdAt).toLocaleString('vi-VN')}</small>
+              </div>
+              {selected.status !== 'resolved' &&
+                canWork &&
+                selected.assignedStaffId !== currentUser.id && (
+                  <button
+                    className="button"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void claim()}
+                  >
+                    Nhận xử lý
+                  </button>
+                )}
+              {selected.status === 'assigned' &&
+                selected.assignedStaffId !== currentUser.id &&
+                currentUser.role !== 'admin' && (
+                  <span className="staff-chat-locked">
+                    Đang do {selected.assignedStaffName} xử lý
+                  </span>
+                )}
+            </header>
+            <div className="staff-chat-transcript" role="log" aria-label="Nội dung hội thoại">
+              {selected.messages.map((message) => (
+                <article className={'staff-chat-message is-' + message.sender} key={message.id}>
+                  <span>
+                    {message.sender === 'customer'
+                      ? 'Khách hàng'
+                      : message.authorName ||
+                        (message.sender === 'assistant' ? 'Vị Ơi' : 'Hà Thành Vị')}
+                  </span>
+                  <p>{message.content}</p>
+                  <time>{new Date(message.createdAt).toLocaleString('vi-VN')}</time>
+                </article>
+              ))}
+            </div>
+            {selected.status === 'resolved' ? (
+              <p className="staff-chat-closed">Cuộc tư vấn đã kết thúc.</p>
+            ) : (
+              <form className="staff-chat-reply" onSubmit={sendReply}>
+                <textarea
+                  aria-label="Phản hồi khách hàng"
+                  value={reply}
+                  onChange={(event) => setReply(event.target.value)}
+                  placeholder={
+                    canWork
+                      ? 'Soạn lời phản hồi thân thiện…'
+                      : 'Yêu cầu đang được nhân viên khác xử lý'
+                  }
+                  maxLength={1500}
+                  rows={3}
+                  disabled={!canWork || busy}
+                />
+                <div>
+                  {canWork && selected.status === 'assigned' && (
+                    <button
+                      className="button button-outline"
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void resolve()}
+                    >
+                      Kết thúc tư vấn
+                    </button>
+                  )}
+                  <button
+                    className="button"
+                    type="submit"
+                    disabled={!canWork || busy || !reply.trim()}
+                  >
+                    {busy ? 'Đang gửi…' : 'Gửi phản hồi'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </>
+        )}
+      </div>
+      {notice && (
+        <p role="status" className="form-status staff-chat-notice">
+          {notice}
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="form-status staff-chat-error">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
 export function StaffDashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [user, setUser] = useState<CustomerUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'orders' | 'tickets' | 'vouchers' | 'users'>('orders');
+  const [tab, setTab] = useState<
+    'dashboard' | 'orders' | 'tickets' | 'chat' | 'vouchers' | 'users' | 'notifications' | 'logs'
+  >('dashboard');
   const [orders, setOrders] = useState<Order[]>([]);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [vouchers, setVouchers] = useState<Campaign[]>([]);
-  const [users, setUsers] = useState<CustomerUser[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [orderQueue, setOrderQueue] = useState<OrderQueue>('needs_action');
+  const [orderSearch, setOrderSearch] = useState('');
+  const [appliedOrderSearch, setAppliedOrderSearch] = useState('');
+  const [orderStatus, setOrderStatus] = useState('');
+  const [orderPaymentStatus, setOrderPaymentStatus] = useState('');
+  const [orderPaymentMethod, setOrderPaymentMethod] = useState('');
+  const [orderFrom, setOrderFrom] = useState('');
+  const [orderTo, setOrderTo] = useState('');
+  const [orderSort, setOrderSort] = useState<'priority' | 'oldest' | 'newest' | 'total-desc'>(
+    'priority',
+  );
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [chatSummary, setChatSummary] = useState({ waiting: 0, unread: 0 });
+  const [dashboard, setDashboard] = useState<StaffDashboardData | null>(null);
+  useEffect(() => {
+    const requestedTab = searchParams.get('tab');
+    const availableTabs = [
+      'dashboard',
+      'orders',
+      'tickets',
+      'chat',
+      'vouchers',
+      'users',
+      'notifications',
+      'logs',
+    ];
+    if (
+      requestedTab &&
+      availableTabs.includes(requestedTab) &&
+      (user?.role === 'admin' || !['vouchers', 'users', 'logs'].includes(requestedTab))
+    )
+      setTab(requestedTab as typeof tab);
+  }, [searchParams, user?.role]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setAppliedOrderSearch(orderSearch.trim());
+      setPage(1);
+    }, 240);
+    return () => window.clearTimeout(timer);
+  }, [orderSearch]);
   useEffect(() => {
     let alive = true;
     customerApi
@@ -289,17 +659,75 @@ export function StaffDashboard() {
   useEffect(() => {
     if (!user || user.role === 'customer') return;
     let alive = true;
+    let previousWaiting: number | null = null;
+    const poll = async () => {
+      try {
+        const summary = await chatApi.staffSummary();
+        if (!alive) return;
+        setChatSummary(summary);
+        if (previousWaiting !== null && summary.waiting > previousWaiting) {
+          const notificationText = `${summary.waiting} yêu cầu tư vấn đang chờ tiếp nhận.`;
+          setNotice(notificationText);
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Vị Ơi cần hỗ trợ khách', { body: notificationText });
+          }
+        }
+        previousWaiting = summary.waiting;
+      } catch {
+        if (alive) setChatSummary({ waiting: 0, unread: 0 });
+      }
+    };
+    void poll();
+    const timer = window.setInterval(() => void poll(), 20000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [user]);
+  useEffect(() => {
+    if (
+      !user ||
+      user.role === 'customer' ||
+      ['chat', 'notifications', 'logs', 'users'].includes(tab)
+    ) {
+      setBusy(false);
+      return;
+    }
+    if (tab === 'orders' && orderFrom && orderTo && orderFrom > orderTo) {
+      setBusy(false);
+      return;
+    }
+    let alive = true;
     setBusy(true);
     setError('');
     (async () => {
       try {
+        if (tab === 'dashboard') {
+          const r = await request<StaffDashboardData>('/staff/dashboard');
+          if (alive) setDashboard(r);
+        }
         if (tab === 'orders') {
-          const r = await request<{ orders: Order[]; total: number }>(
-            `/admin/orders?page=${page}&limit=20`,
-          );
+          const query = new URLSearchParams({
+            page: String(page),
+            limit: '20',
+            queue: orderQueue,
+            sort: orderSort,
+          });
+          if (appliedOrderSearch) query.set('q', appliedOrderSearch);
+          if (orderStatus) query.set('status', orderStatus);
+          if (orderPaymentStatus) query.set('paymentStatus', orderPaymentStatus);
+          if (orderPaymentMethod) query.set('paymentMethod', orderPaymentMethod);
+          if (orderFrom) query.set('from', new Date(orderFrom + 'T00:00:00').toISOString());
+          if (orderTo) query.set('to', new Date(orderTo + 'T23:59:59.999').toISOString());
+          const r = await request<{ orders: Order[]; total: number }>(`/admin/orders?${query}`);
           if (alive) {
             setOrders(r.orders);
             setTotal(r.total);
+            setSelectedOrderId((selected) =>
+              r.orders.some((order) => order.id === selected)
+                ? selected
+                : (r.orders[0]?.id ?? null),
+            );
           }
         }
         if (tab === 'tickets') {
@@ -310,10 +738,6 @@ export function StaffDashboard() {
           const r = await request<{ vouchers: Campaign[] }>('/admin/vouchers');
           if (alive) setVouchers(r.vouchers);
         }
-        if (tab === 'users') {
-          const r = await request<{ users: CustomerUser[] }>('/admin/users');
-          if (alive) setUsers(r.users);
-        }
       } catch (e) {
         if (alive) setError(errorText(e));
       } finally {
@@ -323,28 +747,20 @@ export function StaffDashboard() {
     return () => {
       alive = false;
     };
-  }, [user, tab, page, version]);
-  async function createStaff(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = e.currentTarget;
-    const d = new FormData(f);
-    setBusy(true);
-    setNotice('');
-    setError('');
-    try {
-      await request('/admin/staff', {
-        method: 'POST',
-        body: JSON.stringify(Object.fromEntries(d)),
-      });
-      setNotice('Đã tạo tài khoản nhân viên.');
-      f.reset();
-      setVersion((v) => v + 1);
-    } catch (error) {
-      setError(errorText(error));
-    } finally {
-      setBusy(false);
-    }
-  }
+  }, [
+    user,
+    tab,
+    page,
+    version,
+    orderQueue,
+    appliedOrderSearch,
+    orderStatus,
+    orderPaymentStatus,
+    orderPaymentMethod,
+    orderFrom,
+    orderTo,
+    orderSort,
+  ]);
   async function createVoucher(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = e.currentTarget;
@@ -377,6 +793,24 @@ export function StaffDashboard() {
       setBusy(false);
     }
   }
+  const activeOrder = orders.find((order) => order.id === selectedOrderId) ?? null;
+  const orderQueues: { value: OrderQueue; label: string }[] = [
+    { value: 'needs_action', label: 'Cần xử lý' },
+    { value: 'awaiting_payment', label: 'Chờ thanh toán' },
+    { value: 'fulfillment', label: 'Chờ chuẩn bị' },
+    { value: 'shipping', label: 'Đang giao' },
+    { value: 'closed', label: 'Đã đóng' },
+    { value: 'all', label: 'Tất cả đơn hàng' },
+  ];
+  const orderFiltersActive = Boolean(
+    orderSearch ||
+    orderStatus ||
+    orderPaymentStatus ||
+    orderPaymentMethod ||
+    orderFrom ||
+    orderTo ||
+    orderSort !== 'priority',
+  );
   if (loading)
     return (
       <section className="staff-page">
@@ -397,255 +831,522 @@ export function StaffDashboard() {
       </section>
     );
   return (
-    <section className="staff-page">
-      <div className="staff-heading">
+    <WorkspaceFrame user={user} active={tab}>
+      <header className="workspace-page-heading">
         <div>
           <p className="eyebrow">
             HÀ THÀNH VỊ · {user.role === 'admin' ? 'ADMIN / MANAGER' : 'NHÂN VIÊN'}
           </p>
-          <h1>Điều hành cửa hàng</h1>
-          <p>Xin chào {user.name}.</p>
+          <h1>
+            {tab === 'dashboard'
+              ? 'Tổng quan công việc'
+              : tab === 'orders'
+                ? 'Quản lý đơn hàng'
+                : tab === 'tickets'
+                  ? 'Chăm sóc khách hàng'
+                  : tab === 'chat'
+                    ? 'Hộp thư tư vấn'
+                    : tab === 'users'
+                      ? 'Nhân sự & tài khoản'
+                      : tab === 'vouchers'
+                        ? 'Quản lý ưu đãi'
+                        : tab === 'notifications'
+                          ? 'Thông báo'
+                          : 'Nhật ký hệ thống'}
+          </h1>
+          <p>Xin chào {user.name}. Khu vực xử lý nghiệp vụ nội bộ.</p>
         </div>
-        <div>
-          <Link className="text-link" to="/">
-            Xem website
-          </Link>
-          {user.role === 'admin' && (
-            <Link className="button button-outline" to="/admin">
-              Chỉnh nội dung
+      </header>
+      <section className="staff-page">
+        <div className="staff-heading">
+          <div>
+            <p className="eyebrow">
+              HÀ THÀNH VỊ · {user.role === 'admin' ? 'ADMIN / MANAGER' : 'NHÂN VIÊN'}
+            </p>
+            <h1>Điều hành cửa hàng</h1>
+            <p>Xin chào {user.name}.</p>
+          </div>
+          <div>
+            <Link className="text-link" to="/">
+              Xem website
             </Link>
-          )}
+            {user.role === 'admin' && (
+              <Link className="button button-outline" to="/admin">
+                Chỉnh nội dung
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
-      <nav className="staff-tabs" aria-label="Các mục quản trị">
-        {[
-          ['orders', 'Đơn hàng'],
-          ['tickets', 'Chăm sóc khách hàng'],
-          ...(user.role === 'admin'
-            ? [
-                ['vouchers', 'Voucher'],
-                ['users', 'Nhân sự'],
-              ]
-            : []),
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            className={tab === id ? 'active' : ''}
-            onClick={() => {
-              setTab(id as typeof tab);
-              setNotice('');
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-      {busy && <p role="status">Đang tải…</p>}
-      {error && (
-        <p role="alert" className="form-status">
-          {error}
-        </p>
-      )}
-      {notice && (
-        <p role="status" className="form-status">
-          {notice}
-        </p>
-      )}
-      {tab === 'orders' && (
-        <>
-          <p>
-            {total} đơn hàng · Trang {page}
+        <nav className="staff-tabs" aria-label="Các mục quản trị">
+          {[
+            ['orders', 'Đơn hàng'],
+            ['tickets', 'Chăm sóc khách hàng'],
+            ['chat', `Tư vấn chat${chatSummary.waiting ? ` · ${chatSummary.waiting}` : ''}`],
+            ...(user.role === 'admin'
+              ? [
+                  ['vouchers', 'Voucher'],
+                  ['users', 'Nhân sự'],
+                ]
+              : []),
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              className={tab === id ? 'active' : ''}
+              onClick={() => {
+                const selectedTab = id as typeof tab;
+                setTab(selectedTab);
+                setSearchParams({ tab: selectedTab }, { replace: true });
+                setNotice('');
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+        {busy && <p role="status">Đang tải…</p>}
+        {error && (
+          <p role="alert" className="form-status">
+            {error}
           </p>
-          <div className="managed-order-grid">
-            {orders.map((order) => (
-              <ManagedOrder
-                key={order.id + order.status + order.paymentStatus + (order.trackingNumber || '')}
-                order={order}
-                isAdmin={user.role === 'admin'}
-                onSaved={() => setVersion((v) => v + 1)}
-              />
-            ))}
-          </div>
-          {!orders.length && !busy && <p>Chưa có đơn hàng.</p>}
-          <div className="pagination">
-            <button
-              className="button button-outline"
-              disabled={page <= 1 || busy}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Trang trước
-            </button>
-            <button
-              className="button button-outline"
-              disabled={page * 20 >= total || busy}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Trang sau
-            </button>
-          </div>
-        </>
-      )}
-      {tab === 'tickets' && (
-        <>
-          <div className="staff-ticket-grid">
-            {tickets.map((ticket) => (
-              <TicketEditor
-                key={ticket.id + ticket.status + (ticket.replies?.length || 0)}
-                ticket={ticket}
-                onSaved={() => setVersion((v) => v + 1)}
-              />
-            ))}
-          </div>
-          {!tickets.length && !busy && <p>Chưa có yêu cầu hỗ trợ.</p>}
-        </>
-      )}
-      {tab === 'users' && (
-        <section className="staff-admin-section">
-          <div>
-            <h2>Tài khoản cửa hàng</h2>
-            <div className="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Tên</th>
-                    <th>Email</th>
-                    <th>Vai trò</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
-                      <td>{u.name}</td>
-                      <td>{u.email}</td>
-                      <td>{u.role}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        )}
+        {notice && (
+          <p role="status" className="form-status">
+            {notice}
+          </p>
+        )}
+        {tab === 'dashboard' && dashboard && (
+          <section className="staff-overview" aria-label="Dashboard nhân viên">
+            <div className="staff-overview-kpis">
+              <Link to="/quan-tri?tab=orders">
+                <span>Đơn chờ xác nhận</span>
+                <strong>{dashboard.orders.pending}</strong>
+                <small>Mở hàng đợi đơn hàng →</small>
+              </Link>
+              <Link to="/quan-tri?tab=orders">
+                <span>Yêu cầu đổi trả</span>
+                <strong>{dashboard.orders.returnRequested}</strong>
+                <small>Xem yêu cầu cần xử lý →</small>
+              </Link>
+              <Link to="/quan-tri?tab=tickets">
+                <span>Yêu cầu chăm sóc mở</span>
+                <strong>{dashboard.support.open}</strong>
+                <small>Mở hộp chăm sóc khách →</small>
+              </Link>
+              <Link to="/quan-tri?tab=chat">
+                <span>Chat đang chờ</span>
+                <strong>{dashboard.chat.waiting}</strong>
+                <small>{dashboard.chat.assignedToMe} cuộc được giao cho bạn →</small>
+              </Link>
             </div>
-          </div>
-          <form onSubmit={createStaff}>
-            <h2>Thêm nhân viên</h2>
-            <label className="field">
-              Họ tên
-              <input name="name" required minLength={2} maxLength={100} />
-            </label>
-            <label className="field">
-              Email
-              <input name="email" required type="email" maxLength={254} />
-            </label>
-            <label className="field">
-              Số điện thoại
-              <input name="phone" required type="tel" maxLength={20} />
-            </label>
-            <label className="field">
-              Mật khẩu ban đầu
-              <input
-                name="password"
-                required
-                type="password"
-                minLength={10}
-                maxLength={128}
-                autoComplete="new-password"
-              />
-            </label>
-            <button className="button" disabled={busy}>
-              Tạo nhân viên
-            </button>
-          </form>
-        </section>
-      )}
-      {tab === 'vouchers' && (
-        <section className="staff-admin-section">
-          <div>
-            <h2>Ưu đãi đã phát hành</h2>
-            {vouchers.map((v) => (
-              <article className="campaign-card" key={v.id || v.code}>
-                <strong>
-                  {v.code} · {v.name}
-                </strong>
-                <p>
-                  {v.type === 'percent' ? v.value + '%' : v.value.toLocaleString('vi-VN') + 'đ'} ·{' '}
-                  {v.distribution === 'automatic' ? 'Tự động vào ví' : 'Khách nhập mã'}
-                </p>
-                <small>Hạn dùng: {new Date(v.expiresAt).toLocaleDateString('vi-VN')}</small>
+            <div className="staff-overview-charts">
+              <article className="staff-overview-chart">
+                <h2>Đơn hàng 14 ngày gần đây</h2>
+                <div className="staff-chart-box">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={dashboard.orders.daily}
+                      margin={{ top: 12, right: 12, left: -12, bottom: 4 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8e1d7" />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(value: string) => value.slice(5)}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="orders"
+                        name="Đơn tạo"
+                        stroke="#8c6843"
+                        strokeWidth={3}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </article>
-            ))}
-            {!vouchers.length && !busy && <p>Chưa có chiến dịch.</p>}
-          </div>
-          <form onSubmit={createVoucher}>
-            <h2>Phát hành voucher</h2>
-            <label className="field">
-              Mã ưu đãi
-              <input
-                name="code"
-                required
-                minLength={3}
-                maxLength={40}
-                pattern="[A-Za-z0-9_-]+"
-                placeholder="HATHANH10"
-              />
-            </label>
-            <label className="field">
-              Tên chiến dịch
-              <input name="name" required maxLength={120} />
-            </label>
-            <div className="form-row">
+              <article className="staff-overview-chart">
+                <h2>Đơn hàng theo trạng thái</h2>
+                <div className="staff-chart-box">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={dashboard.orders.byStatus}
+                      margin={{ top: 12, right: 12, left: -12, bottom: 4 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8e1d7" />
+                      <XAxis
+                        dataKey="status"
+                        tickFormatter={(value: string) => stateLabels[value] || value}
+                        tick={{ fontSize: 10 }}
+                      />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Bar dataKey="count" name="Số đơn" fill="#9d784f" radius={[5, 5, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </article>
+            </div>
+            <div className="staff-overview-shortcuts">
+              <h2>Việc cần chú ý</h2>
+              <Link to="/quan-tri?tab=orders">Xử lý đơn chờ và đổi trả</Link>
+              <Link to="/quan-tri?tab=tickets">Phản hồi yêu cầu chăm sóc khách</Link>
+              <Link to="/quan-tri?tab=chat">Tiếp nhận cuộc trò chuyện Vị Ơi</Link>
+            </div>
+          </section>
+        )}
+        {tab === 'notifications' && <WorkspaceNotifications />}
+        {tab === 'logs' && user.role === 'admin' && <AdminSystemLogs />}
+        {tab === 'orders' && (
+          <section className="order-management" aria-label="Hàng đợi xử lý đơn hàng">
+            <header className="order-queue-heading">
+              <div>
+                <p className="eyebrow">HÀNG ĐỢI VẬN HÀNH</p>
+                <h2>Ưu tiên xử lý đúng thứ tự</h2>
+                <p>Đơn cần xử lý và đối soát được đưa lên trước; chưa có SLA được xác nhận.</p>
+              </div>
+              <span>
+                {busy ? 'Đang cập nhật…' : `${total.toLocaleString('vi-VN')} đơn phù hợp`}
+              </span>
+            </header>
+            <nav className="order-queue-tabs" aria-label="Nhóm đơn hàng">
+              {orderQueues.map((queue) => (
+                <button
+                  key={queue.value}
+                  type="button"
+                  aria-pressed={orderQueue === queue.value}
+                  onClick={() => {
+                    setOrderQueue(queue.value);
+                    setPage(1);
+                  }}
+                >
+                  {queue.label}
+                </button>
+              ))}
+            </nav>
+            <div className="order-queue-filters" role="search" aria-label="Tìm và lọc đơn hàng">
+              <label className="field order-queue-search">
+                Tìm mã đơn, người nhận, email, số điện thoại hoặc sản phẩm
+                <input
+                  type="search"
+                  value={orderSearch}
+                  onChange={(event) => setOrderSearch(event.target.value)}
+                  placeholder="Ví dụ: HTV-… hoặc Nguyễn Hà My"
+                />
+              </label>
               <label className="field">
-                Loại
-                <select name="type">
-                  <option value="fixed">Giảm số tiền</option>
-                  <option value="percent">Giảm phần trăm</option>
+                Trạng thái đơn
+                <select
+                  value={orderStatus}
+                  onChange={(event) => {
+                    setOrderStatus(event.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Tất cả trạng thái</option>
+                  {Object.entries(stateLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="field">
-                Giá trị
-                <input name="value" type="number" min="1" required />
+                Thanh toán
+                <select
+                  value={orderPaymentStatus}
+                  onChange={(event) => {
+                    setOrderPaymentStatus(event.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Mọi trạng thái</option>
+                  {Object.entries(paymentStatuses).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
               </label>
+              <label className="field">
+                Phương thức
+                <select
+                  value={orderPaymentMethod}
+                  onChange={(event) => {
+                    setOrderPaymentMethod(event.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Tất cả</option>
+                  <option value="cod">COD</option>
+                  <option value="payos">VietQR · PayOS</option>
+                </select>
+              </label>
+              <label className="field">
+                Từ ngày
+                <input
+                  type="date"
+                  value={orderFrom}
+                  onChange={(event) => {
+                    setOrderFrom(event.target.value);
+                    setPage(1);
+                  }}
+                />
+              </label>
+              <label className="field">
+                Đến ngày
+                <input
+                  type="date"
+                  value={orderTo}
+                  onChange={(event) => {
+                    setOrderTo(event.target.value);
+                    setPage(1);
+                  }}
+                />
+              </label>
+              <label className="field">
+                Sắp xếp
+                <select
+                  value={orderSort}
+                  onChange={(event) => {
+                    setOrderSort(event.target.value as typeof orderSort);
+                    setPage(1);
+                  }}
+                >
+                  <option value="priority">Mức độ cần xử lý</option>
+                  <option value="oldest">Cũ nhất trước</option>
+                  <option value="newest">Mới nhất trước</option>
+                  <option value="total-desc">Giá trị cao nhất</option>
+                </select>
+              </label>
+              {orderFiltersActive && (
+                <button
+                  className="order-queue-clear"
+                  type="button"
+                  onClick={() => {
+                    setOrderSearch('');
+                    setAppliedOrderSearch('');
+                    setOrderStatus('');
+                    setOrderPaymentStatus('');
+                    setOrderPaymentMethod('');
+                    setOrderFrom('');
+                    setOrderTo('');
+                    setOrderSort('priority');
+                    setPage(1);
+                  }}
+                >
+                  Xóa bộ lọc
+                </button>
+              )}
             </div>
-            <div className="form-row">
-              <label className="field">
-                Đơn tối thiểu
-                <input name="minOrder" type="number" min="0" defaultValue="0" required />
-              </label>
-              <label className="field">
-                Giảm tối đa (0: không giới hạn)
-                <input name="maxDiscount" type="number" min="0" defaultValue="0" required />
-              </label>
+            {orderFrom && orderTo && orderFrom > orderTo && (
+              <p className="form-status" role="alert">
+                Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.
+              </p>
+            )}
+            {busy && (
+              <p className="order-queue-loading" role="status">
+                Đang tải hàng đợi đơn…
+              </p>
+            )}
+            {!busy && !orders.length && (
+              <p className="order-queue-empty">
+                Không có đơn phù hợp trong nhóm này. Thử đổi nhóm, bộ lọc hoặc từ khóa.
+              </p>
+            )}
+            {orders.length > 0 && (
+              <div className="order-queue-layout">
+                <div className="order-queue-list" aria-label="Các đơn phù hợp">
+                  {orders.map((order) => {
+                    const priority = orderPriority(order);
+                    return (
+                      <button
+                        className={
+                          'order-queue-row' + (selectedOrderId === order.id ? ' is-selected' : '')
+                        }
+                        key={order.id}
+                        type="button"
+                        aria-pressed={selectedOrderId === order.id}
+                        onClick={() => setSelectedOrderId(order.id)}
+                      >
+                        <span className={'order-priority is-' + priority.tone}>
+                          {priority.label}
+                        </span>
+                        <span className="order-row-code">{order.code}</span>
+                        <span className="order-row-customer">
+                          {order.customer.name} · {order.customer.phone}
+                        </span>
+                        <span className="order-row-meta">
+                          {stateLabels[order.status] || order.status} ·{' '}
+                          {paymentStatuses[order.paymentStatus] || order.paymentStatus}
+                        </span>
+                        <span className="order-row-total">{priceLabel(order.total)}</span>
+                        <time dateTime={order.createdAt}>
+                          {new Date(order.createdAt).toLocaleString('vi-VN')}
+                        </time>
+                        {order.isOwnOrder && (
+                          <span className="order-own-label">Đơn của bạn · chỉ xem</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="order-queue-detail">
+                  {activeOrder && (
+                    <ManagedOrder
+                      key={
+                        activeOrder.id +
+                        activeOrder.status +
+                        activeOrder.paymentStatus +
+                        (activeOrder.trackingNumber || '')
+                      }
+                      order={activeOrder}
+                      isAdmin={user.role === 'admin'}
+                      onSaved={() => setVersion((value) => value + 1)}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="workspace-pagination">
+              <button
+                className="button button-outline"
+                disabled={page <= 1 || busy}
+                onClick={() => setPage((value) => value - 1)}
+              >
+                Trang trước
+              </button>
+              <span>
+                Trang {page} · {total.toLocaleString('vi-VN')} đơn
+              </span>
+              <button
+                className="button button-outline"
+                disabled={page * 20 >= total || busy}
+                onClick={() => setPage((value) => value + 1)}
+              >
+                Trang sau
+              </button>
             </div>
-            <div className="form-row">
-              <label className="field">
-                Bắt đầu
-                <input name="startsAt" type="datetime-local" required />
-              </label>
-              <label className="field">
-                Kết thúc
-                <input name="expiresAt" type="datetime-local" required />
-              </label>
+          </section>
+        )}
+        {tab === 'tickets' && (
+          <>
+            <div className="staff-ticket-grid">
+              {tickets.map((ticket) => (
+                <TicketEditor
+                  key={ticket.id + ticket.status + (ticket.replies?.length || 0)}
+                  ticket={ticket}
+                  onSaved={() => setVersion((v) => v + 1)}
+                />
+              ))}
             </div>
-            <label className="field">
-              Cách nhận
-              <select name="distribution">
-                <option value="code">Nhập mã để nhận</option>
-                <option value="automatic">Tự động vào ví khách</option>
-              </select>
-            </label>
-            <div className="form-row">
-              <label className="field">
-                Tổng lượt dùng
-                <input name="totalLimit" type="number" min="1" defaultValue="100" required />
-              </label>
-              <label className="field">
-                Lượt mỗi khách
-                <input name="perUserLimit" type="number" min="1" defaultValue="1" required />
-              </label>
+            {!tickets.length && !busy && <p>Chưa có yêu cầu hỗ trợ.</p>}
+          </>
+        )}
+        {tab === 'chat' && <StaffChatInbox currentUser={user} />}
+        {tab === 'users' && (
+          <section className="staff-admin-section">
+            <AdminAccountManagement
+              currentUser={user}
+              reloadKey={version}
+              onUpdated={() => setVersion((value) => value + 1)}
+            />
+          </section>
+        )}
+        {tab === 'vouchers' && (
+          <section className="staff-admin-section">
+            <div>
+              <h2>Ưu đãi đã phát hành</h2>
+              {vouchers.map((v) => (
+                <article className="campaign-card" key={v.id || v.code}>
+                  <strong>
+                    {v.code} · {v.name}
+                  </strong>
+                  <p>
+                    {v.type === 'percent' ? v.value + '%' : v.value.toLocaleString('vi-VN') + 'đ'} ·{' '}
+                    {v.distribution === 'automatic' ? 'Tự động vào ví' : 'Khách nhập mã'}
+                  </p>
+                  <small>Hạn dùng: {new Date(v.expiresAt).toLocaleDateString('vi-VN')}</small>
+                </article>
+              ))}
+              {!vouchers.length && !busy && <p>Chưa có chiến dịch.</p>}
             </div>
-            <button className="button" disabled={busy}>
-              Phát hành ưu đãi
-            </button>
-          </form>
-        </section>
-      )}
-    </section>
+            <form onSubmit={createVoucher}>
+              <h2>Phát hành voucher</h2>
+              <label className="field">
+                Mã ưu đãi
+                <input
+                  name="code"
+                  required
+                  minLength={3}
+                  maxLength={40}
+                  pattern="[A-Za-z0-9_-]+"
+                  placeholder="HATHANH10"
+                />
+              </label>
+              <label className="field">
+                Tên chiến dịch
+                <input name="name" required maxLength={120} />
+              </label>
+              <div className="form-row">
+                <label className="field">
+                  Loại
+                  <select name="type">
+                    <option value="fixed">Giảm số tiền</option>
+                    <option value="percent">Giảm phần trăm</option>
+                  </select>
+                </label>
+                <label className="field">
+                  Giá trị
+                  <input name="value" type="number" min="1" required />
+                </label>
+              </div>
+              <div className="form-row">
+                <label className="field">
+                  Đơn tối thiểu
+                  <input name="minOrder" type="number" min="0" defaultValue="0" required />
+                </label>
+                <label className="field">
+                  Giảm tối đa (0: không giới hạn)
+                  <input name="maxDiscount" type="number" min="0" defaultValue="0" required />
+                </label>
+              </div>
+              <div className="form-row">
+                <label className="field">
+                  Bắt đầu
+                  <input name="startsAt" type="datetime-local" required />
+                </label>
+                <label className="field">
+                  Kết thúc
+                  <input name="expiresAt" type="datetime-local" required />
+                </label>
+              </div>
+              <label className="field">
+                Cách nhận
+                <select name="distribution">
+                  <option value="code">Nhập mã để nhận</option>
+                  <option value="automatic">Tự động vào ví khách</option>
+                </select>
+              </label>
+              <div className="form-row">
+                <label className="field">
+                  Tổng lượt dùng
+                  <input name="totalLimit" type="number" min="1" defaultValue="100" required />
+                </label>
+                <label className="field">
+                  Lượt mỗi khách
+                  <input name="perUserLimit" type="number" min="1" defaultValue="1" required />
+                </label>
+              </div>
+              <button className="button" disabled={busy}>
+                Phát hành ưu đãi
+              </button>
+            </form>
+          </section>
+        )}
+      </section>
+    </WorkspaceFrame>
   );
 }

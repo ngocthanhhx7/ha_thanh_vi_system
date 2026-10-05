@@ -7,6 +7,8 @@ import { spawn } from 'node:child_process';
 const root = resolve(import.meta.dirname, '..');
 const privateDir = resolve(root, '.local');
 await mkdir(resolve(privateDir, 'mongodb'), { recursive: true });
+const emptyConfigPath = resolve(privateDir, 'empty-config.env');
+await writeFile(emptyConfigPath, '');
 let secrets;
 try {
   secrets = JSON.parse(await readFile(resolve(privateDir, 'preview-secrets.json'), 'utf8'));
@@ -33,8 +35,14 @@ const mongo = await MongoMemoryServer.create({
 });
 const runtimeEnv = {
   ...process.env,
+  DOTENV_CONFIG_PATH: emptyConfigPath,
+  HTV_DEMO_MAILBOX: '1',
+  GEMINI_API_KEY: '',
+  SMTP_HOST: '',
+  SMTP_USER: '',
+  SMTP_PASS: '',
   NODE_ENV: 'development',
-  MONGODB_URI: mongo.getUri(),
+  MONGODB_URI: mongo.getUri('ha_thanh_vi_demo'),
   FRONTEND_ORIGIN: 'http://127.0.0.1:5173',
   PUBLIC_WEB_URL: 'http://127.0.0.1:5173',
   ORDER_TOKEN_SECRET: secrets.orderTokenSecret,
@@ -82,6 +90,9 @@ const api = spawn(
 );
 console.log(
   'MongoDB phát triển đã sẵn sàng. Tài khoản xem thử lưu tại .local/preview-credentials.txt.',
+);
+console.log(
+  'Email xác thực xem thử được lưu riêng tại .local/preview-mailbox; không gửi email thật.',
 );
 let stopping = false;
 async function stop() {

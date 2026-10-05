@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 import { connectDatabase, disconnectDatabase } from './config/database.js';
 import { loadSeedContent } from './utils/contentSeed.js';
 import { readConfig } from './config/env.js';
+import { demoAuthOptions } from './config/demoAuth.js';
 import { startPaymentReconciliationJob } from './jobs/paymentReconciliation.js';
 import { MongoRepository, type ContentRepository } from './services/contentRepository.js';
 import { initializeCustomerIndexes } from './services/customerRepository.js';
@@ -32,7 +33,12 @@ async function start() {
 
   const activeRepository: ContentRepository & { orderRepository?: OrderRepository } =
     config.mongoUri ? repository : new ReadOnlyDemoRepository(seedContent);
-  const app = createApp({ repository: activeRepository, config, seedContent });
+  const app = createApp({
+    repository: activeRepository,
+    config,
+    seedContent,
+    auth: demoAuthOptions(config),
+  });
   const reconciliation = config.mongoUri
     ? startPaymentReconciliationJob(app.locals.commerce, {
         onError: () => console.error('Payment reconciliation job failed.'),

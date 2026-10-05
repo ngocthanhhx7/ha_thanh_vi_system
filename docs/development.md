@@ -21,6 +21,8 @@ Commit source, package-lock, cấu hình build/lint/CI, env mẫu không có gi�
 
 ## Kiểm tra
 
+`npm run dev:demo` dùng MongoDB cục bộ và cấu hình thử riêng, không tải backend/.env. OTP và liên kết đặt mật khẩu được lưu ở `.local/preview-mailbox/*.txt`, không gửi email thật; mở tệp mới nhất để thử xác thực. Không có API công khai đọc hộp thư này. Chatbot trong chế độ này báo chưa kết nối AI và hướng dẫn liên hệ. Môi trường chạy thường đọc cấu hình SMTP/Gemini của backend; không bật HTV_DEMO_MAILBOX trên hệ thống thật. Chế độ hộp thư cục bộ bị vô hiệu khi NODE_ENV=production.
+
 `npm run verify` chạy typecheck, lint, backend tests và build hai workspace. `npm run test:e2e` kiểm tra UI desktop/mobile; dùng Playwright browser đã cài qua `npx playwright install chromium`. Kiểm tra định dạng bằng `npm run format:check`.
 
 Khi thêm API, giữ schema request/response và tài liệu khớp với caller. Test tập trung quyền truy cập, tính tiền, idempotency, chuyển trạng thái và lỗi thực tế. Khi chỉnh giao diện, kiểm tra mobile/tablet/desktop, bàn phím và chế độ giảm chuyển động.

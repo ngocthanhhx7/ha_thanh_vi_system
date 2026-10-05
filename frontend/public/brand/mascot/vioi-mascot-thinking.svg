@@ -1,0 +1,256 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none" aria-label="Vị Ơi Mascot - Thinking">
+  <defs>
+    <!-- Ground Ambient Shadow -->
+    <radialGradient id="think-ground-shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5A2807" stop-opacity="0.22" />
+      <stop offset="65%" stop-color="#5A2807" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#5A2807" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Pastry Body Baked Gradient -->
+    <linearGradient id="think-pastry-body" x1="256" y1="130" x2="256" y2="435" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE8B8" />
+      <stop offset="22%" stop-color="#F7C474" />
+      <stop offset="55%" stop-color="#E59235" />
+      <stop offset="85%" stop-color="#C26A1B" />
+      <stop offset="100%" stop-color="#8F4109" />
+    </linearGradient>
+
+    <!-- Pastry Top Glaze Highlight -->
+    <linearGradient id="think-pastry-glaze" x1="256" y1="145" x2="256" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.65" />
+      <stop offset="45%" stop-color="#FFF5DE" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#F7C474" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Sage-Green Tea Leaf Gradient 1 -->
+    <linearGradient id="think-tea-leaf-left" x1="210" y1="105" x2="260" y2="145" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#B7DCAB" />
+      <stop offset="45%" stop-color="#73A76D" />
+      <stop offset="100%" stop-color="#3D6638" />
+    </linearGradient>
+
+    <!-- Sage-Green Tea Leaf Gradient 2 -->
+    <linearGradient id="think-tea-leaf-right" x1="260" y1="95" x2="300" y2="135" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C7E6BD" />
+      <stop offset="50%" stop-color="#83B67D" />
+      <stop offset="100%" stop-color="#467341" />
+    </linearGradient>
+
+    <!-- Terracotta Scarf Gradient -->
+    <linearGradient id="think-scarf-main" x1="165" y1="340" x2="345" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E87658" />
+      <stop offset="50%" stop-color="#C75135" />
+      <stop offset="100%" stop-color="#9E351D" />
+    </linearGradient>
+
+    <!-- Terracotta Knot Gradient -->
+    <linearGradient id="think-scarf-knot" x1="305" y1="355" x2="335" y2="385" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EA7E62" />
+      <stop offset="100%" stop-color="#99321B" />
+    </linearGradient>
+
+    <!-- Cheerful Glossy Eye Gradient -->
+    <linearGradient id="think-eye-pupil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A0E08" />
+      <stop offset="70%" stop-color="#2D1A10" />
+      <stop offset="100%" stop-color="#59341E" />
+    </linearGradient>
+
+    <!-- Soft Rosy Blush -->
+    <radialGradient id="think-rosy-cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF7568" stop-opacity="0.75" />
+      <stop offset="60%" stop-color="#FF9388" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#FFA8A0" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Ground Ambient Shadow (Centered) -->
+  <ellipse cx="256" cy="458" rx="108" ry="14" fill="url(#think-ground-shadow)" />
+
+  <!-- Chubby Pastry Stumpy Feet -->
+  <g id="think-feet">
+    <!-- Left Foot -->
+    <ellipse cx="212" cy="428" rx="28" ry="18" fill="#8F4109" transform="rotate(-6 212 428)" />
+    <ellipse cx="212" cy="425" rx="26" ry="16" fill="#E59235" stroke="#7A3406" stroke-width="4.5" transform="rotate(-6 212 425)" />
+    <ellipse cx="211" cy="422" rx="17" ry="9" fill="#FFE8B8" transform="rotate(-6 211 422)" />
+
+    <!-- Right Foot -->
+    <ellipse cx="300" cy="428" rx="28" ry="18" fill="#8F4109" transform="rotate(6 300 428)" />
+    <ellipse cx="300" cy="425" rx="26" ry="16" fill="#E59235" stroke="#7A3406" stroke-width="4.5" transform="rotate(6 300 425)" />
+    <ellipse cx="301" cy="422" rx="17" ry="9" fill="#FFE8B8" transform="rotate(6 301 422)" />
+  </g>
+
+  <!-- Curious Tilted Character Group (Head/Body Tilted ~4.5° in thought) -->
+  <g id="think-character" transform="rotate(4.5 256 315)">
+    <!-- Main Round Bánh Chả Pastry Body -->
+    <g id="think-body">
+      <!-- Pastry Outer Silhouette -->
+      <path d="M 144 305 C 137 218 182 146 256 146 C 330 146 375 218 368 305 C 362 384 326 432 256 432 C 186 432 150 384 144 305 Z"
+            fill="url(#think-pastry-body)"
+            stroke="#7A3406"
+            stroke-width="6"
+            stroke-linejoin="round" />
+
+      <!-- Top Glaze Cream Highlight -->
+      <ellipse cx="256" cy="180" rx="72" ry="26" fill="#FFAE42" opacity="0.32" />
+      <path d="M 198 174 C 220 156 292 156 314 174 C 288 166 224 166 198 174 Z" fill="url(#think-pastry-glaze)" />
+
+      <!-- Bánh Chả Golden Pastry Swirl / Flaky Fold Lines -->
+      <path d="M 178 188 C 216 166 296 166 334 188" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+      <path d="M 184 184 C 218 164 294 164 328 184" stroke="#FFF5DE" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+      <!-- Left Flank Fold -->
+      <path d="M 152 248 C 168 238 182 254 175 276" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+      <path d="M 154 245 C 168 236 179 249 174 271" stroke="#FFF5DE" stroke-width="2" stroke-linecap="round" fill="none" />
+
+      <!-- Right Flank Fold -->
+      <path d="M 360 248 C 344 238 330 254 337 276" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+      <path d="M 358 245 C 344 236 333 249 338 271" stroke="#FFF5DE" stroke-width="2" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Sage-Green Tea-Leaf Tuft on Crown -->
+    <g id="think-tea-tuft">
+      <!-- Tea Stem -->
+      <path d="M 256 150 C 255 134 257 122 259 112" stroke="#33562E" stroke-width="5" stroke-linecap="round" fill="none" />
+
+      <!-- Left Sprouting Tea Leaf -->
+      <path d="M 258 120 C 238 106 215 106 204 125 C 212 144 236 146 258 126 Z"
+            fill="url(#think-tea-leaf-left)"
+            stroke="#2D4D29"
+            stroke-width="3.5"
+            stroke-linejoin="round" />
+      <path d="M 253 124 C 238 121 224 122 214 126" stroke="#E3F4DE" stroke-width="2.2" stroke-linecap="round" fill="none" />
+
+      <!-- Right Small Perky Tea Leaf -->
+      <path d="M 258 116 C 269 95 289 94 297 109 C 295 126 277 131 258 116 Z"
+            fill="url(#think-tea-leaf-right)"
+            stroke="#2D4D29"
+            stroke-width="3.5"
+            stroke-linejoin="round" />
+      <path d="M 262 115 C 274 110 284 109 291 112" stroke="#E3F4DE" stroke-width="2" stroke-linecap="round" fill="none" />
+
+      <!-- Dewdrop -->
+      <circle cx="288" cy="105" r="2.8" fill="#FFFFFF" opacity="0.9" />
+    </g>
+
+    <!-- Curious Thinking Face (Eyes Looking Upward, Arched Eyebrow, Chin Paw) -->
+    <g id="think-face">
+      <!-- Inquisitive Eyebrows -->
+      <!-- Left eyebrow raised high in curiosity -->
+      <path d="M 193 231 C 205 221 222 227 225 233" stroke="#7A3406" stroke-width="4.2" stroke-linecap="round" fill="none" />
+      <!-- Right eyebrow slightly quizzical -->
+      <path d="M 290 238 C 298 235 311 234 320 241" stroke="#7A3406" stroke-width="3.8" stroke-linecap="round" fill="none" />
+
+      <!-- Left Glossy Eye (Gazing Up-Right) -->
+      <g id="think-left-eye">
+        <circle cx="208" cy="265" r="20" fill="url(#think-eye-pupil)" stroke="#140B06" stroke-width="2" />
+        <ellipse cx="208" cy="275" rx="14" ry="7" fill="#8A4822" opacity="0.65" />
+        <!-- Highlights shifted toward top-right -->
+        <circle cx="214" cy="254" r="7" fill="#FFFFFF" />
+        <circle cx="203" cy="271" r="3.2" fill="#FFFFFF" />
+        <circle cx="219" cy="265" r="2" fill="#FFFFFF" opacity="0.9" />
+      </g>
+
+      <!-- Right Glossy Eye (Gazing Up-Right) -->
+      <g id="think-right-eye">
+        <circle cx="304" cy="265" r="20" fill="url(#think-eye-pupil)" stroke="#140B06" stroke-width="2" />
+        <ellipse cx="304" cy="275" rx="14" ry="7" fill="#8A4822" opacity="0.65" />
+        <!-- Highlights shifted toward top-right -->
+        <circle cx="310" cy="254" r="7" fill="#FFFFFF" />
+        <circle cx="299" cy="271" r="3.2" fill="#FFFFFF" />
+        <circle cx="315" cy="265" r="2" fill="#FFFFFF" opacity="0.9" />
+      </g>
+
+      <!-- Rosy Glowing Cheeks -->
+      <ellipse cx="168" cy="286" rx="22" ry="13" fill="url(#think-rosy-cheek)" />
+      <ellipse cx="344" cy="286" rx="22" ry="13" fill="url(#think-rosy-cheek)" />
+      <ellipse cx="166" cy="284" rx="5.5" ry="3.2" fill="#FFFFFF" opacity="0.5" transform="rotate(-15 166 284)" />
+      <ellipse cx="346" cy="284" rx="5.5" ry="3.2" fill="#FFFFFF" opacity="0.5" transform="rotate(15 346 284)" />
+
+      <!-- Cute Thoughtful Pursed "Hm..." Mouth -->
+      <g id="think-mouth">
+        <ellipse cx="254" cy="290" rx="6.5" ry="7.8" fill="#753012" stroke="#48220C" stroke-width="3" />
+        <ellipse cx="254" cy="291" rx="4.5" ry="5.5" fill="#D65858" />
+        <circle cx="252" cy="288" r="1.6" fill="#FFFFFF" opacity="0.75" />
+      </g>
+    </g>
+
+    <!-- Terracotta Neck Scarf -->
+    <g id="think-scarf">
+      <!-- Back Tail -->
+      <path d="M 326 376 C 336 392 344 408 353 420 C 344 424 336 422 330 414 C 327 400 326 388 326 376 Z"
+            fill="#8A2C17"
+            stroke="#6E200F"
+            stroke-width="3"
+            stroke-linejoin="round" />
+
+      <!-- Main Scarf Collar -->
+      <path d="M 166 342 C 196 358 316 358 346 342 C 354 360 342 380 324 386 C 280 396 232 396 188 386 C 170 380 158 360 166 342 Z"
+            fill="url(#think-scarf-main)"
+            stroke="#6E200F"
+            stroke-width="5"
+            stroke-linejoin="round" />
+
+      <path d="M 188 360 C 224 374 288 374 324 360" stroke="#F5937C" stroke-width="3.2" stroke-linecap="round" fill="none" />
+      <path d="M 200 376 C 234 386 278 386 312 376" stroke="#7A2210" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+      <!-- Front Tail with Fringes -->
+      <path d="M 320 374 C 326 395 330 415 336 433 C 324 435 315 432 310 422 C 310 404 313 388 316 374 Z"
+            fill="url(#think-scarf-main)"
+            stroke="#6E200F"
+            stroke-width="4"
+            stroke-linejoin="round" />
+      <path d="M 314 425 L 314 434 M 321 428 L 321 437 M 328 430 L 328 439 M 334 430 L 334 436"
+          stroke="#F8A794"
+          stroke-width="2.5"
+          stroke-linecap="round" />
+
+      <!-- Knot -->
+      <path d="M 308 360 C 320 351 336 354 338 368 C 339 378 323 386 310 376 Z"
+            fill="url(#think-scarf-knot)"
+            stroke="#6E200F"
+            stroke-width="4" />
+    </g>
+
+    <!-- Left Arm (Folded Under Supporting Elbow) -->
+    <g id="think-left-arm">
+      <path d="M 152 344 C 172 360 216 366 244 358 C 252 352 248 338 234 338 C 204 340 172 336 156 328 Z"
+            fill="url(#think-pastry-body)"
+            stroke="#7A3406"
+            stroke-width="4.5"
+            stroke-linejoin="round" />
+      <ellipse cx="242" cy="350" rx="12" ry="9" fill="#FFE8B8" />
+    </g>
+
+    <!-- Right Arm (Paw Placed Thoughtfully on Chin) -->
+    <g id="think-right-arm">
+      <!-- Arm going up to chin -->
+      <path d="M 346 342 C 342 316 318 300 286 308 C 276 313 282 326 292 326 C 314 324 330 334 336 350 Z"
+            fill="url(#think-pastry-body)"
+            stroke="#7A3406"
+            stroke-width="4.5"
+            stroke-linejoin="round" />
+
+      <!-- Paw on Chin -->
+      <ellipse cx="280" cy="308" rx="14" ry="12" fill="#F7C474" stroke="#7A3406" stroke-width="4" />
+      <ellipse cx="280" cy="307" rx="8.5" ry="6.5" fill="#FFF2D6" />
+      <!-- Soft finger crease dots -->
+      <circle cx="273" cy="302" r="2.2" fill="#FFE8B8" />
+      <circle cx="280" cy="299" r="2.4" fill="#FFE8B8" />
+      <circle cx="287" cy="302" r="2.2" fill="#FFE8B8" />
+    </g>
+  </g>
+
+  <!-- Curious Idea / Sparkle Accents (Golden Pastry Sparks) -->
+  <g id="think-sparkles">
+    <!-- Main Idea Sparkle -->
+    <path d="M 386 142 C 387 151 395 153 395 154 C 395 155 387 157 386 166 C 385 157 377 155 377 154 C 377 153 385 151 386 142 Z" fill="#F7C474" />
+    <circle cx="386" cy="154" r="2.5" fill="#FFFFFF" />
+
+    <!-- Secondary playful floating golden crumb sparks -->
+    <circle cx="368" cy="172" r="3.2" fill="#F7C474" opacity="0.8" />
+    <circle cx="404" cy="170" r="2.2" fill="#E59235" opacity="0.75" />
+    <circle cx="384" cy="184" r="1.8" fill="#F7C474" opacity="0.6" />
+  </g>
+</svg>

@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { orderStatuses, paymentStatuses, type Order } from '../constants/commerce';
 import { priceLabel } from '../utils/format';
 import { lastOrderId, orderToken, paymentDestination, rememberOrder } from '../utils/orderSession';
+import './commerce-public.css';
 
 export function OrderSummary({ order }: { order: Order }) {
   return (
@@ -99,12 +100,21 @@ export function OrderSummary({ order }: { order: Order }) {
 }
 export function OrderPage() {
   const { id = '' } = useParams();
-  const token = orderToken(id);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const fragmentToken = new URLSearchParams(location.hash.slice(1)).get('token') || '';
+  const emailToken = /^[a-f\d]{64}$/i.test(fragmentToken) ? fragmentToken : '';
+  const token = emailToken || orderToken(id);
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [showKey, setShowKey] = useState(false);
+  useEffect(() => {
+    if (!emailToken) return;
+    rememberOrder(id, emailToken);
+    navigate(location.pathname + location.search, { replace: true });
+  }, [emailToken, id, location.pathname, location.search, navigate]);
   async function refresh() {
     setBusy(true);
     setError('');
@@ -161,31 +171,42 @@ export function OrderPage() {
     }
   }
   return (
-    <section className="section commerce-page order-page">
-      <p className="eyebrow">THỨC QUÀ ĐANG ĐƯỢC CHĂM CHÚT</p>
-      <h1>{order ? 'Đơn hàng ' + order.code : 'Thông tin đơn hàng'}</h1>
-      <>
-        {busy && !order && <p role="status">Đang tải đơn hàng…</p>}
-        {error && (
-          <div className="form-status" role="alert">
-            <p>{error}</p>
-            {!token && (
-              <p>
-                <Link to="/tai-khoan">Đăng nhập tài khoản sở hữu đơn</Link> hoặc{' '}
-                <Link to="/tra-cuu-don-hang">nhập khóa tra cứu đơn mua</Link>.
-              </p>
-            )}
-          </div>
-        )}
+    <section className="section commerce-page order-page htv-commerce-public htv-order-page">
+      <header className="commerce-intro">
+        <p className="eyebrow">THỨC QUÀ ĐANG ĐƯỢC CHĂM CHÚT</p>
+        <h1>{order ? 'Đơn hàng ' + order.code : 'Thông tin đơn hàng'}</h1>
         {order && (
-          <>
+          <p className="commerce-lead">
+            Đơn đã được ghi nhận. Trạng thái thanh toán bên dưới được xác nhận từ hệ thống cửa hàng.
+          </p>
+        )}
+      </header>
+      {busy && !order && (
+        <p className="commerce-loading" role="status">
+          Đang tải đơn hàng…
+        </p>
+      )}
+      {error && (
+        <div className="form-status commerce-error" role="alert">
+          <p>{error}</p>
+          {!token && (
             <p>
-              Đơn đã được ghi nhận. Trạng thái thanh toán bên dưới được xác nhận từ hệ thống cửa
-              hàng.
+              <Link to="/tai-khoan">Đăng nhập tài khoản sở hữu đơn</Link> hoặc{' '}
+              <Link to="/tra-cuu-don-hang">nhập khóa tra cứu đơn mua</Link>.
             </p>
+          )}
+        </div>
+      )}
+      {order && (
+        <div className="order-layout">
+          <article className="commerce-panel order-summary-panel">
+            <OrderSummary order={order} />
+          </article>
+          <aside className="order-side-column">
             {token && (
-              <div className="retrieval-key">
-                <h2>Giữ lại khóa tra cứu của bạn</h2>
+              <section className="commerce-panel retrieval-key">
+                <p className="eyebrow">LƯU LẠI ĐỂ TRA CỨU</p>
+                <h2>Khóa riêng của đơn hàng</h2>
                 <p>
                   Lưu mã đơn và khóa riêng để tra cứu sau khi đóng trình duyệt. Không chia sẻ khóa
                   này công khai.
@@ -207,15 +228,14 @@ export function OrderPage() {
                 <button type="button" className="text-link" onClick={() => setShowKey((v) => !v)}>
                   {showKey ? 'Ẩn khóa' : 'Hiện khóa để lưu lại'}
                 </button>
-              </div>
+              </section>
             )}
-            <OrderSummary order={order} />
             {order.paymentMethod === 'payos' &&
               order.paymentStatus === 'unpaid' &&
               !['cancelled', 'delivered', 'returned', 'return_requested'].includes(
                 order.status,
               ) && (
-                <div className="notice">
+                <section className="notice order-payment-panel">
                   <p>
                     Đơn này chưa được xác nhận thanh toán.{' '}
                     {token
@@ -225,51 +245,53 @@ export function OrderPage() {
                   <button className="button" disabled={busy} onClick={() => void pay()}>
                     Thanh toán VietQR qua payOS
                   </button>
-                </div>
+                </section>
               )}
-            <div className="order-actions">
-              <button
-                className="button button-outline"
-                disabled={busy}
-                onClick={() => void refresh()}
-              >
-                Cập nhật trạng thái
-              </button>
-              {order.paymentMethod === 'cod' &&
-                order.status === 'pending' &&
-                order.paymentStatus === 'unpaid' && (
+            <section className="commerce-panel order-action-panel">
+              <div className="order-actions">
+                <button
+                  className="button button-outline"
+                  disabled={busy}
+                  onClick={() => void refresh()}
+                >
+                  Cập nhật trạng thái
+                </button>
+                {order.paymentMethod === 'cod' &&
+                  order.status === 'pending' &&
+                  order.paymentStatus === 'unpaid' && (
+                    <button
+                      className="text-link"
+                      disabled={busy}
+                      onClick={() => setConfirmCancel(true)}
+                    >
+                      Hủy đơn hàng
+                    </button>
+                  )}
+              </div>
+              {confirmCancel && (
+                <div className="notice order-cancel-confirmation">
+                  <p>Bạn muốn hủy đơn hàng này? Đơn đã hủy sẽ không được giao.</p>
+                  <button className="button" disabled={busy} onClick={() => void cancel()}>
+                    Xác nhận hủy đơn
+                  </button>
                   <button
                     className="text-link"
                     disabled={busy}
-                    onClick={() => setConfirmCancel(true)}
+                    onClick={() => setConfirmCancel(false)}
                   >
-                    Hủy đơn hàng
+                    Giữ đơn hàng
                   </button>
-                )}
-            </div>
-            {confirmCancel && (
-              <div className="notice">
-                <p>Bạn muốn hủy đơn hàng này? Đơn đã hủy sẽ không được giao.</p>
-                <button className="button" disabled={busy} onClick={() => void cancel()}>
-                  Xác nhận hủy đơn
-                </button>
-                <button
-                  className="text-link"
-                  disabled={busy}
-                  onClick={() => setConfirmCancel(false)}
-                >
-                  Giữ đơn hàng
-                </button>
-              </div>
-            )}
-          </>
-        )}
-        {!order && !busy && (
-          <button className="button" onClick={() => void refresh()}>
-            Thử tải lại
-          </button>
-        )}
-      </>
+                </div>
+              )}
+            </section>
+          </aside>
+        </div>
+      )}
+      {!order && !busy && (
+        <button className="button" onClick={() => void refresh()}>
+          Thử tải lại
+        </button>
+      )}
     </section>
   );
 }
@@ -294,11 +316,13 @@ export function OrderLookup() {
     }
   }
   return (
-    <section className="section commerce-page lookup-page">
-      <p className="eyebrow">DÕI THEO THỨC QUÀ</p>
-      <h1>Tra cứu đơn hàng</h1>
-      <p>Nhập mã đơn và khóa riêng nhận được sau khi đặt hàng.</p>
-      <form onSubmit={submit}>
+    <section className="section commerce-page lookup-page htv-commerce-public htv-lookup-page">
+      <header className="commerce-intro">
+        <p className="eyebrow">DÕI THEO THỨC QUÀ</p>
+        <h1>Tra cứu đơn hàng</h1>
+        <p className="commerce-lead">Nhập mã đơn và khóa riêng nhận được sau khi đặt hàng.</p>
+      </header>
+      <form className="commerce-panel order-lookup-form" onSubmit={submit}>
         <label className="field">
           Mã đơn / ID
           <input required value={id} onChange={(e) => setId(e.target.value)} autoComplete="off" />
@@ -322,7 +346,7 @@ export function OrderLookup() {
           </p>
         )}
       </form>
-      <p className="fine-print">
+      <p className="fine-print lookup-help">
         Nếu quên khóa, vui lòng liên hệ cửa hàng để xác minh thông tin người nhận.
       </p>
     </section>
@@ -349,29 +373,39 @@ export function PaymentResult() {
     };
   }, [id]);
   return (
-    <section className="section commerce-page">
-      <p className="eyebrow">THÔNG TIN THANH TOÁN</p>
-      <h1>
-        {order?.paymentStatus === 'paid'
-          ? 'Đã xác nhận thanh toán'
-          : 'Kiểm tra trạng thái thanh toán'}
-      </h1>
-      <p role="status">
-        {order
-          ? `Đơn ${order.code}: ${paymentStatuses[order.paymentStatus] || order.paymentStatus}.`
-          : 'Chưa có xác nhận thanh toán từ hệ thống.'}
-      </p>
-      <p>
-        Nếu bạn vừa chuyển khoản, trạng thái có thể cần một lúc để cập nhật. Việc quay về trang này
-        không thay thế xác nhận từ cửa hàng.
-      </p>
-      {error && <p role="alert">{error}</p>}
-      <Link
-        className="button"
-        to={id ? '/don-hang/' + encodeURIComponent(id) : '/tra-cuu-don-hang'}
+    <section className="section commerce-page htv-commerce-public htv-payment-result">
+      <header className="commerce-intro">
+        <p className="eyebrow">THÔNG TIN THANH TOÁN</p>
+        <h1>
+          {order?.paymentStatus === 'paid'
+            ? 'Đã xác nhận thanh toán'
+            : 'Kiểm tra trạng thái thanh toán'}
+        </h1>
+      </header>
+      <div
+        className={`commerce-panel payment-result-card ${order?.paymentStatus === 'paid' ? 'is-paid' : 'is-pending'}`}
       >
-        Xem và cập nhật đơn hàng
-      </Link>
+        <p className="payment-result-status" role="status">
+          {order
+            ? `Đơn ${order.code}: ${paymentStatuses[order.paymentStatus] || order.paymentStatus}.`
+            : 'Chưa có xác nhận thanh toán từ hệ thống.'}
+        </p>
+        <p>
+          Nếu bạn vừa chuyển khoản, trạng thái có thể cần một lúc để cập nhật. Việc quay về trang
+          này không thay thế xác nhận từ cửa hàng.
+        </p>
+        {error && (
+          <p className="commerce-error" role="alert">
+            {error}
+          </p>
+        )}
+        <Link
+          className="button"
+          to={id ? '/don-hang/' + encodeURIComponent(id) : '/tra-cuu-don-hang'}
+        >
+          Xem và cập nhật đơn hàng
+        </Link>
+      </div>
     </section>
   );
 }

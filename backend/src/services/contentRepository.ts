@@ -8,6 +8,7 @@ export interface ContentRepository {
   readonly available: boolean;
   getContent(): Promise<SiteContent | null>;
   saveContent(content: SiteContent): Promise<SiteContent>;
+  saveContentIfCurrent?(content: SiteContent, previous: SiteContent | null): Promise<boolean>;
   createContact(contact: ContactInput): Promise<void>;
 }
 
@@ -36,6 +37,23 @@ export class MongoRepository implements ApplicationRepository {
       { upsert: true, new: true, runValidators: true },
     ).exec();
     return content;
+  }
+
+  async saveContentIfCurrent(content: SiteContent, previous: SiteContent | null): Promise<boolean> {
+    try {
+      const result = await ContentModel.updateOne(
+        previous
+          ? { key: 'site', content: previous }
+          : { key: 'site', content: { $exists: false } },
+        { $set: { content }, $setOnInsert: { key: 'site' } },
+        { upsert: !previous, runValidators: true },
+      ).exec();
+      return result.matchedCount === 1 || result.upsertedCount === 1;
+    } catch (error) {
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 11000)
+        return false;
+      throw error;
+    }
   }
 
   async seedIfAbsent(content: SiteContent): Promise<void> {

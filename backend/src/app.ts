@@ -2,6 +2,7 @@ import cors from 'cors';
 import express, { type ErrorRequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import { createHmac } from 'node:crypto';
 import type { SiteContent } from './validators/content.js';
 import type { AppConfig } from './config/env.js';
 import type { ContentRepository } from './services/contentRepository.js';
@@ -19,6 +20,17 @@ import { ContactService } from './services/contactService.js';
 import { createCustomerModule } from './routes/customerRoutes.js';
 import { createCommerceCustomerOrderGateway } from './services/customerOrderGateway.js';
 import { CustomerError } from './utils/customerSecurity.js';
+import { createSmtpAuthMailer } from './services/authMail.js';
+import type { AuthMailer } from './services/authMail.js';
+import type { AuthOptions } from './services/customerAuthService.js';
+import { ChatService } from './services/chatService.js';
+import type { ChatProvider } from './services/geminiClient.js';
+import { createChatRouter } from './routes/chatRoutes.js';
+import { createChatHandoffRouter } from './routes/chatHandoffRoutes.js';
+import { ChatHandoffService } from './services/chatHandoffService.js';
+import { createAdminProductRouter } from './routes/adminProductRoutes.js';
+import { uploadDirectory } from './services/productImageService.js';
+import { systemAuditMiddleware } from './middlewares/systemAudit.js';
 
 export type AppDependencies = {
   repository: ContentRepository & { orderRepository?: OrderRepository };
@@ -26,6 +38,9 @@ export type AppDependencies = {
   seedContent: SiteContent;
   commerce?: CommerceService;
   paymentFetcher?: typeof fetch;
+  auth?: AuthOptions;
+  orderMailer?: AuthMailer;
+  chatProvider?: ChatProvider;
 };
 
 export function createApp({
@@ -34,10 +49,38 @@ export function createApp({
   seedContent,
   commerce,
   paymentFetcher,
+  auth,
+  orderMailer,
+  chatProvider,
 }: AppDependencies) {
   const app = express();
   app.disable('x-powered-by');
+  if (config.trustProxyHops) app.set('trust proxy', config.trustProxyHops);
   app.use(helmet());
+  app.use(
+    '/uploads',
+    (req, res, next) => {
+      if (
+        !/^\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/.test(
+          req.path,
+        )
+      ) {
+        res.sendStatus(404);
+        return;
+      }
+      next();
+    },
+    express.static(uploadDirectory, {
+      dotfiles: 'deny',
+      index: false,
+      immutable: true,
+      maxAge: '1y',
+      setHeaders(res) {
+        res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+        res.setHeader('Content-Type', 'image/webp');
+      },
+    }),
+  );
   const allowedOrigins = new Set([config.frontendOrigin]);
   if (config.isDevelopment) {
     allowedOrigins.add('http://127.0.0.1:5173');
@@ -55,6 +98,7 @@ export function createApp({
         'Authorization',
         'Idempotency-Key',
         'X-Order-Token',
+        'X-Chat-Token',
         'X-Requested-With',
       ],
     }),
@@ -101,18 +145,55 @@ export function createApp({
       new PayOsHttpClient(payOsSettings, paymentFetcher),
     );
   app.locals.commerce = commerceService;
+  const authSecret = config.authTokenSecret ?? config.orderTokenSecret;
+  const smtpMailer = createSmtpAuthMailer({
+    host: config.smtpHost,
+    port: config.smtpPort,
+    user: config.smtpUser,
+    password: config.smtpPassword,
+    from: config.mailFrom,
+  });
+  const authOptions =
+    auth ??
+    (authSecret
+      ? {
+          mailer: smtpMailer,
+          publicWebUrl: config.publicWebUrl ?? config.frontendOrigin,
+          challengeSecret: createHmac('sha256', authSecret)
+            .update('htv:auth:challenge:v1')
+            .digest('hex'),
+          resetSecret: createHmac('sha256', authSecret).update('htv:auth:reset:v1').digest('hex'),
+        }
+      : undefined);
   const customers = createCustomerModule({
     orders: createCommerceCustomerOrderGateway(commerceService),
     content: repository,
     allowedOrigins,
     isDevelopment: config.isDevelopment,
+    auth: authOptions,
   });
   commerceService.setVoucherRepository(customers.repository);
-  app.use('/api', customers.middleware, customers.csrf);
+  app.use('/api', customers.middleware, systemAuditMiddleware, customers.csrf);
   app.use('/api', customers.router);
 
   const contentService = new ContentService(repository, seedContent);
   const contactService = new ContactService(repository);
+  app.use('/api', createAdminProductRouter(contentService, adminAuth, adminLimiter));
+  const chatService = new ChatService(
+    contentService,
+    {
+      apiKey: config.geminiApiKey ?? '',
+      model: config.geminiModel ?? 'gemini-3.1-flash-lite',
+      enabled: Boolean(config.geminiApiKey),
+      timeoutMs: 15_000,
+    },
+    chatProvider,
+  );
+  app.use('/api', createChatRouter(chatService));
+  app.use(
+    '/api',
+    createChatHandoffRouter(new ChatHandoffService(), { isDevelopment: config.isDevelopment }),
+  );
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', storage: repository.storage });
@@ -134,6 +215,8 @@ export function createApp({
     createCommerceRouter({
       service: commerceService,
       checksumKey: config.payOsChecksumKey,
+      orderMailer: orderMailer ?? (config.smtpHost && config.mailFrom ? smtpMailer : undefined),
+      publicWebUrl: config.publicWebUrl ?? config.frontendOrigin,
       publicLimiter,
       adminLimiter,
     }),

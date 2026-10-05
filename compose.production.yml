@@ -1,0 +1,58 @@
+name: ha-thanh-vi
+services:
+  api:
+    build:
+      context: .
+      target: api
+    restart: unless-stopped
+    init: true
+    env_file: ./deploy/aws/.env.production
+    environment:
+      NODE_ENV: production
+      PORT: '4000'
+      TRUST_PROXY_HOPS: '1'
+      FRONTEND_ORIGIN: https://hathanhvi.vn
+      PUBLIC_WEB_URL: https://hathanhvi.vn
+    expose:
+      - '4000'
+    volumes:
+      - uploads:/app/backend/uploads
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4000/api/health').then(r=>{if(!r.ok)process.exit(1);return r.json()}).then(j=>{if(j.storage==='demo-read-only')process.exit(1)}).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  web:
+    build:
+      context: .
+      target: web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+volumes:
+  uploads:
+  caddy_data:
+  caddy_config:

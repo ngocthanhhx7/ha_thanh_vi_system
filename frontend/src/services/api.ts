@@ -1,21 +1,28 @@
 import type { Content } from '../constants/catalog';
 import type { CommerceConfig, Order, OrderInput } from '../constants/commerce';
+import { fetchWithErrorRouting, routeApiError } from './httpErrors';
 
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch('/api' + path, {
-    credentials: 'same-origin',
-    ...init,
-    signal: init.signal ?? AbortSignal.timeout(15000),
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest',
-      ...init.headers,
+  const response = await fetchWithErrorRouting(
+    '/api' + path,
+    {
+      credentials: 'same-origin',
+      ...init,
+      signal: init.signal ?? AbortSignal.timeout(15000),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...init.headers,
+      },
     },
-  });
+    path,
+  );
   if (response.status === 204) return undefined as T;
   const data = await response.json().catch(() => null);
+  if (!response.ok) routeApiError(path, response.status, data, init.method);
   if (!response.ok)
     throw new Error(data?.message || 'Chưa thể kết nối hệ thống. Vui lòng thử lại.');
+  if (data === null) routeApiError(path, 502, undefined, init.method);
   if (data === null) throw new Error('Phản hồi hệ thống chưa hợp lệ. Vui lòng thử lại.');
   return data as T;
 }

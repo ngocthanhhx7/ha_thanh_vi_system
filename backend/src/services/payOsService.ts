@@ -1,4 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
+import { isIP } from 'node:net';
 import { createPayOsSignature, isAllowedPayOsUrl } from '../utils/paymentSignatures.js';
 import { ServiceError } from './errors.js';
 import type { OrderRecord } from '../models/order.js';
@@ -14,6 +15,62 @@ export type PayOsSettings = {
 export type PayOsClient = {
   createPayment(order: OrderRecord): Promise<{ paymentUrl: string; paymentLinkId?: string }>;
 };
+
+export async function confirmPayOsWebhook(
+  settings: Pick<PayOsSettings, 'clientId' | 'apiKey'>,
+  webhookUrl: string,
+  fetcher: typeof fetch = fetch,
+): Promise<void> {
+  if (!settings.clientId || !settings.apiKey) {
+    throw new ServiceError(503, 'Thiếu Client ID hoặc API Key để đăng ký webhook PayOS.');
+  }
+  let target: URL;
+  try {
+    target = new URL(webhookUrl);
+  } catch {
+    throw new ServiceError(400, 'PAYOS_WEBHOOK_URL không hợp lệ.');
+  }
+  if (
+    target.protocol !== 'https:' ||
+    target.username ||
+    target.password ||
+    target.search ||
+    target.hash ||
+    target.hostname === 'localhost' ||
+    target.hostname.endsWith('.localhost') ||
+    target.hostname.endsWith('.local') ||
+    isIP(target.hostname.replace(/^\[|\]$/g, '')) !== 0
+  ) {
+    throw new ServiceError(400, 'Webhook PayOS cần URL HTTPS công khai, không dùng localhost.');
+  }
+  let response: Response;
+  try {
+    response = await fetcher('https://api-merchant.payos.vn/confirm-webhook', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-client-id': settings.clientId,
+        'x-api-key': settings.apiKey,
+      },
+      body: JSON.stringify({ webhookUrl: target.toString() }),
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch {
+    throw new ServiceError(503, 'Không thể kết nối PayOS để đăng ký webhook.');
+  }
+  const result: unknown = await response.json().catch(() => null);
+  if (
+    !response.ok ||
+    !result ||
+    typeof result !== 'object' ||
+    (result as { code?: unknown }).code !== '00'
+  ) {
+    throw new ServiceError(
+      503,
+      'PayOS chưa xác nhận webhook. Kiểm tra URL và trạng thái endpoint.',
+    );
+  }
+}
 
 export class PayOsHttpClient implements PayOsClient {
   constructor(

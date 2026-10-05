@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowUpRight,
+  Bell,
   Gift,
   LogOut,
   MapPin,
@@ -21,8 +22,12 @@ import {
 import { orderStatuses, paymentStatuses, type Order } from '../constants/commerce';
 import { priceLabel } from '../utils/format';
 import './account.css';
+import './account-public.css';
+import { AuthForm } from '../components/AuthForm';
+import { WorkspaceNotifications } from '../components/Workspace';
 
-type Section = 'profile' | 'orders' | 'addresses' | 'vouchers' | 'reviews' | 'support';
+type Section =
+  'profile' | 'orders' | 'addresses' | 'vouchers' | 'reviews' | 'support' | 'notifications';
 const sections = [
   { id: 'orders', label: 'Đơn hàng của tôi', icon: Package },
   { id: 'profile', label: 'Thông tin tài khoản', icon: UserRound },
@@ -30,7 +35,10 @@ const sections = [
   { id: 'vouchers', label: 'Ví ưu đãi', icon: Gift },
   { id: 'reviews', label: 'Đánh giá sản phẩm', icon: Star },
   { id: 'support', label: 'Hỗ trợ & đổi trả', icon: MessageCircle },
+  { id: 'notifications', label: 'Thông báo', icon: Bell },
 ] as const;
+const isAccountSection = (value: string | null): value is Section =>
+  sections.some((section) => section.id === value);
 const orderTabs = [
   ['all', 'Tất cả'],
   ['pending', 'Chờ xác nhận'],
@@ -58,10 +66,15 @@ const emptyAddress = (): Omit<Address, 'id'> => ({
 });
 
 export function Account() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [user, setUser] = useState<CustomerUser | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [section, setSection] = useState<Section>('orders');
+  const [section, setSection] = useState<Section>(() =>
+    isAccountSection(searchParams.get('section'))
+      ? (searchParams.get('section') as Section)
+      : 'orders',
+  );
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -80,6 +93,11 @@ export function Account() {
   const [ticketKind, setTicketKind] = useState<'support' | 'return'>('support');
   const [reviewOrder, setReviewOrder] = useState('');
   const [rating, setRating] = useState(5);
+
+  useEffect(() => {
+    const requestedSection = searchParams.get('section');
+    if (isAccountSection(requestedSection)) setSection(requestedSection);
+  }, [searchParams]);
 
   useEffect(() => {
     let active = true;
@@ -170,35 +188,6 @@ export function Account() {
       setBusy(false);
     }
   }
-  async function authenticate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    setBusy(true);
-    setError('');
-    setNotice('');
-    try {
-      const credentials = {
-        email: String(form.get('email')).trim(),
-        password: String(form.get('password')),
-      };
-      const result =
-        mode === 'register'
-          ? await customerApi.register({
-              ...credentials,
-              name: String(form.get('name')).trim(),
-              phone: String(form.get('phone')).trim(),
-            })
-          : await customerApi.login(credentials);
-      clearPrivateData();
-      setUser(result.user);
-      setSection('orders');
-      window.dispatchEvent(new Event('customer-session-changed'));
-    } catch (reason) {
-      setError(messageOf(reason));
-    } finally {
-      setBusy(false);
-    }
-  }
   const selectedReviewOrder = orders.find(
     (order) => order.id === reviewOrder && order.status === 'delivered',
   );
@@ -232,76 +221,18 @@ export function Account() {
             Khám phá thức quà <ArrowUpRight size={16} />
           </Link>
         </div>
-        <div className="account-panel">
-          <div className="account-auth-tabs" aria-label="Tài khoản">
-            <button
-              type="button"
-              aria-pressed={mode === 'login'}
-              disabled={busy}
-              onClick={() => {
-                setMode('login');
-                setError('');
-              }}
-            >
-              Đăng nhập
-            </button>
-            <button
-              type="button"
-              aria-pressed={mode === 'register'}
-              disabled={busy}
-              onClick={() => {
-                setMode('register');
-                setError('');
-              }}
-            >
-              Đăng ký
-            </button>
-          </div>
-          <h2>{mode === 'login' ? 'Mừng bạn trở lại' : 'Thêm một người bạn mới'}</h2>
-          <form onSubmit={authenticate} key={mode}>
-            {mode === 'register' && (
-              <>
-                <label className="field">
-                  Họ và tên
-                  <input name="name" autoComplete="name" required maxLength={100} />
-                </label>
-                <label className="field">
-                  Số điện thoại
-                  <input name="phone" type="tel" autoComplete="tel" required maxLength={20} />
-                </label>
-              </>
-            )}
-            <label className="field">
-              Email
-              <input name="email" type="email" autoComplete="email" required maxLength={254} />
-            </label>
-            <label className="field">
-              Mật khẩu
-              <input
-                name="password"
-                type="password"
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                required
-                minLength={mode === 'register' ? 10 : undefined}
-                maxLength={128}
-              />
-              {mode === 'register' && <small>Từ 10 đến 128 ký tự.</small>}
-            </label>
-            <button className="button" disabled={busy}>
-              {busy ? 'Đang xử lý…' : mode === 'login' ? 'Đăng nhập' : 'Tạo tài khoản'}
-            </button>
-            {error && (
-              <p className="account-error" role="alert">
-                {error}
-              </p>
-            )}
-            {notice && <p role="status">{notice}</p>}
-          </form>
-          <p className="fine-print">
-            Bạn vẫn có thể <Link to="/tra-cuu-don-hang">tra cứu đơn mua không cần tài khoản</Link>{' '}
-            bằng khóa riêng.
-          </p>
-        </div>
+        <AuthForm
+          initialError={error}
+          onAccountAppeal={(appealToken) =>
+            navigate('/khieu-nai-tai-khoan', { state: { appealToken } })
+          }
+          onAuthenticated={(verifiedUser) => {
+            clearPrivateData();
+            setUser(verifiedUser);
+            setSection('orders');
+            setSearchParams({ section: 'orders' });
+          }}
+        />
       </section>
     );
 
@@ -328,6 +259,7 @@ export function Account() {
                 disabled={busy}
                 onClick={() => {
                   setSection(id);
+                  setSearchParams({ section: id });
                   setError('');
                   setNotice('');
                 }}
@@ -967,6 +899,7 @@ export function Account() {
                   </p>
                 </>
               )}
+              {section === 'notifications' && <WorkspaceNotifications />}
             </>
           )}
         </div>

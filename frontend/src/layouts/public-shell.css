@@ -1,0 +1,80 @@
+body {
+  background-color: var(--cream);
+  background-image: radial-gradient(ellipse at 94% 9%, #d9bd8621, transparent 430px);
+}
+.announcement {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(95deg, #641a27, #791f2a 48%, #591b27);
+}
+.announcement::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: url('/brand/pattern.webp') right 30% center / 220px auto repeat;
+  content: '';
+  opacity: 0.09;
+  pointer-events: none;
+}
+.announcement > * {
+  position: relative;
+  z-index: 1;
+}
+.header {
+  position: sticky;
+  top: 0;
+  isolation: isolate;
+  background: #fbf5e9ed;
+  box-shadow: 0 8px 24px #4625180a;
+  backdrop-filter: blur(16px) saturate(1.12);
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+}
+.desktop-nav a {
+  transition: color 180ms ease;
+}
+.desktop-nav a:hover {
+  color: var(--red);
+}
+.closing-strip {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, #f4e8d4, #fbf5e9 50%, #f4e8d4);
+}
+footer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 85% 0%, #a66e382c, transparent 40%),
+    linear-gradient(125deg, #4d2025, #3e1c23 72%, #351a21);
+}
+footer::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 0 auto;
+  width: min(48%, 660px);
+  background: url('/brand/pattern.webp') right top / 360px auto repeat;
+  content: '';
+  opacity: 0.09;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 55%);
+  mask-image: linear-gradient(90deg, transparent, #000 55%);
+}
+footer > * {
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 640px) {
+  .header {
+    background: #fbf5e9f2;
+  }
+  footer::before {
+    width: 100%;
+    background-size: 270px auto;
+    opacity: 0.065;
+    -webkit-mask-image: linear-gradient(180deg, #000, transparent 85%);
+    mask-image: linear-gradient(180deg, #000, transparent 85%);
+  }
+}

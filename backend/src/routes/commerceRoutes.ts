@@ -2,15 +2,23 @@ import { Router } from 'express';
 import { commerceControllers } from '../controllers/commerceController.js';
 import type { CommerceService } from '../services/commerceService.js';
 import { requireRole } from '../middlewares/customerAuth.js';
+import type { AuthMailer } from '../services/authMail.js';
 
 export function createCommerceRouter(options: {
   service: CommerceService;
   checksumKey?: string;
   publicLimiter: ReturnType<typeof import('express-rate-limit').default>;
   adminLimiter: ReturnType<typeof import('express-rate-limit').default>;
+  orderMailer?: AuthMailer;
+  publicWebUrl?: string;
 }) {
   const router = Router();
-  const controllers = commerceControllers(options.service, options.checksumKey);
+  const controllers = commerceControllers(
+    options.service,
+    options.checksumKey,
+    options.orderMailer,
+    options.publicWebUrl,
+  );
   const admin = requireRole('admin', 'staff');
 
   router.get('/commerce/config', (_req, res) => res.json(options.service.config));

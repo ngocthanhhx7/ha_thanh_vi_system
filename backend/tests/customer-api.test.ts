@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { before, beforeEach, after, test } from 'node:test';
 import request from 'supertest';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import type { Express } from 'express';
 import { createApp } from '../src/app.js';
 import { loadSeedContent } from '../src/utils/contentSeed.js';
@@ -16,10 +16,15 @@ import {
   CustomerVoucher,
   CustomerReview,
 } from '../src/models/customer.js';
+import { TrustedDevice } from '../src/models/authChallenge.js';
+import { CustomerAccountAppeal } from '../src/models/accountManagement.js';
 import { OrderModel } from '../src/models/order.js';
+import { Notification, SystemAuditLog } from '../src/models/operations.js';
+import type { AuthOptions } from '../src/services/customerAuthService.js';
+import type { AuthMailer } from '../src/services/authMail.js';
 import { SESSION_COOKIE } from '../src/middlewares/customerAuth.js';
 
-let database: MongoMemoryServer;
+let database: MongoMemoryReplSet;
 let app: Express;
 let adminCookie: string;
 let staffCookie: string;
@@ -29,6 +34,39 @@ let customerId: string;
 const origin = 'http://localhost:5173';
 const seed = loadSeedContent();
 const password = 'Test-password-for-api!';
+const delivered: { to: string; text: string }[] = [];
+const orderEmails: { to: string; subject: string; text: string; html: string }[] = [];
+const orderMailer: AuthMailer = {
+  async send(message) {
+    orderEmails.push(message);
+  },
+};
+const auth: AuthOptions = {
+  mailer: {
+    async send(message) {
+      delivered.push(message);
+    },
+  },
+  publicWebUrl: origin,
+  challengeSecret: 'test-challenge-secret-at-least-32-characters',
+  resetSecret: 'test-reset-secret-at-least-32-characters',
+};
+const latestCode = (email: string) =>
+  delivered
+    .filter((mail) => mail.to === email)
+    .at(-1)!
+    .text.match(/\b\d{6}\b/)![0];
+const loginVerified = async (email: string) => {
+  const login = await request(app).post('/api/auth/login').set(csrf).send({ email, password });
+  assert.equal(login.status, 200, login.body.message);
+  if (!login.body.otpRequired) return login;
+  const verified = await request(app)
+    .post('/api/auth/verify-login')
+    .set(csrf)
+    .send({ challengeId: login.body.challengeId, code: latestCode(email) });
+  assert.equal(verified.status, 200, verified.body.message);
+  return verified;
+};
 const csrf = { 'X-Requested-With': 'XMLHttpRequest', Origin: origin };
 const checkoutBody = {
   items: [{ productId: seed.products[0].id, quantity: 3 }],
@@ -44,6 +82,62 @@ const checkoutBody = {
 };
 const cookieFrom = (response: { headers: Record<string, unknown> }) =>
   String((response.headers['set-cookie'] as string[])[0]).split(';')[0];
+const registerCustomer = async (email: string) => {
+  const registered = await request(app).post('/api/auth/register').set(csrf).send({
+    email,
+    name: 'Khách hàng thử',
+    phone: '0912345678',
+    password,
+    confirmPassword: password,
+  });
+  assert.equal(registered.status, 201, registered.body.message);
+  const verified = await request(app)
+    .post('/api/auth/verify-email')
+    .set(csrf)
+    .send({ email, code: latestCode(email), rememberDevice: true });
+  assert.equal(verified.status, 200, verified.body.message);
+  const cookies = verified.headers['set-cookie'] as unknown as string[];
+  return {
+    id: verified.body.user.id as string,
+    cookie: cookies.map((value) => value.split(';')[0]).join('; '),
+  };
+};
+const createSuspendedAppeal = async (email: string) => {
+  const account = await registerCustomer(email);
+  const suspended = await request(app)
+    .patch('/api/admin/users/' + account.id)
+    .set(csrf)
+    .set('User-Agent', 'HTV-account-admin-test/1.0')
+    .set('Cookie', adminCookie)
+    .send({ accountStatus: 'suspended', reason: 'Review bảo mật trong kiểm thử.' });
+  assert.equal(suspended.status, 200, suspended.body.message);
+  assert.equal(await CustomerSession.exists({ userId: account.id }), null);
+  assert.equal(await TrustedDevice.exists({ userId: account.id }), null);
+
+  const login = await request(app)
+    .post('/api/auth/login')
+    .set(csrf)
+    .set('Cookie', account.cookie)
+    .send({ email, password, rememberDevice: true });
+  assert.equal(login.status, 200, login.body.message);
+  assert.equal(login.body.otpRequired, true);
+  assert.equal(login.body.appealRequired, true);
+  const verified = await request(app)
+    .post('/api/auth/verify-login')
+    .set(csrf)
+    .send({ challengeId: login.body.challengeId, code: latestCode(email) });
+  assert.equal(verified.status, 200, verified.body.message);
+  assert.equal(verified.body.appealRequired, true);
+  assert.equal(await CustomerSession.exists({ userId: account.id }), null);
+  assert.equal((await request(app).get('/api/account/addresses')).status, 401);
+
+  const submitted = await request(app).post('/api/auth/appeals').set(csrf).send({
+    appealToken: verified.body.appealToken,
+    message: 'Tôi tin tài khoản bị khóa nhầm, xin vui lòng kiểm tra và xem xét lại giúp tôi.',
+  });
+  assert.equal(submitted.status, 201, submitted.body.message);
+  return { ...account, appealId: submitted.body.appeal.id as string };
+};
 const checkout = (cookie?: string, extra: Record<string, unknown> = {}) => {
   const req = request(app).post('/api/orders').set(csrf).set('Idempotency-Key', randomUUID());
   if (cookie) req.set('Cookie', cookie);
@@ -67,7 +161,7 @@ const campaign = (code: string, extra: Record<string, unknown> = {}) => ({
 
 before(
   async () => {
-    database = await MongoMemoryServer.create({ instance: { dbName: 'htv_customer_api_test' } });
+    database = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
     await mongoose.connect(database.getUri());
     const repository = new MongoRepository();
     await repository.seedIfAbsent(seed);
@@ -75,6 +169,8 @@ before(
     await OrderModel.init();
     await bootstrapAdmin({ ADMIN_EMAIL: 'admin@example.com', ADMIN_PASSWORD: password });
     app = createApp({
+      auth,
+      orderMailer,
       repository,
       seedContent: seed,
       config: {
@@ -83,10 +179,7 @@ before(
         orderTokenSecret: 'test-order-token-secret-at-least-32-chars',
       },
     });
-    const login = await request(app)
-      .post('/api/auth/login')
-      .set(csrf)
-      .send({ email: 'admin@example.com', password });
+    const login = await loginVerified('admin@example.com');
     assert.equal(login.status, 200, login.body.message);
     adminCookie = cookieFrom(login);
     const staff = await request(app)
@@ -95,22 +188,27 @@ before(
       .set('Cookie', adminCookie)
       .send({ email: 'staff@example.com', name: 'Nhân viên', phone: '0912345678', password });
     assert.equal(staff.status, 201);
-    staffCookie = cookieFrom(
-      await request(app)
-        .post('/api/auth/login')
-        .set(csrf)
-        .send({ email: 'staff@example.com', password }),
-    );
+    staffCookie = cookieFrom(await loginVerified('staff@example.com'));
     for (const email of ['customer@example.com', 'other@example.com']) {
-      const response = await request(app)
-        .post('/api/auth/register')
-        .set(csrf)
-        .send({ email, name: 'Khách hàng', phone: '0912345678', password });
+      const response = await request(app).post('/api/auth/register').set(csrf).send({
+        email,
+        name: 'Khách hàng',
+        phone: '0912345678',
+        password,
+        confirmPassword: password,
+      });
       assert.equal(response.status, 201, response.body.message);
+      assert.equal(response.body.verificationRequired, true);
+      assert.equal(response.headers['set-cookie'], undefined);
+      const verified = await request(app)
+        .post('/api/auth/verify-email')
+        .set(csrf)
+        .send({ email, code: latestCode(email) });
+      assert.equal(verified.status, 200, verified.body.message);
       if (email.startsWith('customer')) {
-        customerCookie = cookieFrom(response);
-        customerId = response.body.user.id;
-      } else otherCookie = cookieFrom(response);
+        customerCookie = cookieFrom(verified);
+        customerId = verified.body.user.id;
+      } else otherCookie = cookieFrom(verified);
     }
   },
   { timeout: 120000 },
@@ -121,7 +219,10 @@ after(async () => {
 });
 // Each scenario uses a fresh limiter while preserving the isolated test database and sessions.
 beforeEach(() => {
+  orderEmails.length = 0;
   app = createApp({
+    auth,
+    orderMailer,
     repository: new MongoRepository(),
     seedContent: seed,
     config: {
@@ -130,6 +231,28 @@ beforeEach(() => {
       orderTokenSecret: 'test-order-token-secret-at-least-32-chars',
     },
   });
+});
+
+test('new checkout sends one confirmation email and an idempotent replay does not resend it', async () => {
+  const key = randomUUID();
+  const send = () =>
+    request(app).post('/api/orders').set(csrf).set('Idempotency-Key', key).send(checkoutBody);
+  const created = await send();
+  assert.equal(created.status, 201, created.body.message);
+  assert.equal(orderEmails.length, 1);
+  assert.equal(orderEmails[0].to, checkoutBody.customer.email);
+  assert.match(orderEmails[0].subject, new RegExp(created.body.order.code));
+  assert.match(orderEmails[0].text, new RegExp(created.body.order.code));
+  assert.ok(
+    orderEmails[0].text.includes(
+      `/don-hang/${created.body.order.id}#token=${created.body.accessToken}`,
+    ),
+  );
+
+  const replay = await send();
+  assert.equal(replay.status, 200);
+  assert.equal(replay.body.order.id, created.body.order.id);
+  assert.equal(orderEmails.length, 1);
 });
 
 test('cookie session is HttpOnly, token is stored hashed, registration cannot choose role, CSRF and logout revoke access', async () => {
@@ -167,10 +290,7 @@ test('cookie session is HttpOnly, token is stored hashed, registration cannot ch
     ).status,
     403,
   );
-  const login = await request(app)
-    .post('/api/auth/login')
-    .set(csrf)
-    .send({ email: 'customer@example.com', password });
+  const login = await loginVerified('customer@example.com');
   assert.match(String(login.headers['set-cookie']), /HttpOnly/);
   assert.match(String(login.headers['set-cookie']), /SameSite=Lax/);
   const temporary = cookieFrom(login);
@@ -531,4 +651,260 @@ test('authentication attempts are rate-limited independently of successful accou
   for (let index = 0; index < 20; index++)
     assert.equal((await request(app).post('/api/auth/login').set(csrf).send({})).status, 400);
   assert.equal((await request(app).post('/api/auth/login').set(csrf).send({})).status, 429);
+});
+
+test('admin account edits are audited, role changes revoke sessions, and admins cannot change their own access', async () => {
+  const account = await registerCustomer(`account-edit-${randomUUID()}@example.com`);
+  const profile = await request(app)
+    .patch('/api/admin/users/' + account.id)
+    .set(csrf)
+    .set('User-Agent', 'HTV-account-admin-test/1.0')
+    .set('Cookie', adminCookie)
+    .send({ name: 'Nguyễn Hà My', phone: '0987654321' });
+  assert.equal(profile.status, 200, profile.body.message);
+  assert.equal(profile.body.user.name, 'Nguyễn Hà My');
+  assert.equal((await request(app).get('/api/auth/me').set('Cookie', account.cookie)).status, 200);
+
+  const changedRole = await request(app)
+    .patch('/api/admin/users/' + account.id)
+    .set(csrf)
+    .set('User-Agent', 'HTV-account-admin-test/1.0')
+    .set('Cookie', adminCookie)
+    .send({ role: 'staff' });
+  assert.equal(changedRole.status, 200, changedRole.body.message);
+  assert.equal(changedRole.body.user.role, 'staff');
+  assert.equal((await request(app).get('/api/auth/me').set('Cookie', account.cookie)).status, 401);
+
+  const admin = await request(app).get('/api/auth/me').set('Cookie', adminCookie);
+  const selfChange = await request(app)
+    .patch('/api/admin/users/' + admin.body.user.id)
+    .set(csrf)
+    .set('Cookie', adminCookie)
+    .send({ accountStatus: 'suspended', reason: 'Self-lock test.' });
+  assert.equal(selfChange.status, 403);
+
+  const audit = await request(app)
+    .get('/api/admin/users/' + account.id + '/audit')
+    .set('Cookie', adminCookie);
+  assert.equal(audit.status, 200);
+  assert.equal(audit.body.audit.length, 2);
+  assert.ok(
+    audit.body.audit.every(
+      (entry: { actorIp?: string; actorUserAgent?: string }) =>
+        entry.actorIp && entry.actorUserAgent === 'HTV-account-admin-test/1.0',
+    ),
+  );
+});
+
+test('suspended accounts can submit one verified appeal without a session and admins can approve or reject it', async () => {
+  const approved = await createSuspendedAppeal(`appeal-approve-${randomUUID()}@example.com`);
+  const approve = await request(app)
+    .patch('/api/admin/appeals/' + approved.appealId)
+    .set(csrf)
+    .set('User-Agent', 'HTV-appeal-review-test/1.0')
+    .set('Cookie', adminCookie)
+    .send({ decision: 'approve', note: 'Đã xác minh thông tin tài khoản.' });
+  assert.equal(approve.status, 200, approve.body.message);
+  assert.equal((await CustomerUser.findById(approved.id).lean())?.accountStatus, 'active');
+  assert.equal(await CustomerSession.exists({ userId: approved.id }), null);
+
+  const approvedAudit = await request(app)
+    .get('/api/admin/users/' + approved.id + '/audit')
+    .set('Cookie', adminCookie);
+  assert.ok(
+    approvedAudit.body.audit.some(
+      (entry: { action: string; actorIp?: string; actorUserAgent?: string }) =>
+        entry.action === 'admin.appeal.approved' &&
+        entry.actorIp &&
+        entry.actorUserAgent === 'HTV-appeal-review-test/1.0',
+    ),
+  );
+
+  const rejected = await createSuspendedAppeal(`appeal-reject-${randomUUID()}@example.com`);
+  const reject = await request(app)
+    .patch('/api/admin/appeals/' + rejected.appealId)
+    .set(csrf)
+    .set('User-Agent', 'HTV-appeal-review-test/1.0')
+    .set('Cookie', adminCookie)
+    .send({ decision: 'reject', note: 'Chưa đủ thông tin xác minh.' });
+  assert.equal(reject.status, 200, reject.body.message);
+  assert.equal((await CustomerUser.findById(rejected.id).lean())?.accountStatus, 'suspended');
+  assert.equal(await CustomerSession.exists({ userId: rejected.id }), null);
+});
+
+test('concurrent admin appeal decisions commit exactly one matching account outcome', async () => {
+  const appealed = await createSuspendedAppeal(`appeal-race-${randomUUID()}@example.com`);
+  const [approve, reject] = await Promise.all([
+    request(app)
+      .patch('/api/admin/appeals/' + appealed.appealId)
+      .set(csrf)
+      .set('Cookie', adminCookie)
+      .send({ decision: 'approve', note: 'Đủ thông tin xác minh.' }),
+    request(app)
+      .patch('/api/admin/appeals/' + appealed.appealId)
+      .set(csrf)
+      .set('Cookie', adminCookie)
+      .send({ decision: 'reject', note: 'Chưa đủ thông tin xác minh.' }),
+  ]);
+  assert.equal([approve.status, reject.status].filter((status) => status === 200).length, 1);
+  assert.equal([approve.status, reject.status].filter((status) => status === 409).length, 1);
+
+  const [appeal, user] = await Promise.all([
+    CustomerAccountAppeal.findById(appealed.appealId).lean(),
+    CustomerUser.findById(appealed.id).lean(),
+  ]);
+  assert.ok(appeal);
+  assert.ok(user);
+  assert.equal(appeal.status === 'approved', user.accountStatus === 'active');
+});
+
+test('admin account search is filtered and paged in the database instead of truncating at 200', async () => {
+  const extraUsers = Array.from({ length: 31 }, (_, index) => ({
+    name: `Ops Directory ${String(index).padStart(2, '0')}`,
+    email: `ops-directory-${index}@example.com`,
+    phone: '0912345678',
+    passwordHash: 'test-only-hash',
+    role: index % 2 ? 'staff' : 'customer',
+    accountStatus: index % 3 ? 'active' : 'suspended',
+    authVersion: 0,
+  }));
+  await CustomerUser.insertMany(extraUsers);
+  const first = await request(app)
+    .get('/api/admin/users?page=1&limit=7&q=Ops%20Directory&role=staff&sort=name&direction=asc')
+    .set('Cookie', adminCookie);
+  assert.equal(first.status, 200);
+  assert.equal(first.body.total, 15);
+  assert.equal(first.body.users.length, 7);
+  assert.equal(first.body.page, 1);
+  const second = await request(app)
+    .get('/api/admin/users?page=3&limit=7&q=Ops%20Directory&role=staff&sort=name&direction=asc')
+    .set('Cookie', adminCookie);
+  assert.equal(second.status, 200);
+  assert.equal(second.body.users.length, 1);
+  assert.notEqual(first.body.users[0].id, second.body.users[0].id);
+  assert.equal(
+    (await request(app).get('/api/admin/users?page=1&limit=1000').set('Cookie', adminCookie))
+      .status,
+    400,
+  );
+});
+
+test('notification inbox is owner-scoped, supports read actions, and the staff dashboard is role protected', async () => {
+  const customer = await request(app).get('/api/auth/me').set('Cookie', customerCookie);
+  const other = await request(app).get('/api/auth/me').set('Cookie', otherCookie);
+  const ownNotification = await Notification.create({
+    userId: customer.body.user.id,
+    category: 'order',
+    title: 'Đơn hàng đã cập nhật',
+    message: 'Kiểm thử hộp thông báo.',
+    href: '/tai-khoan?section=orders',
+    eventKey: `test-owner-notification:${randomUUID()}`,
+  });
+  const otherNotification = await Notification.create({
+    userId: other.body.user.id,
+    category: 'support',
+    title: 'Riêng tư',
+    message: 'Không hiển thị cho người khác.',
+    href: '/tai-khoan?section=support',
+    eventKey: `test-other-notification:${randomUUID()}`,
+  });
+  const inbox = await request(app).get('/api/notifications').set('Cookie', customerCookie);
+  assert.equal(inbox.status, 200);
+  assert.ok(
+    inbox.body.notifications.some(
+      (item: { id: string }) => item.id === String(ownNotification._id),
+    ),
+  );
+  assert.ok(
+    !inbox.body.notifications.some(
+      (item: { id: string }) => item.id === String(otherNotification._id),
+    ),
+  );
+  assert.equal(inbox.body.unread >= 1, true);
+  assert.equal(
+    (
+      await request(app)
+        .patch('/api/notifications/' + otherNotification.id + '/read')
+        .set(csrf)
+        .set('Cookie', customerCookie)
+    ).status,
+    404,
+  );
+  const marked = await request(app)
+    .patch('/api/notifications/' + ownNotification.id + '/read')
+    .set(csrf)
+    .set('Cookie', customerCookie);
+  assert.equal(marked.status, 200);
+  assert.ok((await Notification.findById(ownNotification.id).lean())?.readAt);
+
+  const dashboard = await request(app).get('/api/staff/dashboard').set('Cookie', staffCookie);
+  assert.equal(dashboard.status, 200);
+  assert.equal(dashboard.body.rangeDays, 14);
+  assert.ok(Array.isArray(dashboard.body.orders.byStatus));
+  assert.equal(
+    (await request(app).get('/api/staff/dashboard').set('Cookie', customerCookie)).status,
+    403,
+  );
+});
+
+test('system audit captures correlated safe request metadata and logs are admin-only', async () => {
+  const account = await registerCustomer(`audit-target-${randomUUID()}@example.com`);
+  const requestId = randomUUID();
+  const changed = await request(app)
+    .patch('/api/admin/users/' + account.id)
+    .set(csrf)
+    .set('X-Request-Id', requestId)
+    .set('User-Agent', 'HTV-audit-console-test/1.0')
+    .set('Cookie', adminCookie)
+    .send({ name: 'Audit Correlated Target' });
+  assert.equal(changed.status, 200);
+  assert.equal(changed.headers['x-request-id'], requestId);
+  type SystemAuditEntry = {
+    outcome: string;
+    method: string;
+    path: string;
+    targetType?: string;
+    targetId?: string;
+    actorRole?: string;
+    actorUserAgent?: string;
+  };
+  let entry: SystemAuditEntry | null = null;
+  for (let attempt = 0; attempt < 25 && !entry; attempt++) {
+    entry = (await SystemAuditLog.findOne({ requestId }).lean()) as SystemAuditEntry | null;
+    if (!entry) await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  assert.ok(entry);
+  assert.equal(entry.outcome, 'success');
+  assert.equal(entry.method, 'PATCH');
+  assert.equal(entry.path, '/admin/users/' + account.id);
+  assert.equal(entry.targetType, 'user');
+  assert.equal(entry.targetId, account.id);
+  assert.equal(entry.actorRole, 'admin');
+  assert.equal(entry.actorUserAgent, 'HTV-audit-console-test/1.0');
+
+  const logs = await request(app)
+    .get('/api/admin/system-logs?q=HTV-audit-console-test')
+    .set('Cookie', adminCookie);
+  assert.equal(logs.status, 200);
+  assert.ok(logs.body.logs.some((item: { requestId: string }) => item.requestId === requestId));
+  const filtered = await request(app)
+    .get(
+      '/api/admin/system-logs?severity=info&outcome=success&actorRole=admin&method=PATCH&targetType=user&statusCode=200&from=2026-10-04T00:00:00.000Z&to=2026-10-06T00:00:00.000Z',
+    )
+    .set('Cookie', adminCookie);
+  assert.equal(filtered.status, 200);
+  assert.ok(filtered.body.logs.some((item: { requestId: string }) => item.requestId === requestId));
+  assert.equal(Array.isArray(filtered.body.anomalies), true);
+  const invalidRange = await request(app)
+    .get('/api/admin/system-logs?from=2026-10-06T00:00:00.000Z&to=2026-10-04T00:00:00.000Z')
+    .set('Cookie', adminCookie);
+  assert.equal(invalidRange.status, 400);
+  assert.equal(
+    (await request(app).get('/api/admin/system-logs').set('Cookie', staffCookie)).status,
+    403,
+  );
+  assert.equal(
+    (await request(app).get('/api/admin/system-logs').set('Cookie', customerCookie)).status,
+    403,
+  );
 });

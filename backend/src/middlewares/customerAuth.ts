@@ -36,6 +36,10 @@ export function requireRole(...roles: Role[]): RequestHandler {
 }
 export function csrfGuard(allowedOrigins: Set<string>, always = false): RequestHandler {
   return (req, _res, next) => {
+    if (req.method === 'POST' && req.originalUrl.split('?')[0] === '/api/payments/payos/webhook') {
+      next();
+      return;
+    }
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method) || (!always && !req.user)) {
       next();
       return;

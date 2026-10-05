@@ -56,25 +56,55 @@ async function prepare(page: Page, authenticated = false) {
   await page.route('**/api/account/vouchers', (route) => route.fulfill(json({ vouchers: [] })));
   await page.goto('/san-pham');
   await page
-    .getByRole('button', { name: 'Thêm vào giỏ Bánh chả truyền thống', exact: true })
+    .getByRole('button', { name: 'Thêm vào giỏ Bánh Chả Hà Nội – Vị Truyền Thống', exact: true })
     .click();
 }
 
 test('cart quantities, removal and persistence match the checkout total', async ({ page }) => {
   await prepare(page);
+  await expect(page.locator('.notification-toast')).toContainText('Đã thêm vào giỏ hàng');
   await page.goto('/gio-hang');
   await page
-    .getByRole('button', { name: 'Tăng số lượng Bánh chả truyền thống', exact: true })
+    .getByRole('button', { name: 'Tăng số lượng Bánh Chả Hà Nội – Vị Truyền Thống', exact: true })
     .click();
-  await expect(page.getByLabel('Số lượng Bánh chả truyền thống', { exact: true })).toHaveText('2');
+  await expect(
+    page.getByLabel('Số lượng Bánh Chả Hà Nội – Vị Truyền Thống', { exact: true }),
+  ).toHaveText('2');
   await expect(page.locator('.cart-subtotal')).toContainText('158.000');
   await page.reload();
-  await expect(page.getByLabel('Số lượng Bánh chả truyền thống', { exact: true })).toHaveText('2');
+  await expect(
+    page.getByLabel('Số lượng Bánh Chả Hà Nội – Vị Truyền Thống', { exact: true }),
+  ).toHaveText('2');
   await page
-    .getByRole('button', { name: 'Giảm số lượng Bánh chả truyền thống', exact: true })
+    .getByRole('button', { name: 'Giảm số lượng Bánh Chả Hà Nội – Vị Truyền Thống', exact: true })
     .click();
-  await page.getByRole('button', { name: 'Xóa Bánh chả truyền thống', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Xóa Bánh Chả Hà Nội – Vị Truyền Thống', exact: true })
+    .click();
   await expect(page.getByRole('heading', { name: 'Chưa có thức quà nào' })).toBeVisible();
+});
+
+test('guest can open the secure order-tracking link from the confirmation email', async ({
+  page,
+}) => {
+  const trackedOrder = { ...order, id: 'a'.repeat(24) };
+  const accessToken = 'a'.repeat(64);
+  let submittedToken = '';
+  await page.route('**/api/content', (route) => route.fulfill(json(content)));
+  await page.route('**/api/commerce/config', (route) => route.fulfill(json(config)));
+  await page.route('**/api/auth/me', (route) =>
+    route.fulfill(json({ message: 'Chưa đăng nhập' }, 401)),
+  );
+  await page.route(`**/api/orders/${trackedOrder.id}`, (route) => {
+    submittedToken = route.request().headers()['x-order-token'] || '';
+    return route.fulfill(json(trackedOrder));
+  });
+
+  await page.goto(`/don-hang/${trackedOrder.id}#token=${accessToken}`);
+
+  await expect(page.getByRole('heading', { name: `Đơn hàng ${trackedOrder.code}` })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/don-hang/${trackedOrder.id}$`));
+  expect(submittedToken).toBe(accessToken);
 });
 
 test('failed checkout keeps cart and customer fields; retry uses the same request key', async ({
@@ -103,9 +133,10 @@ test('failed checkout keeps cart and customer fields; retry uses the same reques
   await page.getByRole('button', { name: 'Xác nhận đặt hàng', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Tạm thời chưa tiếp nhận đơn');
   await expect(page.getByLabel('Họ và tên người nhận')).toHaveValue(customer.name);
-  await expect(page.locator('.cart-lines')).toContainText('Bánh chả truyền thống');
+  await expect(page.locator('.cart-lines')).toContainText('Bánh Chả Hà Nội – Vị Truyền Thống');
   await page.getByRole('button', { name: 'Xác nhận đặt hàng', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Đơn hàng HTV-0001' })).toBeVisible();
+  await expect(page.locator('.notification-toast')).toContainText('Đặt hàng thành công');
   expect(requests).toHaveLength(2);
   expect(requests[0].key).toBeTruthy();
   expect(requests[1]).toEqual(requests[0]);

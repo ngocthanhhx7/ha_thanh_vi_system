@@ -38,6 +38,10 @@ export function isValidPayOsWebhook(
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
+export function isPayOsWebhookValidationSample(data: PayOsData): boolean {
+  return data.orderCode === 123 && data.amount === 3000 && data.description === 'VQRIO123';
+}
+
 export function isAllowedPayOsUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;
   try {

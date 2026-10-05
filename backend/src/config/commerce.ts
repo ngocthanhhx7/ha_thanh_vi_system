@@ -3,6 +3,7 @@ export type CommerceConfig = {
   payOsClientId?: string;
   payOsApiKey?: string;
   payOsChecksumKey?: string;
+  payOsWebhookUrl: string;
   publicWebUrl: string;
   shippingFee: number;
   freeShippingThreshold: number;
@@ -34,6 +35,24 @@ export function readCommerceConfig(env: NodeJS.ProcessEnv = process.env): Commer
   ) {
     throw new Error('PUBLIC_WEB_URL phải là một origin HTTP(S) chính xác.');
   }
+  const payOsWebhookUrl =
+    env.PAYOS_WEBHOOK_URL?.trim() || `${parsedUrl.origin}/api/payments/payos/webhook`;
+  let parsedWebhookUrl: URL;
+  try {
+    parsedWebhookUrl = new URL(payOsWebhookUrl);
+  } catch {
+    throw new Error('PAYOS_WEBHOOK_URL không hợp lệ.');
+  }
+  if (
+    !['http:', 'https:'].includes(parsedWebhookUrl.protocol) ||
+    parsedWebhookUrl.username ||
+    parsedWebhookUrl.password ||
+    parsedWebhookUrl.search ||
+    parsedWebhookUrl.hash ||
+    parsedWebhookUrl.pathname !== '/api/payments/payos/webhook'
+  ) {
+    throw new Error('PAYOS_WEBHOOK_URL phải trỏ đúng endpoint webhook HTTP(S) của ứng dụng.');
+  }
   const paymentsEnabled = env.PAYMENTS_ENABLED?.trim().toLowerCase() === 'true';
   const payOsClientId = env.PAYOS_CLIENT_ID?.trim() || undefined;
   const payOsApiKey = env.PAYOS_API_KEY?.trim() || undefined;
@@ -49,6 +68,7 @@ export function readCommerceConfig(env: NodeJS.ProcessEnv = process.env): Commer
     payOsClientId,
     payOsApiKey,
     payOsChecksumKey,
+    payOsWebhookUrl: parsedWebhookUrl.toString(),
     publicWebUrl: parsedUrl.origin,
     shippingFee: integerSetting(env, 'SHIPPING_FEE', 30_000),
     freeShippingThreshold: integerSetting(env, 'FREE_SHIPPING_THRESHOLD', 499_000),

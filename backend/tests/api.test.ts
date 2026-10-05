@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import request from 'supertest';
+import express from 'express';
 import { createApp } from '../src/app.js';
+import { createErrorHandler } from '../src/middlewares/errorHandler.js';
 import type { SiteContent } from '../src/validators/content.js';
 import { UnavailableOrderRepository } from '../src/services/unavailableOrderRepository.js';
 import type { OrderRepository } from '../src/services/orderRepository.js';
@@ -169,4 +171,15 @@ test('GET /api/health reports current storage mode', async () => {
 
   assert.equal(response.status, 200);
   assert.deepEqual(response.body, { status: 'ok', storage: 'memory-test' });
+});
+
+test('server error handler preserves HTTP 505 for the reusable error page', async () => {
+  const app = express();
+  app.get('/unsupported-http-version', (_req, _res, next) => {
+    next(Object.assign(new Error('Unsupported HTTP version.'), { status: 505 }));
+  });
+  app.use(createErrorHandler({ storage: 'memory-test' }));
+
+  const response = await request(app).get('/unsupported-http-version');
+  assert.equal(response.status, 505);
 });

@@ -247,6 +247,57 @@ test('checkout is idempotent and server prices the saved order', async () => {
   );
 });
 
+test('staff and admins cannot update orders placed under their account or email', async () => {
+  const orders = new MemoryOrders();
+  const service = makeCommerce(orders);
+  const ownAccountOrder = await service.createCheckout(
+    checkout,
+    '640b9f59-8ac0-4a0e-8f0e-463858786a02',
+    'staff-account-id',
+  );
+  await assert.rejects(
+    () =>
+      service.updateAdminOrder(
+        ownAccountOrder.order.id,
+        { status: 'confirmed' },
+        {
+          id: 'staff-account-id',
+          email: 'different@example.com',
+        },
+      ),
+    (error: unknown) => error instanceof ServiceError && error.status === 403,
+  );
+  const ownEmailOrder = await service.createCheckout(
+    { ...checkout, customer: { ...checkout.customer, email: 'admin@example.com' } },
+    '41a1b5f2-e5e7-4735-97c9-5e18bdf2ce2f',
+  );
+  await assert.rejects(
+    () =>
+      service.updateAdminOrder(
+        ownEmailOrder.order.id,
+        { status: 'confirmed' },
+        {
+          id: 'admin-account-id',
+          email: 'ADMIN@example.com',
+        },
+      ),
+    (error: unknown) => error instanceof ServiceError && error.status === 403,
+  );
+  assert.equal(
+    (
+      await service.updateAdminOrder(
+        ownEmailOrder.order.id,
+        { status: 'confirmed' },
+        {
+          id: 'another-staff-id',
+          email: 'another@example.com',
+        },
+      )
+    ).status,
+    'confirmed',
+  );
+});
+
 test('order token gates lookup and failed payment creation preserves order for retry', async () => {
   const orders = new MemoryOrders();
   let calls = 0;
@@ -312,6 +363,31 @@ test('verified PayOS webhook validates the saved order amount and is idempotent'
   const altered = { ...body, data: { ...data, amount: data.amount + 1 } };
   await assert.rejects(
     () => service.handlePayOsWebhook(altered, checksumKey),
+    (error: unknown) => error instanceof ServiceError && error.status === 400,
+  );
+});
+
+test('PayOS signed webhook confirmation sample is acknowledged without creating an order', async () => {
+  const orders = new MemoryOrders();
+  const service = makeCommerce(orders);
+  const data = {
+    orderCode: 123,
+    amount: 3000,
+    description: 'VQRIO123',
+    code: '00',
+    desc: 'success',
+    currency: 'VND',
+  };
+  const body = {
+    code: '00',
+    success: true,
+    data,
+    signature: createPayOsSignature(data, checksumKey),
+  };
+  await service.handlePayOsWebhook(body, checksumKey);
+  assert.equal(orders.values.size, 0);
+  await assert.rejects(
+    () => service.handlePayOsWebhook({ ...body, signature: '0'.repeat(64) }, checksumKey),
     (error: unknown) => error instanceof ServiceError && error.status === 400,
   );
 });

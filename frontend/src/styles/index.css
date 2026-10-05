@@ -187,6 +187,114 @@ svg {
   gap: 9px;
   align-items: center;
 }
+.account-menu-wrap {
+  position: relative;
+}
+.account-button {
+  position: relative;
+}
+.account-notification-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--cream);
+  border-radius: 50%;
+  background: #d52f39;
+  box-shadow: 0 0 0 2px #d52f3926;
+}
+.account-dropdown {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 12px);
+  right: 0;
+  display: grid;
+  gap: 10px;
+  width: min(340px, calc(100vw - 24px));
+  max-height: min(76dvh, 660px);
+  overflow-y: auto;
+  padding: 14px;
+  border: 1px solid #dbcbb6;
+  border-radius: 16px;
+  background: #f4ebdc;
+  box-shadow: 0 18px 48px #34251b30;
+  color: #412c26;
+}
+.account-dropdown-heading {
+  display: grid;
+  gap: 4px;
+  padding: 4px 8px 12px;
+  border-bottom: 1px solid #dbcbb6;
+}
+.account-dropdown-heading strong {
+  overflow: hidden;
+  color: var(--red);
+  font-size: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-dropdown-heading span,
+.account-dropdown-loading {
+  color: #77675c;
+  font-size: 12px;
+}
+.account-dropdown-links,
+.account-dropdown-group {
+  display: grid;
+  gap: 3px;
+}
+.account-dropdown-group {
+  padding-top: 10px;
+  border-top: 1px solid #dbcbb6;
+}
+.account-dropdown-group > span {
+  padding: 0 9px 5px;
+  color: #77675c;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.account-dropdown-links a,
+.account-dropdown-group a,
+.account-dropdown-logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  text-decoration: none;
+}
+.account-dropdown-links a:hover,
+.account-dropdown-group a:hover,
+.account-dropdown-logout:hover {
+  background: #eadbc5;
+}
+.account-dropdown-logout {
+  width: 100%;
+  border-top: 1px solid #dbcbb6;
+  border-radius: 0 0 9px 9px;
+  color: var(--red);
+  cursor: pointer;
+}
+.account-dropdown-error {
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: #f9e4df;
+  color: #8d282a;
+  font-size: 12px;
+}
+.account-dropdown-loading {
+  padding: 8px;
+}
 .icon-button {
   width: 42px;
   height: 44px;
@@ -593,6 +701,8 @@ svg {
   font-size: 25px;
   color: var(--red);
   margin-bottom: 14px;
+  line-height: 1.2;
+  min-height: 2.4em;
 }
 .product-bottom {
   display: flex;
@@ -1682,7 +1792,7 @@ footer .footer-small {
     height: 42px;
   }
   .account-button {
-    display: none;
+    display: inline-flex;
   }
   .hero {
     display: flex;
@@ -2357,4 +2467,41 @@ footer .footer-small {
 .review-card header strong,
 .campaign-card > strong {
   font-weight: 700;
+}
+
+.product-tagline {
+  font-style: italic;
+  color: var(--wine);
+}
+.product-information {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 2rem;
+  margin: 3rem 0;
+}
+.product-information article {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid #d9c7ac;
+  border-radius: 1.25rem;
+  background: #fff9ef;
+}
+.product-information h2 {
+  font-size: clamp(1.3rem, 2vw, 1.75rem);
+}
+.product-information p,
+.product-information li {
+  line-height: 1.7;
+}
+.product-information img {
+  display: block;
+  max-width: 100%;
+  max-height: 36rem;
+  object-fit: contain;
+  margin: 1.5rem auto;
+}
+@media (max-width: 700px) {
+  .product-information {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }

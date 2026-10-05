@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none" aria-label="Vị Ơi Mascot - Idle Wave">
+  <defs>
+    <!-- Ground Ambient Shadow -->
+    <radialGradient id="idle-ground-shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5A2807" stop-opacity="0.22" />
+      <stop offset="65%" stop-color="#5A2807" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#5A2807" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Pastry Body Baked Gradient -->
+    <linearGradient id="idle-pastry-body" x1="256" y1="130" x2="256" y2="435" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE8B8" />
+      <stop offset="22%" stop-color="#F7C474" />
+      <stop offset="55%" stop-color="#E59235" />
+      <stop offset="85%" stop-color="#C26A1B" />
+      <stop offset="100%" stop-color="#8F4109" />
+    </linearGradient>
+
+    <!-- Pastry Top Glaze Highlight -->
+    <linearGradient id="idle-pastry-glaze" x1="256" y1="145" x2="256" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.65" />
+      <stop offset="45%" stop-color="#FFF5DE" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#F7C474" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Sage-Green Tea Leaf Gradient 1 -->
+    <linearGradient id="idle-tea-leaf-left" x1="210" y1="105" x2="260" y2="145" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#B7DCAB" />
+      <stop offset="45%" stop-color="#73A76D" />
+      <stop offset="100%" stop-color="#3D6638" />
+    </linearGradient>
+
+    <!-- Sage-Green Tea Leaf Gradient 2 -->
+    <linearGradient id="idle-tea-leaf-right" x1="260" y1="95" x2="300" y2="135" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C7E6BD" />
+      <stop offset="50%" stop-color="#83B67D" />
+      <stop offset="100%" stop-color="#467341" />
+    </linearGradient>
+
+    <!-- Terracotta Scarf Gradient -->
+    <linearGradient id="idle-scarf-main" x1="165" y1="340" x2="345" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E87658" />
+      <stop offset="50%" stop-color="#C75135" />
+      <stop offset="100%" stop-color="#9E351D" />
+    </linearGradient>
+
+    <!-- Terracotta Knot Gradient -->
+    <linearGradient id="idle-scarf-knot" x1="305" y1="355" x2="335" y2="385" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EA7E62" />
+      <stop offset="100%" stop-color="#99321B" />
+    </linearGradient>
+
+    <!-- Cheerful Glossy Eye Gradient -->
+    <linearGradient id="idle-eye-pupil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A0E08" />
+      <stop offset="70%" stop-color="#2D1A10" />
+      <stop offset="100%" stop-color="#59341E" />
+    </linearGradient>
+
+    <!-- Soft Rosy Blush -->
+    <radialGradient id="idle-rosy-cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF7568" stop-opacity="0.75" />
+      <stop offset="60%" stop-color="#FF9388" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#FFA8A0" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Ground Ambient Shadow (Preserves Floating Room) -->
+  <ellipse cx="256" cy="458" rx="108" ry="14" fill="url(#idle-ground-shadow)" />
+
+  <!-- Back Arm (Left Resting Arm) -->
+  <g id="idle-left-arm">
+    <ellipse cx="146" cy="336" rx="22" ry="15" fill="#C26A1B" transform="rotate(22 146 336)" />
+    <ellipse cx="146" cy="334" rx="20" ry="13" fill="#E59235" stroke="#7A3406" stroke-width="4.5" stroke-linejoin="round" transform="rotate(22 146 334)" />
+    <ellipse cx="147" cy="332" rx="14" ry="8" fill="#FFE8B8" transform="rotate(22 147 332)" />
+  </g>
+
+  <!-- Chubby Pastry Stumpy Feet -->
+  <g id="idle-feet">
+    <!-- Left Foot -->
+    <ellipse cx="212" cy="428" rx="28" ry="18" fill="#8F4109" transform="rotate(-6 212 428)" />
+    <ellipse cx="212" cy="425" rx="26" ry="16" fill="#E59235" stroke="#7A3406" stroke-width="4.5" transform="rotate(-6 212 425)" />
+    <ellipse cx="211" cy="422" rx="17" ry="9" fill="#FFE8B8" transform="rotate(-6 211 422)" />
+
+    <!-- Right Foot -->
+    <ellipse cx="300" cy="428" rx="28" ry="18" fill="#8F4109" transform="rotate(6 300 428)" />
+    <ellipse cx="300" cy="425" rx="26" ry="16" fill="#E59235" stroke="#7A3406" stroke-width="4.5" transform="rotate(6 300 425)" />
+    <ellipse cx="301" cy="422" rx="17" ry="9" fill="#FFE8B8" transform="rotate(6 301 422)" />
+  </g>
+
+  <!-- Main Round Bánh Chả Pastry Body -->
+  <g id="idle-body">
+    <!-- Pastry Outer Silhouette -->
+    <path d="M 144 305 C 137 218 182 146 256 146 C 330 146 375 218 368 305 C 362 384 326 432 256 432 C 186 432 150 384 144 305 Z"
+          fill="url(#idle-pastry-body)"
+          stroke="#7A3406"
+          stroke-width="6"
+          stroke-linejoin="round" />
+
+    <!-- Top Glaze Cream Highlight -->
+    <ellipse cx="256" cy="180" rx="72" ry="26" fill="#FFAE42" opacity="0.32" />
+    <path d="M 198 174 C 220 156 292 156 314 174 C 288 166 224 166 198 174 Z" fill="url(#idle-pastry-glaze)" />
+
+    <!-- Bánh Chả Golden Pastry Swirl / Flaky Fold Lines -->
+    <!-- Crown Flaky Crease -->
+    <path d="M 178 188 C 216 166 296 166 334 188" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 184 184 C 218 164 294 164 328 184" stroke="#FFF5DE" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Left Flank Fold -->
+    <path d="M 152 248 C 168 238 182 254 175 276" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 154 245 C 168 236 179 249 174 271" stroke="#FFF5DE" stroke-width="2" stroke-linecap="round" fill="none" />
+
+    <!-- Right Flank Fold -->
+    <path d="M 360 248 C 344 238 330 254 337 276" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 358 245 C 344 236 333 249 338 271" stroke="#FFF5DE" stroke-width="2" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- Sage-Green Tea-Leaf Tuft on Crown -->
+  <g id="idle-tea-tuft">
+    <!-- Delicate Tea Stem -->
+    <path d="M 256 150 C 255 134 257 122 259 112" stroke="#33562E" stroke-width="5" stroke-linecap="round" fill="none" />
+
+    <!-- Left Sprouting Tea Leaf -->
+    <path d="M 258 120 C 238 106 215 106 204 125 C 212 144 236 146 258 126 Z"
+          fill="url(#idle-tea-leaf-left)"
+          stroke="#2D4D29"
+          stroke-width="3.5"
+          stroke-linejoin="round" />
+    <!-- Leaf Center Vein -->
+    <path d="M 253 124 C 238 121 224 122 214 126" stroke="#E3F4DE" stroke-width="2.2" stroke-linecap="round" fill="none" />
+
+    <!-- Right Small Perky Tea Leaf -->
+    <path d="M 258 116 C 269 95 289 94 297 109 C 295 126 277 131 258 116 Z"
+          fill="url(#idle-tea-leaf-right)"
+          stroke="#2D4D29"
+          stroke-width="3.5"
+          stroke-linejoin="round" />
+    <!-- Right Leaf Vein -->
+    <path d="M 262 115 C 274 110 284 109 291 112" stroke="#E3F4DE" stroke-width="2" stroke-linecap="round" fill="none" />
+
+    <!-- Tiny Morning Dewdrop -->
+    <circle cx="288" cy="105" r="2.8" fill="#FFFFFF" opacity="0.9" />
+  </g>
+
+  <!-- Cheerful Facial Features -->
+  <g id="idle-face">
+    <!-- Cute Soft Eyebrows -->
+    <path d="M 195 237 C 206 230 219 233 223 237" stroke="#7A3406" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 289 237 C 293 233 306 230 317 237" stroke="#7A3406" stroke-width="4" stroke-linecap="round" fill="none" />
+
+    <!-- Left Glossy Eye -->
+    <g id="idle-left-eye">
+      <circle cx="208" cy="265" r="20" fill="url(#idle-eye-pupil)" stroke="#140B06" stroke-width="2" />
+      <!-- Warm Iris Arc -->
+      <ellipse cx="208" cy="275" rx="14" ry="7" fill="#8A4822" opacity="0.65" />
+      <!-- Glossy Main Shine -->
+      <circle cx="201" cy="257" r="7" fill="#FFFFFF" />
+      <!-- Secondary Specular Shine -->
+      <circle cx="216" cy="273" r="3.5" fill="#FFFFFF" />
+      <circle cx="204" cy="274" r="2" fill="#FFFFFF" opacity="0.9" />
+    </g>
+
+    <!-- Right Glossy Eye -->
+    <g id="idle-right-eye">
+      <circle cx="304" cy="265" r="20" fill="url(#idle-eye-pupil)" stroke="#140B06" stroke-width="2" />
+      <!-- Warm Iris Arc -->
+      <ellipse cx="304" cy="275" rx="14" ry="7" fill="#8A4822" opacity="0.65" />
+      <!-- Glossy Main Shine -->
+      <circle cx="297" cy="257" r="7" fill="#FFFFFF" />
+      <!-- Secondary Specular Shine -->
+      <circle cx="312" cy="273" r="3.5" fill="#FFFFFF" />
+      <circle cx="300" cy="274" r="2" fill="#FFFFFF" opacity="0.9" />
+    </g>
+
+    <!-- Rosy Glowing Cheeks -->
+    <ellipse cx="168" cy="286" rx="22" ry="13" fill="url(#idle-rosy-cheek)" />
+    <ellipse cx="344" cy="286" rx="22" ry="13" fill="url(#idle-rosy-cheek)" />
+    <!-- Cheek Sparkle Shines -->
+    <ellipse cx="166" cy="284" rx="5.5" ry="3.2" fill="#FFFFFF" opacity="0.5" transform="rotate(-15 166 284)" />
+    <ellipse cx="346" cy="284" rx="5.5" ry="3.2" fill="#FFFFFF" opacity="0.5" transform="rotate(15 346 284)" />
+
+    <!-- Cheerful Open Smile -->
+    <g id="idle-mouth">
+      <!-- Mouth Shadow / Lip Line -->
+      <path d="M 242 284 Q 256 299 270 284" stroke="#48220C" stroke-width="4.5" stroke-linecap="round" fill="none" />
+      <!-- Sweet Pink Tongue Fill -->
+      <path d="M 246 287 Q 256 297 266 287 Q 256 303 246 287 Z" fill="#F06B6B" />
+    </g>
+  </g>
+
+  <!-- Subtle Terracotta Neck Scarf (Hanoi Charm) -->
+  <g id="idle-scarf">
+    <!-- Back Tail of Scarf -->
+    <path d="M 326 376 C 336 392 344 408 353 420 C 344 424 336 422 330 414 C 327 400 326 388 326 376 Z"
+          fill="#8A2C17"
+          stroke="#6E200F"
+          stroke-width="3"
+          stroke-linejoin="round" />
+
+    <!-- Main Wrapped Scarf Collar -->
+    <path d="M 166 342 C 196 358 316 358 346 342 C 354 360 342 380 324 386 C 280 396 232 396 188 386 C 170 380 158 360 166 342 Z"
+          fill="url(#idle-scarf-main)"
+          stroke="#6E200F"
+          stroke-width="5"
+          stroke-linejoin="round" />
+
+    <!-- Scarf Soft Knit Crease Details -->
+    <path d="M 188 360 C 224 374 288 374 324 360" stroke="#F5937C" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 200 376 C 234 386 278 386 312 376" stroke="#7A2210" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Front Scarf Tail with Soft Fringes -->
+    <path d="M 320 374 C 326 395 330 415 336 433 C 324 435 315 432 310 422 C 310 404 313 388 316 374 Z"
+          fill="url(#idle-scarf-main)"
+          stroke="#6E200F"
+          stroke-width="4"
+          stroke-linejoin="round" />
+    <!-- Fringes -->
+    <path d="M 314 425 L 314 434 M 321 428 L 321 437 M 328 430 L 328 439 M 334 430 L 334 436"
+          stroke="#F8A794"
+          stroke-width="2.5"
+          stroke-linecap="round" />
+
+    <!-- Cozy Scarf Knot -->
+    <path d="M 308 360 C 320 351 336 354 338 368 C 339 378 323 386 310 376 Z"
+          fill="url(#idle-scarf-knot)"
+          stroke="#6E200F"
+          stroke-width="4" />
+  </g>
+
+  <!-- Right Waving Arm (Energetic Cheerful Wave) -->
+  <g id="idle-waving-arm">
+    <!-- Arm Body -->
+    <path d="M 350 320 C 374 295 398 265 402 235 C 392 222 372 230 358 260 C 346 285 342 305 350 320 Z"
+          fill="url(#idle-pastry-body)"
+          stroke="#7A3406"
+          stroke-width="5"
+          stroke-linejoin="round" />
+
+    <!-- Raised Waving Paw Cushion -->
+    <circle cx="396" cy="235" r="16.5" fill="#F7C474" stroke="#7A3406" stroke-width="4.5" />
+    <circle cx="396" cy="235" r="9" fill="#FFF2D6" />
+
+    <!-- Tiny Chubby Paw Finger Dots -->
+    <circle cx="388" cy="226" r="3.2" fill="#FFF2D6" />
+    <circle cx="397" cy="221" r="3.4" fill="#FFF2D6" />
+    <circle cx="406" cy="226" r="3.2" fill="#FFF2D6" />
+
+    <!-- Cheerful Waving Breezy Sparkles / Motion Arcs -->
+    <path d="M 420 220 C 427 227 427 239 421 247" stroke="#E59235" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 428 226 C 435 233 435 241 430 249" stroke="#F7C474" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <!-- Friendly Sparkle -->
+    <path d="M 416 198 L 418 205 L 425 207 L 418 209 L 416 216 L 414 209 L 407 207 L 414 205 Z" fill="#F7C474" />
+  </g>
+</svg>

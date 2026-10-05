@@ -9,7 +9,7 @@ import {
   type PaymentStatus,
 } from '../constants/order.js';
 import type { NewOrder, OrderRecord } from '../models/order.js';
-import type { OrderRepository } from './orderRepository.js';
+import type { OrderListQuery, OrderRepository } from './orderRepository.js';
 import type { PayOsClient } from './payOsService.js';
 import { ServiceError } from './errors.js';
 import type { CustomerRepository } from './customerRepository.js';
@@ -37,7 +37,9 @@ export class CommerceService {
   constructor(
     private readonly orders: OrderRepository,
     private readonly content: CommerceContentRepository,
-    private readonly settings: CommerceConfig & { orderTokenSecret?: string },
+    private readonly settings: Omit<CommerceConfig, 'payOsWebhookUrl'> & {
+      orderTokenSecret?: string;
+    },
     private readonly payOs: PayOsClient,
     private readonly now: () => Date = () => new Date(),
   ) {}
@@ -245,7 +247,8 @@ export class CommerceService {
     body: { data?: unknown; signature?: unknown },
     checksumKey: string,
   ): Promise<void> {
-    const { isValidPayOsWebhook } = await import('../utils/paymentSignatures.js');
+    const { isPayOsWebhookValidationSample, isValidPayOsWebhook } =
+      await import('../utils/paymentSignatures.js');
     if (!isValidPayOsWebhook(body, checksumKey))
       throw new ServiceError(400, 'Chữ ký thông báo thanh toán không hợp lệ.');
     const envelope = body as { code?: unknown; success?: unknown; data: Record<string, unknown> };
@@ -264,6 +267,7 @@ export class CommerceService {
     }
     if (!this.orders.available)
       throw new ServiceError(503, 'Dịch vụ thanh toán hiện chưa khả dụng.');
+    if (isPayOsWebhookValidationSample(data)) return;
     const order = await this.orders.findByOrderCode(data.orderCode);
     if (!order || order.paymentMethod !== 'payos' || order.total !== data.amount) {
       throw new ServiceError(400, 'Mã đơn hoặc số tiền thanh toán không khớp.');
@@ -308,10 +312,14 @@ export class CommerceService {
     if (paid?.voucherReservationId) await this.vouchers?.settle(paid.voucherReservationId);
   }
 
-  async listOrders(page: number, limit: number) {
+  async listOrders(
+    page: number,
+    limit: number,
+    query: OrderListQuery = { queue: 'all', sort: 'newest' },
+  ) {
     if (!this.orders.available)
       throw new ServiceError(503, 'Dịch vụ quản trị đơn hàng hiện chưa khả dụng.');
-    return this.orders.list(page, limit);
+    return this.orders.list(page, limit, query);
   }
 
   async updateAdminOrder(
@@ -323,11 +331,19 @@ export class CommerceService {
       shippingEvent?: { status: string; description: string; location?: string; occurredAt?: Date };
       paymentStatus?: PaymentStatus;
     },
+    actor?: { id: string; email: string },
   ): Promise<CommerceOrderView> {
     if (!this.orders.available)
       throw new ServiceError(503, 'Dịch vụ quản trị đơn hàng hiện chưa khả dụng.');
     const order = await this.orders.findById(id);
     if (!order) throw new ServiceError(404, 'Không tìm thấy đơn hàng.');
+    if (
+      actor &&
+      (order.userId === actor.id ||
+        order.customer.email.trim().toLocaleLowerCase('en-US') ===
+          actor.email.trim().toLocaleLowerCase('en-US'))
+    )
+      throw new ServiceError(403, 'Bạn không thể xử lý đơn hàng của chính mình.');
     const changes: Partial<OrderRecord> = {};
     if (
       order.paymentMethod === 'payos' &&

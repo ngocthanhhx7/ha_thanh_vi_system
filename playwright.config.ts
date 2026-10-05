@@ -1,10 +1,12 @@
 import { defineConfig } from '@playwright/test';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173';
+
 export default defineConfig({
   testDir: './tests/e2e',
-  use: { baseURL: 'http://127.0.0.1:5173', headless: true },
+  use: { baseURL, headless: true },
   webServer: {
-    command: 'npm run dev:web',
-    url: 'http://127.0.0.1:5173',
+    command: process.env.PLAYWRIGHT_WEB_SERVER_COMMAND ?? 'npm run dev:web',
+    url: baseURL,
     reuseExistingServer: true,
   },
   projects: [

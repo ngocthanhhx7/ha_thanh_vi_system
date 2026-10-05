@@ -1,0 +1,538 @@
+.account-page {
+  --account-ink: #552f27;
+  --account-red: #86232d;
+  --account-line: rgba(128, 77, 49, 0.2);
+  --account-paper: #fffaf1;
+  --account-shadow: 0 22px 55px rgba(79, 45, 29, 0.08);
+}
+
+.account-auth {
+  min-height: min(760px, calc(100svh - 110px));
+  padding-block: clamp(24px, 4vw, 54px);
+}
+
+.account-welcome {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 430px;
+  padding: clamp(28px, 4.2vw, 58px);
+  overflow: hidden;
+  border: 1px solid rgba(160, 111, 66, 0.28);
+  border-radius: 28px 28px 28px 6px;
+  background:
+    radial-gradient(ellipse at 12% 10%, rgba(255, 255, 255, 0.84), transparent 38%),
+    radial-gradient(circle at 92% 90%, rgba(189, 143, 76, 0.16), transparent 34%),
+    linear-gradient(145deg, #f2e5ce, #f8f0e2 62%, #efe0c7);
+  box-shadow: var(--account-shadow);
+}
+
+.account-welcome::before {
+  position: absolute;
+  right: -92px;
+  bottom: -122px;
+  width: 330px;
+  aspect-ratio: 1;
+  border: 1px solid rgba(134, 35, 45, 0.18);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 18px rgba(134, 35, 45, 0.035),
+    0 0 0 38px rgba(134, 35, 45, 0.025);
+  content: '';
+  pointer-events: none;
+}
+
+.account-welcome > * {
+  position: relative;
+  z-index: 1;
+}
+
+.account-welcome .eyebrow,
+.account-heading .eyebrow,
+.auth-reset .eyebrow,
+.account-appeal-card .eyebrow {
+  color: var(--account-red);
+  letter-spacing: 0.18em;
+}
+
+.account-welcome h1,
+.account-heading h1,
+.auth-reset h1,
+.account-appeal-card h1 {
+  color: var(--account-red);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.account-welcome h1 {
+  max-width: 12ch;
+  font-size: clamp(38px, 4.1vw, 60px);
+  line-height: 1.08;
+}
+
+.account-welcome p:not(.eyebrow) {
+  max-width: 42ch;
+  color: #70574a;
+  line-height: 1.75;
+}
+
+.account-welcome .text-link {
+  align-self: flex-start;
+  margin-top: 12px;
+}
+
+.account-auth > :last-child {
+  min-width: 0;
+  padding: clamp(26px, 4vw, 48px);
+  border: 1px solid var(--account-line);
+  border-radius: 24px;
+  background: rgba(255, 251, 243, 0.94);
+  box-shadow: 0 18px 48px rgba(79, 45, 29, 0.07);
+  backdrop-filter: blur(8px);
+}
+
+.account-auth h2,
+.account-content > h2 {
+  color: var(--account-red);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+.account-heading {
+  align-items: flex-end;
+  padding: 0 0 26px;
+  border-bottom: 1px solid var(--account-line);
+}
+
+.account-heading h1 {
+  margin-block: 8px 10px;
+  font-size: clamp(36px, 4vw, 54px);
+  line-height: 1.08;
+}
+
+.account-heading p:not(.eyebrow) {
+  margin-bottom: 0;
+  color: #71594b;
+  line-height: 1.7;
+}
+
+.account-layout {
+  gap: clamp(22px, 3vw, 40px);
+}
+
+.account-nav {
+  border-color: var(--account-line);
+  border-radius: 18px;
+  background: linear-gradient(155deg, #f8f0e3, #f1e6d4);
+  box-shadow: 0 12px 32px rgba(79, 45, 29, 0.05);
+}
+
+.account-nav nav {
+  gap: 5px;
+}
+
+.account-nav button,
+.account-admin-link {
+  min-height: 46px;
+  border-radius: 10px;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.account-nav button[aria-current='page'] {
+  box-shadow: 0 5px 14px rgba(116, 30, 39, 0.18);
+}
+
+.account-content {
+  padding-top: 4px;
+}
+
+.account-content > h2 {
+  margin-bottom: 20px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.2;
+}
+
+.account-panel {
+  border-color: var(--account-line);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #fffdf8, var(--account-paper));
+  box-shadow: 0 10px 30px rgba(79, 45, 29, 0.045);
+}
+
+.account-panel h3 {
+  color: var(--account-red);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 500;
+}
+
+.account-order header,
+.account-order footer,
+.account-card-heading {
+  flex-wrap: wrap;
+}
+
+.account-order header > div > strong {
+  color: var(--account-red);
+}
+
+.account-badge {
+  background: #f4ead9;
+}
+
+.account-profile > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.38fr) 1fr;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.account-profile dt,
+.account-profile dd {
+  overflow-wrap: anywhere;
+}
+
+.account-page .field input,
+.account-page .field textarea,
+.account-page .field select,
+.account-appeal-form textarea,
+.auth-reset .field input {
+  min-height: 48px;
+  border-color: #d3bea1;
+  border-radius: 10px;
+  background: #fffdf8;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.account-page .field input:focus-visible,
+.account-page .field textarea:focus-visible,
+.account-page .field select:focus-visible,
+.account-appeal-form textarea:focus-visible,
+.auth-reset .field input:focus-visible {
+  border-color: #9b4b38;
+  outline: 3px solid rgba(182, 130, 53, 0.28);
+  outline-offset: 2px;
+  background: #fffefa;
+  box-shadow: 0 0 0 1px rgba(134, 35, 45, 0.08);
+}
+
+.account-page .button,
+.account-appeal-page .button,
+.auth-reset .button {
+  min-height: 48px;
+  border-radius: 9px;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.account-order-tabs button {
+  min-height: 40px;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.account-order-tabs button:focus-visible,
+.account-nav button:focus-visible,
+.account-admin-link:focus-visible,
+.account-page .button:focus-visible,
+.account-appeal-page .button:focus-visible,
+.auth-reset .button:focus-visible,
+.account-page .text-link:focus-visible,
+.account-appeal-page .text-link:focus-visible,
+.auth-reset a:focus-visible {
+  outline: 3px solid #b68235;
+  outline-offset: 3px;
+}
+
+.account-auth .auth-panel form,
+.account-auth form {
+  gap: 16px;
+}
+
+.auth-reset {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 14px;
+  width: min(100% - 36px, 650px);
+  max-width: 650px;
+  min-height: 0;
+  margin: clamp(34px, 7vh, 78px) auto;
+  padding: clamp(26px, 5vw, 54px);
+  overflow: hidden;
+  border: 1px solid rgba(160, 111, 66, 0.28);
+  border-radius: 24px 24px 24px 6px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(189, 143, 76, 0.14), transparent 35%),
+    linear-gradient(150deg, #fffaf1, #f8efdf);
+  box-shadow: 0 22px 55px rgba(79, 45, 29, 0.09);
+}
+
+.auth-reset::after {
+  position: absolute;
+  z-index: -1;
+  right: -70px;
+  bottom: -110px;
+  width: 250px;
+  aspect-ratio: 1;
+  border: 1px solid rgba(134, 35, 45, 0.14);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 16px rgba(134, 35, 45, 0.03),
+    0 0 0 34px rgba(134, 35, 45, 0.02);
+  content: '';
+  pointer-events: none;
+}
+
+.auth-reset > * {
+  position: relative;
+}
+
+.auth-reset h1 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 48px);
+  line-height: 1.1;
+}
+
+.auth-reset > p:not(.eyebrow) {
+  max-width: 52ch;
+  margin: 0 0 8px;
+  color: #70574a;
+  line-height: 1.75;
+}
+
+.auth-reset form {
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.auth-reset .field {
+  gap: 8px;
+  margin-bottom: 16px;
+  color: var(--account-ink, #552f27);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.auth-reset .field input {
+  width: 100%;
+  padding: 12px 14px;
+  color: #472e24;
+  font: inherit;
+  font-weight: 400;
+}
+
+.auth-reset > p:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 0;
+  color: #70574a;
+  font-size: 14px;
+}
+
+.auth-reset a {
+  color: #86232d;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.account-appeal-page {
+  width: min(100% - 36px, 780px);
+  max-width: 780px;
+  min-height: min(680px, calc(100svh - 100px));
+  padding: clamp(30px, 6vh, 64px) 0;
+}
+
+.account-appeal-page > .text-link {
+  min-height: 40px;
+}
+
+.account-appeal-card {
+  position: relative;
+  isolation: isolate;
+  gap: 16px;
+  margin-top: 18px;
+  border-radius: 24px 24px 24px 6px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(189, 143, 76, 0.15), transparent 32%),
+    linear-gradient(150deg, #fffdf8, #f8efdf);
+  box-shadow: 0 22px 55px rgba(79, 45, 29, 0.08);
+}
+
+.account-appeal-card > svg {
+  box-sizing: content-box;
+  padding: 12px;
+  border: 1px solid rgba(134, 35, 45, 0.15);
+  border-radius: 50%;
+  background: #f4ead9;
+}
+
+.account-appeal-card h1 {
+  max-width: 18ch;
+  line-height: 1.12;
+}
+
+.account-appeal-card > p:not(.eyebrow) {
+  margin: 0;
+  color: #70574a;
+  line-height: 1.8;
+}
+
+.account-appeal-form {
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.account-appeal-form .field {
+  gap: 9px;
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+.account-appeal-form textarea {
+  min-height: 170px;
+  font: inherit;
+}
+
+.account-appeal-form small {
+  line-height: 1.6;
+}
+
+.account-appeal-form .button {
+  justify-self: start;
+  min-width: 190px;
+}
+
+.account-appeal-form .account-error {
+  margin: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .account-nav button:hover:not(:disabled),
+  .account-admin-link:hover {
+    transform: translateX(2px);
+  }
+
+  .account-panel:hover {
+    box-shadow: 0 14px 36px rgba(79, 45, 29, 0.075);
+  }
+
+  .account-page .button:hover:not(:disabled),
+  .account-appeal-page .button:hover:not(:disabled),
+  .auth-reset .button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(116, 30, 39, 0.16);
+  }
+}
+
+@media (max-width: 760px) {
+  .account-auth {
+    min-height: 0;
+    padding-block: 24px;
+  }
+
+  .account-welcome {
+    min-height: 0;
+    padding: 28px 24px;
+    border-radius: 20px 20px 20px 5px;
+  }
+
+  .account-welcome h1 {
+    max-width: 14ch;
+    font-size: clamp(36px, 9vw, 48px);
+  }
+
+  .account-auth > :last-child {
+    padding: 24px;
+    border-radius: 18px;
+  }
+
+  .account-heading {
+    padding-bottom: 20px;
+  }
+
+  .account-profile > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .account-nav nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-nav button {
+    align-items: flex-start;
+    min-width: 0;
+    min-height: 48px;
+    line-height: 1.4;
+  }
+
+  .account-order header,
+  .account-order footer,
+  .account-card-heading {
+    align-items: flex-start;
+  }
+
+  .auth-reset {
+    margin-block: 28px;
+  }
+
+  .account-appeal-page {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 440px) {
+  .account-nav nav {
+    grid-template-columns: 1fr;
+  }
+
+  .account-nav button {
+    align-items: center;
+  }
+
+  .account-auth > :last-child {
+    padding: 20px 16px;
+  }
+
+  .auth-reset,
+  .account-appeal-card {
+    padding: 22px 18px;
+    border-radius: 18px 18px 18px 5px;
+  }
+
+  .account-appeal-form .button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-nav button,
+  .account-admin-link,
+  .account-page .field input,
+  .account-page .field textarea,
+  .account-page .field select,
+  .account-appeal-form textarea,
+  .auth-reset .field input,
+  .account-page .button,
+  .account-appeal-page .button,
+  .auth-reset .button,
+  .account-order-tabs button {
+    scroll-behavior: auto;
+    transition-duration: 0.01ms !important;
+  }
+}

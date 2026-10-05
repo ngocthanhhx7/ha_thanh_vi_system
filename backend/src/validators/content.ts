@@ -26,6 +26,12 @@ function isSafeHttpUrl(value: string, httpsOnly = false): boolean {
 
 function isSafeImage(value: string): boolean {
   if (value.startsWith('/')) {
+    if (
+      /^\/uploads\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/.test(
+        value,
+      )
+    )
+      return true;
     if (!value.startsWith('/brand/') || value.includes('\\') || value.includes('//')) return false;
     try {
       const decoded = decodeURIComponent(value);
@@ -56,6 +62,13 @@ export const productSchema = z
     weight: text(80),
     flavor: text(100),
     description: text(2000),
+    tagline: text(300).optional(),
+    packaging: text(300).optional(),
+    packageContents: z.array(text(300)).max(20).optional(),
+    ingredients: text(2000).optional(),
+    ingredientImage: z.string().max(2048).refine(isSafeImage).optional(),
+    allergens: text(1000).optional(),
+    storage: text(1000).optional(),
     image: z
       .string()
       .min(1)
@@ -85,12 +98,20 @@ export const siteContentSchema = z
 export const contentSchema = z
   .object({
     site: siteContentSchema,
-    products: z.array(productSchema).min(1).max(200),
+    products: z.array(productSchema).max(200),
   })
   .strict()
   .superRefine((content, ctx) => {
     const slugs = new Set<string>();
+    const ids = new Set<string>();
     for (const [index, product] of content.products.entries()) {
+      if (ids.has(product.id))
+        ctx.addIssue({
+          code: 'custom',
+          path: ['products', index, 'id'],
+          message: 'ID sản phẩm không được trùng.',
+        });
+      ids.add(product.id);
       if (slugs.has(product.slug)) {
         ctx.addIssue({
           code: 'custom',

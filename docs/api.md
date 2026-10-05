@@ -6,19 +6,23 @@ Base `/api`. JSON errors `{message}`; successful writes require MongoDB. Browser
 
 All roles belong to documents in MongoDB collection **users**: `role = admin | staff | customer`. A session loads the current database role on every request. Admin is an ordinary user. There is no special admin bearer or ADMIN_TOKEN authentication.
 
-| Endpoint                      | Contract                                                         | Access              |
-| ----------------------------- | ---------------------------------------------------------------- | ------------------- |
-| POST /auth/register           | `{name,email,password,phone}` → 201 `{user}`; cannot accept role | Public, CSRF header |
-| POST /auth/login              | `{email,password}` → `{user}` and HttpOnly cookie                | Public, CSRF header |
-| POST /auth/logout             | Revokes current session, clears cookie, 204                      | Session             |
-| GET /auth/me                  | `{user:{id,name,email,phone,role}}`                              | Session             |
-| PATCH /account/profile        | `{name,phone}` → `{user}`                                        | Session             |
-| GET /account/addresses        | `{addresses:[{id,label,name,phone,address,isDefault}]}`          | Owner               |
-| POST /account/addresses       | Address fields except id → 201 `{address}`                       | Owner               |
-| PATCH /account/addresses/:id  | Full address fields except id → `{address}`                      | Owner               |
-| DELETE /account/addresses/:id | 204; promotes remaining default if needed                        | Owner               |
+| Endpoint                      | Contract                                                                                                                                                                                     | Access              |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| POST /auth/register           | `{name,email,password,confirmPassword,phone}` → 201 `{verificationRequired,email,message}`; no session                                                                                       | Public, CSRF header |
+| POST /auth/login              | `{email,password,rememberDevice?}` → `{otpRequired,challengeId,email,message}` on new devices; `{user}` on trusted device after valid password; pending email verification returns403 marker | Public, CSRF header |
+| POST /auth/logout             | Revokes current session, clears cookie, 204                                                                                                                                                  | Session             |
+| GET /auth/me                  | `{user:{id,name,email,phone,role}}`                                                                                                                                                          | Session             |
+| PATCH /account/profile        | `{name,phone}` → `{user}`                                                                                                                                                                    | Session             |
+| GET /account/addresses        | `{addresses:[{id,label,name,phone,address,isDefault}]}`                                                                                                                                      | Owner               |
+| POST /account/addresses       | Address fields except id → 201 `{address}`                                                                                                                                                   | Owner               |
+| PATCH /account/addresses/:id  | Full address fields except id → `{address}`                                                                                                                                                  | Owner               |
+| DELETE /account/addresses/:id | 204; promotes remaining default if needed                                                                                                                                                    | Owner               |
 
-Session cookie `htv_session` lasts 30 days, HttpOnly, SameSite=Lax, Secure in production. Only the hash is stored; Mongo TTL removes expired sessions and expiry is checked immediately during authorization. Passwords use salted scrypt, 10–128 characters. Address book has at most 10 entries and exactly one default when nonempty. Checkout snapshots entered address/contact details; editing the address book cannot change past orders.
+Session cookie `htv_session` is a browser cookie backed by a24-hour server session when not remembered; remembered sessions and owner-bound trusted-device cookies last30days. Cookies are HttpOnly, SameSite=Lax, Secure in production. Only hashes are stored; Mongo TTL removes expired records and expiry/version is checked immediately during authorization. Passwords use salted scrypt, 10–128 characters. Address book has at most10 entries and exactly one default when nonempty. Checkout snapshots entered address/contact details; editing the address book cannot change past orders.
+
+POST /auth/verify-email `{email,code,rememberDevice?}` and /auth/verify-login `{challengeId,code}` return `{user}` and cookies after valid OTP. POST /auth/resend-verification `{email}`, /auth/resend-login-otp `{challengeId}` and /auth/forgot-password `{email}` return generic202 acknowledgments. POST /auth/reset-password `{token,password,confirmPassword}` consumes a20-minute one-use link and revokes authentication. OTPs expire10minutes, with5 attempts and60-second resend cooldown. See [authentication](authentication.md) for delivery and migration semantics.
+
+GET /chat/config and POST /chat `{message,history?}` return safe chat configuration/replies. Chat reply `{reply,products,handoff,sources,available}` also accompanies503/429 service fallback. See [chatbot](chatbot.md). Product CRUD, image upload and statistics contracts are in [product management](product-management.md).
 
 ## Public content and checkout
 

@@ -1,0 +1,232 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none" aria-label="Vị Ơi Mascot - Offline Sleepy">
+  <defs>
+    <!-- Ground Ambient Shadow -->
+    <radialGradient id="off-ground-shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5A2807" stop-opacity="0.2" />
+      <stop offset="65%" stop-color="#5A2807" stop-opacity="0.07" />
+      <stop offset="100%" stop-color="#5A2807" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Pastry Body Baked Gradient -->
+    <linearGradient id="off-pastry-body" x1="256" y1="130" x2="256" y2="435" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE8B8" />
+      <stop offset="22%" stop-color="#F7C474" />
+      <stop offset="55%" stop-color="#E59235" />
+      <stop offset="85%" stop-color="#C26A1B" />
+      <stop offset="100%" stop-color="#8F4109" />
+    </linearGradient>
+
+    <!-- Pastry Top Glaze Highlight -->
+    <linearGradient id="off-pastry-glaze" x1="256" y1="145" x2="256" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.65" />
+      <stop offset="45%" stop-color="#FFF5DE" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#F7C474" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Sage-Green Tea Leaf Gradient 1 -->
+    <linearGradient id="off-tea-leaf-left" x1="210" y1="105" x2="260" y2="145" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#B7DCAB" />
+      <stop offset="45%" stop-color="#73A76D" />
+      <stop offset="100%" stop-color="#3D6638" />
+    </linearGradient>
+
+    <!-- Sage-Green Tea Leaf Gradient 2 -->
+    <linearGradient id="off-tea-leaf-right" x1="260" y1="95" x2="300" y2="135" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C7E6BD" />
+      <stop offset="50%" stop-color="#83B67D" />
+      <stop offset="100%" stop-color="#467341" />
+    </linearGradient>
+
+    <!-- Terracotta Scarf Gradient -->
+    <linearGradient id="off-scarf-main" x1="165" y1="340" x2="345" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E87658" />
+      <stop offset="50%" stop-color="#C75135" />
+      <stop offset="100%" stop-color="#9E351D" />
+    </linearGradient>
+
+    <!-- Terracotta Knot Gradient -->
+    <linearGradient id="off-scarf-knot" x1="305" y1="355" x2="335" y2="385" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EA7E62" />
+      <stop offset="100%" stop-color="#99321B" />
+    </linearGradient>
+
+    <!-- Cozy Deeper Rosy Blush -->
+    <radialGradient id="off-rosy-cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF6F63" stop-opacity="0.85" />
+      <stop offset="60%" stop-color="#FF9388" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#FFA8A0" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Ground Ambient Shadow -->
+  <ellipse cx="256" cy="458" rx="108" ry="14" fill="url(#off-ground-shadow)" />
+
+  <!-- Chubby Pastry Stumpy Feet (Resting Cozily) -->
+  <g id="off-feet">
+    <!-- Left Foot -->
+    <ellipse cx="212" cy="428" rx="28" ry="18" fill="#8F4109" transform="rotate(-6 212 428)" />
+    <ellipse cx="212" cy="425" rx="26" ry="16" fill="#E59235" stroke="#7A3406" stroke-width="4.5" transform="rotate(-6 212 425)" />
+    <ellipse cx="211" cy="422" rx="17" ry="9" fill="#FFE8B8" transform="rotate(-6 211 422)" />
+
+    <!-- Right Foot -->
+    <ellipse cx="300" cy="428" rx="28" ry="18" fill="#8F4109" transform="rotate(6 300 428)" />
+    <ellipse cx="300" cy="425" rx="26" ry="16" fill="#E59235" stroke="#7A3406" stroke-width="4.5" transform="rotate(6 300 425)" />
+    <ellipse cx="301" cy="422" rx="17" ry="9" fill="#FFE8B8" transform="rotate(6 301 422)" />
+  </g>
+
+  <!-- Main Round Bánh Chả Pastry Body -->
+  <g id="off-body">
+    <!-- Pastry Outer Silhouette -->
+    <path d="M 144 305 C 137 218 182 146 256 146 C 330 146 375 218 368 305 C 362 384 326 432 256 432 C 186 432 150 384 144 305 Z"
+          fill="url(#off-pastry-body)"
+          stroke="#7A3406"
+          stroke-width="6"
+          stroke-linejoin="round" />
+
+    <!-- Top Glaze Cream Highlight -->
+    <ellipse cx="256" cy="180" rx="72" ry="26" fill="#FFAE42" opacity="0.32" />
+    <path d="M 198 174 C 220 156 292 156 314 174 C 288 166 224 166 198 174 Z" fill="url(#off-pastry-glaze)" />
+
+    <!-- Bánh Chả Golden Pastry Swirl / Flaky Fold Lines -->
+    <path d="M 178 188 C 216 166 296 166 334 188" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 184 184 C 218 164 294 164 328 184" stroke="#FFF5DE" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <path d="M 152 248 C 168 238 182 254 175 276" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 154 245 C 168 236 179 249 174 271" stroke="#FFF5DE" stroke-width="2" stroke-linecap="round" fill="none" />
+
+    <path d="M 360 248 C 344 238 330 254 337 276" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 358 245 C 344 236 333 249 338 271" stroke="#FFF5DE" stroke-width="2" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- Sage-Green Tea-Leaf Tuft on Crown (Softly Relaxed) -->
+  <g id="off-tea-tuft">
+    <!-- Tea Stem -->
+    <path d="M 256 150 C 255 136 258 124 260 115" stroke="#33562E" stroke-width="5" stroke-linecap="round" fill="none" />
+
+    <!-- Left Sprouting Tea Leaf (Gently Resting) -->
+    <path d="M 258 122 C 238 110 216 112 206 128 C 214 146 237 147 258 128 Z"
+          fill="url(#off-tea-leaf-left)"
+          stroke="#2D4D29"
+          stroke-width="3.5"
+          stroke-linejoin="round" />
+    <path d="M 253 126 C 238 123 225 124 216 128" stroke="#E3F4DE" stroke-width="2.2" stroke-linecap="round" fill="none" />
+
+    <!-- Right Small Relaxed Tea Leaf -->
+    <path d="M 258 118 C 268 98 287 98 295 113 C 293 129 276 133 258 118 Z"
+          fill="url(#off-tea-leaf-right)"
+          stroke="#2D4D29"
+          stroke-width="3.5"
+          stroke-linejoin="round" />
+    <path d="M 262 117 C 273 112 283 112 289 115" stroke="#E3F4DE" stroke-width="2" stroke-linecap="round" fill="none" />
+
+    <!-- Dewdrop -->
+    <circle cx="286" cy="108" r="2.8" fill="#FFFFFF" opacity="0.9" />
+  </g>
+
+  <!-- Gentle Sleepy Facial Features -->
+  <g id="off-face">
+    <!-- Peaceful Resting Eyebrows -->
+    <path d="M 196 238 C 206 233 218 235 222 239" stroke="#7A3406" stroke-width="3.5" stroke-linecap="round" fill="none" />
+    <path d="M 290 239 C 294 235 306 233 316 238" stroke="#7A3406" stroke-width="3.5" stroke-linecap="round" fill="none" />
+
+    <!-- Left Gentle Sleepy Closed Eye -->
+    <g id="off-left-eye">
+      <path d="M 190 266 C 197 278 219 278 226 266" stroke="#2B150A" stroke-width="4.8" stroke-linecap="round" fill="none" />
+      <!-- Soft Sleepy Lashes -->
+      <path d="M 197 274 L 193 280" stroke="#2B150A" stroke-width="3.2" stroke-linecap="round" />
+      <path d="M 219 274 L 223 280" stroke="#2B150A" stroke-width="3.2" stroke-linecap="round" />
+    </g>
+
+    <!-- Right Gentle Sleepy Closed Eye -->
+    <g id="off-right-eye">
+      <path d="M 286 266 C 293 278 315 278 322 266" stroke="#2B150A" stroke-width="4.8" stroke-linecap="round" fill="none" />
+      <!-- Soft Sleepy Lashes -->
+      <path d="M 293 274 L 289 280" stroke="#2B150A" stroke-width="3.2" stroke-linecap="round" />
+      <path d="M 315 274 L 319 280" stroke="#2B150A" stroke-width="3.2" stroke-linecap="round" />
+    </g>
+
+    <!-- Extra Cozy Glowing Rosy Cheeks -->
+    <ellipse cx="168" cy="286" rx="23" ry="14" fill="url(#off-rosy-cheek)" />
+    <ellipse cx="344" cy="286" rx="23" ry="14" fill="url(#off-rosy-cheek)" />
+    <ellipse cx="166" cy="284" rx="5.5" ry="3.2" fill="#FFFFFF" opacity="0.5" transform="rotate(-15 166 284)" />
+    <ellipse cx="346" cy="284" rx="5.5" ry="3.2" fill="#FFFFFF" opacity="0.5" transform="rotate(15 346 284)" />
+
+    <!-- Sweet Contented Sleeping Mouth -->
+    <g id="off-mouth">
+      <path d="M 248 288 Q 256 294 264 288" stroke="#48220C" stroke-width="4" stroke-linecap="round" fill="none" />
+    </g>
+  </g>
+
+  <!-- Terracotta Neck Scarf (Cozy Wrap) -->
+  <g id="off-scarf">
+    <!-- Back Tail -->
+    <path d="M 326 376 C 336 392 344 408 353 420 C 344 424 336 422 330 414 C 327 400 326 388 326 376 Z"
+          fill="#8A2C17"
+          stroke="#6E200F"
+          stroke-width="3"
+          stroke-linejoin="round" />
+
+    <!-- Main Scarf Collar -->
+    <path d="M 166 342 C 196 358 316 358 346 342 C 354 360 342 380 324 386 C 280 396 232 396 188 386 C 170 380 158 360 166 342 Z"
+          fill="url(#off-scarf-main)"
+          stroke="#6E200F"
+          stroke-width="5"
+          stroke-linejoin="round" />
+
+    <path d="M 188 360 C 224 374 288 374 324 360" stroke="#F5937C" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 200 376 C 234 386 278 386 312 376" stroke="#7A2210" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Front Tail with Fringes -->
+    <path d="M 320 374 C 326 395 330 415 336 433 C 324 435 315 432 310 422 C 310 404 313 388 316 374 Z"
+          fill="url(#off-scarf-main)"
+          stroke="#6E200F"
+          stroke-width="4"
+          stroke-linejoin="round" />
+    <path d="M 314 425 L 314 434 M 321 428 L 321 437 M 328 430 L 328 439 M 334 430 L 334 436"
+          stroke="#F8A794"
+          stroke-width="2.5"
+          stroke-linecap="round" />
+
+    <!-- Knot -->
+    <path d="M 308 360 C 320 351 336 354 338 368 C 339 378 323 386 310 376 Z"
+          fill="url(#off-scarf-knot)"
+          stroke="#6E200F"
+          stroke-width="4" />
+  </g>
+
+  <!-- Paws Snuggled Cozily Over Tummy / Scarf -->
+  <g id="off-snug-paws">
+    <!-- Left Paw Resting on Scarf/Tummy -->
+    <g id="off-left-paw">
+      <ellipse cx="226" cy="360" rx="17" ry="13" fill="#C26A1B" transform="rotate(15 226 360)" />
+      <ellipse cx="226" cy="358" rx="15" ry="12" fill="#E59235" stroke="#7A3406" stroke-width="4" transform="rotate(15 226 358)" />
+      <ellipse cx="225" cy="356" rx="9" ry="7" fill="#FFE8B8" transform="rotate(15 225 356)" />
+    </g>
+
+    <!-- Right Paw Resting on Scarf/Tummy -->
+    <g id="off-right-paw">
+      <ellipse cx="286" cy="360" rx="17" ry="13" fill="#C26A1B" transform="rotate(-15 286 360)" />
+      <ellipse cx="286" cy="358" rx="15" ry="12" fill="#E59235" stroke="#7A3406" stroke-width="4" transform="rotate(-15 286 358)" />
+      <ellipse cx="287" cy="356" rx="9" ry="7" fill="#FFE8B8" transform="rotate(-15 287 356)" />
+    </g>
+  </g>
+
+  <!-- Dreamy Floating Golden Sleep Accents (Bubbles & Pastry Sparkles) -->
+  <g id="off-sleep-accents">
+    <!-- Dream Bubble 1 (Small) -->
+    <circle cx="366" cy="195" r="7" fill="#FFE9BE" stroke="#E59235" stroke-width="2" opacity="0.85" />
+    <circle cx="364" cy="193" r="2" fill="#FFFFFF" />
+
+    <!-- Dream Bubble 2 (Medium) -->
+    <circle cx="390" cy="164" r="11" fill="#FFE9BE" stroke="#E59235" stroke-width="2.5" opacity="0.85" />
+    <circle cx="386" cy="160" r="3.5" fill="#FFFFFF" />
+
+    <!-- Dream Bubble 3 (Large) -->
+    <circle cx="418" cy="128" r="16" fill="#FFE9BE" stroke="#E59235" stroke-width="2.5" opacity="0.85" />
+    <circle cx="412" cy="123" r="5" fill="#FFFFFF" />
+
+    <!-- Cozy Pastry Dream Star -->
+    <path d="M 440 102 L 442 111 L 450 113 L 442 116 L 440 125 L 437 116 L 429 113 L 437 111 Z" fill="#F7C474" opacity="0.9" />
+    <circle cx="440" cy="113" r="2" fill="#FFFFFF" />
+  </g>
+</svg>

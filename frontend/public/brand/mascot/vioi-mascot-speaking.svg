@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none" aria-label="Vị Ơi Mascot - Speaking">
+  <defs>
+    <!-- Ground Ambient Shadow -->
+    <radialGradient id="speak-ground-shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5A2807" stop-opacity="0.22" />
+      <stop offset="65%" stop-color="#5A2807" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#5A2807" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Pastry Body Baked Gradient -->
+    <linearGradient id="speak-pastry-body" x1="256" y1="130" x2="256" y2="435" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE8B8" />
+      <stop offset="22%" stop-color="#F7C474" />
+      <stop offset="55%" stop-color="#E59235" />
+      <stop offset="85%" stop-color="#C26A1B" />
+      <stop offset="100%" stop-color="#8F4109" />
+    </linearGradient>
+
+    <!-- Pastry Top Glaze Highlight -->
+    <linearGradient id="speak-pastry-glaze" x1="256" y1="145" x2="256" y2="225" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.65" />
+      <stop offset="45%" stop-color="#FFF5DE" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#F7C474" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Sage-Green Tea Leaf Gradient 1 -->
+    <linearGradient id="speak-tea-leaf-left" x1="210" y1="105" x2="260" y2="145" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#B7DCAB" />
+      <stop offset="45%" stop-color="#73A76D" />
+      <stop offset="100%" stop-color="#3D6638" />
+    </linearGradient>
+
+    <!-- Sage-Green Tea Leaf Gradient 2 -->
+    <linearGradient id="speak-tea-leaf-right" x1="260" y1="95" x2="300" y2="135" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C7E6BD" />
+      <stop offset="50%" stop-color="#83B67D" />
+      <stop offset="100%" stop-color="#467341" />
+    </linearGradient>
+
+    <!-- Terracotta Scarf Gradient -->
+    <linearGradient id="speak-scarf-main" x1="165" y1="340" x2="345" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E87658" />
+      <stop offset="50%" stop-color="#C75135" />
+      <stop offset="100%" stop-color="#9E351D" />
+    </linearGradient>
+
+    <!-- Terracotta Knot Gradient -->
+    <linearGradient id="speak-scarf-knot" x1="305" y1="355" x2="335" y2="385" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EA7E62" />
+      <stop offset="100%" stop-color="#99321B" />
+    </linearGradient>
+
+    <!-- Glossy Eye Gradient -->
+    <linearGradient id="speak-eye-pupil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A0E08" />
+      <stop offset="70%" stop-color="#2D1A10" />
+      <stop offset="100%" stop-color="#59341E" />
+    </linearGradient>
+
+    <!-- Soft Rosy Blush -->
+    <radialGradient id="speak-rosy-cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF7568" stop-opacity="0.75" />
+      <stop offset="60%" stop-color="#FF9388" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#FFA8A0" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Ground Ambient Shadow -->
+  <ellipse cx="256" cy="458" rx="108" ry="14" fill="url(#speak-ground-shadow)" />
+
+  <!-- Chubby Pastry Stumpy Feet -->
+  <g id="speak-feet">
+    <!-- Left Foot -->
+    <ellipse cx="212" cy="428" rx="28" ry="18" fill="#8F4109" transform="rotate(-6 212 428)" />
+    <ellipse cx="212" cy="425" rx="26" ry="16" fill="#E59235" stroke="#7A3406" stroke-width="4.5" transform="rotate(-6 212 425)" />
+    <ellipse cx="211" cy="422" rx="17" ry="9" fill="#FFE8B8" transform="rotate(-6 211 422)" />
+
+    <!-- Right Foot -->
+    <ellipse cx="300" cy="428" rx="28" ry="18" fill="#8F4109" transform="rotate(6 300 428)" />
+    <ellipse cx="300" cy="425" rx="26" ry="16" fill="#E59235" stroke="#7A3406" stroke-width="4.5" transform="rotate(6 300 425)" />
+    <ellipse cx="301" cy="422" rx="17" ry="9" fill="#FFE8B8" transform="rotate(6 301 422)" />
+  </g>
+
+  <!-- Main Round Bánh Chả Pastry Body -->
+  <g id="speak-body">
+    <!-- Pastry Outer Silhouette -->
+    <path d="M 144 305 C 137 218 182 146 256 146 C 330 146 375 218 368 305 C 362 384 326 432 256 432 C 186 432 150 384 144 305 Z"
+          fill="url(#speak-pastry-body)"
+          stroke="#7A3406"
+          stroke-width="6"
+          stroke-linejoin="round" />
+
+    <!-- Top Glaze Cream Highlight -->
+    <ellipse cx="256" cy="180" rx="72" ry="26" fill="#FFAE42" opacity="0.32" />
+    <path d="M 198 174 C 220 156 292 156 314 174 C 288 166 224 166 198 174 Z" fill="url(#speak-pastry-glaze)" />
+
+    <!-- Bánh Chả Golden Pastry Swirl / Flaky Fold Lines -->
+    <path d="M 178 188 C 216 166 296 166 334 188" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 184 184 C 218 164 294 164 328 184" stroke="#FFF5DE" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <path d="M 152 248 C 168 238 182 254 175 276" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 154 245 C 168 236 179 249 174 271" stroke="#FFF5DE" stroke-width="2" stroke-linecap="round" fill="none" />
+
+    <path d="M 360 248 C 344 238 330 254 337 276" stroke="#B85D14" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 358 245 C 344 236 333 249 338 271" stroke="#FFF5DE" stroke-width="2" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- Sage-Green Tea-Leaf Tuft on Crown (Bouncing with excitement) -->
+  <g id="speak-tea-tuft">
+    <!-- Tea Stem -->
+    <path d="M 256 150 C 255 134 257 122 259 112" stroke="#33562E" stroke-width="5" stroke-linecap="round" fill="none" />
+
+    <!-- Left Sprouting Tea Leaf -->
+    <path d="M 258 120 C 238 106 215 106 204 125 C 212 144 236 146 258 126 Z"
+          fill="url(#speak-tea-leaf-left)"
+          stroke="#2D4D29"
+          stroke-width="3.5"
+          stroke-linejoin="round" />
+    <path d="M 253 124 C 238 121 224 122 214 126" stroke="#E3F4DE" stroke-width="2.2" stroke-linecap="round" fill="none" />
+
+    <!-- Right Small Perky Tea Leaf -->
+    <path d="M 258 116 C 269 95 289 94 297 109 C 295 126 277 131 258 116 Z"
+          fill="url(#speak-tea-leaf-right)"
+          stroke="#2D4D29"
+          stroke-width="3.5"
+          stroke-linejoin="round" />
+    <path d="M 262 115 C 274 110 284 109 291 112" stroke="#E3F4DE" stroke-width="2" stroke-linecap="round" fill="none" />
+
+    <!-- Dewdrop -->
+    <circle cx="288" cy="105" r="2.8" fill="#FFFFFF" opacity="0.9" />
+  </g>
+
+  <!-- Animated Speaking Face (Happy Open Mouth & Sparking Eyes) -->
+  <g id="speak-face">
+    <!-- Cheerful Raised Eyebrows -->
+    <path d="M 194 233 C 206 225 220 228 224 233" stroke="#7A3406" stroke-width="4" stroke-linecap="round" fill="none" />
+    <path d="M 288 233 C 292 228 306 225 318 233" stroke="#7A3406" stroke-width="4" stroke-linecap="round" fill="none" />
+
+    <!-- Left Glossy Eye (Lively & Beaming) -->
+    <g id="speak-left-eye">
+      <circle cx="208" cy="264" r="20" fill="url(#speak-eye-pupil)" stroke="#140B06" stroke-width="2" />
+      <ellipse cx="208" cy="274" rx="14" ry="7" fill="#8A4822" opacity="0.65" />
+      <circle cx="201" cy="256" r="7.2" fill="#FFFFFF" />
+      <circle cx="216" cy="272" r="3.6" fill="#FFFFFF" />
+      <circle cx="204" cy="273" r="2.2" fill="#FFFFFF" opacity="0.9" />
+    </g>
+
+    <!-- Right Glossy Eye (Lively & Beaming) -->
+    <g id="speak-right-eye">
+      <circle cx="304" cy="264" r="20" fill="url(#speak-eye-pupil)" stroke="#140B06" stroke-width="2" />
+      <ellipse cx="304" cy="274" rx="14" ry="7" fill="#8A4822" opacity="0.65" />
+      <circle cx="297" cy="256" r="7.2" fill="#FFFFFF" />
+      <circle cx="312" cy="272" r="3.6" fill="#FFFFFF" />
+      <circle cx="300" cy="273" r="2.2" fill="#FFFFFF" opacity="0.9" />
+    </g>
+
+    <!-- Rosy Glowing Cheeks -->
+    <ellipse cx="168" cy="286" rx="22" ry="13" fill="url(#speak-rosy-cheek)" />
+    <ellipse cx="344" cy="286" rx="22" ry="13" fill="url(#speak-rosy-cheek)" />
+    <ellipse cx="166" cy="284" rx="5.5" ry="3.2" fill="#FFFFFF" opacity="0.5" transform="rotate(-15 166 284)" />
+    <ellipse cx="346" cy="284" rx="5.5" ry="3.2" fill="#FFFFFF" opacity="0.5" transform="rotate(15 346 284)" />
+
+    <!-- Happy Open Speaking Mouth (Warm Greeting) -->
+    <g id="speak-mouth">
+      <!-- Mouth Cavity -->
+      <path d="M 238 279 C 238 274 274 274 274 279 C 274 306 238 306 238 279 Z"
+            fill="#5E1D0C"
+            stroke="#48220C"
+            stroke-width="4.5"
+            stroke-linejoin="round" />
+      <!-- Upper Teeth / Cream Accent -->
+      <path d="M 245 277 C 251 280 261 280 267 277" stroke="#FFF7ED" stroke-width="2.6" stroke-linecap="round" fill="none" />
+      <!-- Sweet Pink Tongue -->
+      <path d="M 244 293 C 248 287 264 287 268 293 C 265 304 247 304 244 293 Z" fill="#F06B6B" />
+    </g>
+  </g>
+
+  <!-- Terracotta Neck Scarf -->
+  <g id="speak-scarf">
+    <!-- Back Tail -->
+    <path d="M 326 376 C 336 392 344 408 353 420 C 344 424 336 422 330 414 C 327 400 326 388 326 376 Z"
+          fill="#8A2C17"
+          stroke="#6E200F"
+          stroke-width="3"
+          stroke-linejoin="round" />
+
+    <!-- Main Scarf Collar -->
+    <path d="M 166 342 C 196 358 316 358 346 342 C 354 360 342 380 324 386 C 280 396 232 396 188 386 C 170 380 158 360 166 342 Z"
+          fill="url(#speak-scarf-main)"
+          stroke="#6E200F"
+          stroke-width="5"
+          stroke-linejoin="round" />
+
+    <path d="M 188 360 C 224 374 288 374 324 360" stroke="#F5937C" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 200 376 C 234 386 278 386 312 376" stroke="#7A2210" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Front Tail with Fringes -->
+    <path d="M 320 374 C 326 395 330 415 336 433 C 324 435 315 432 310 422 C 310 404 313 388 316 374 Z"
+          fill="url(#speak-scarf-main)"
+          stroke="#6E200F"
+          stroke-width="4"
+          stroke-linejoin="round" />
+    <path d="M 314 425 L 314 434 M 321 428 L 321 437 M 328 430 L 328 439 M 334 430 L 334 436"
+          stroke="#F8A794"
+          stroke-width="2.5"
+          stroke-linecap="round" />
+
+    <!-- Knot -->
+    <path d="M 308 360 C 320 351 336 354 338 368 C 339 378 323 386 310 376 Z"
+          fill="url(#speak-scarf-knot)"
+          stroke="#6E200F"
+          stroke-width="4" />
+  </g>
+
+  <!-- Left Arm (Welcoming Open Gesture) -->
+  <g id="speak-left-arm">
+    <!-- Arm reaching outward warmly -->
+    <path d="M 152 328 C 132 312 118 296 128 286 C 138 276 152 288 166 306 Z"
+          fill="url(#speak-pastry-body)"
+          stroke="#7A3406"
+          stroke-width="4.5"
+          stroke-linejoin="round" />
+    <!-- Rounded Paw Cushion -->
+    <circle cx="125" cy="288" r="14" fill="#F7C474" stroke="#7A3406" stroke-width="4" />
+    <circle cx="125" cy="287" r="8" fill="#FFF2D6" />
+  </g>
+
+  <!-- Right Arm (Active Explaining / Presenting Gesture) -->
+  <g id="speak-right-arm">
+    <!-- Arm extending forward/upward in customer-service guidance -->
+    <path d="M 354 322 C 374 306 392 290 384 278 C 372 268 358 282 344 304 Z"
+          fill="url(#speak-pastry-body)"
+          stroke="#7A3406"
+          stroke-width="4.5"
+          stroke-linejoin="round" />
+    <!-- Open Presenting Paw Cushion -->
+    <circle cx="386" cy="280" r="14.5" fill="#F7C474" stroke="#7A3406" stroke-width="4" />
+    <circle cx="386" cy="279" r="8.5" fill="#FFF2D6" />
+
+    <!-- Soft Finger Crease Accents -->
+    <circle cx="380" cy="273" r="2.4" fill="#FFE8B8" />
+    <circle cx="387" cy="270" r="2.6" fill="#FFE8B8" />
+    <circle cx="394" cy="273" r="2.4" fill="#FFE8B8" />
+  </g>
+
+  <!-- Hospitable Speaking / Voice Aura Accents -->
+  <g id="speak-accents">
+    <!-- Sound Waves / Cheerful Harmonic Arcs -->
+    <path d="M 390 248 C 397 241 397 230 390 223" stroke="#F7C474" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 402 254 C 413 243 413 227 402 216" stroke="#E59235" stroke-width="3" stroke-linecap="round" fill="none" />
+    <!-- Friendly Chat Sparkle -->
+    <circle cx="418" cy="210" r="3.2" fill="#F7C474" />
+    <circle cx="426" cy="224" r="2" fill="#E59235" opacity="0.8" />
+  </g>
+</svg>

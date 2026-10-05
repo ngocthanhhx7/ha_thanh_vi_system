@@ -7,16 +7,29 @@ import {
   CustomerReview,
   CustomerTicket,
 } from '../models/customer.js';
+import { ChatHandoff } from '../models/chatHandoff.js';
+import { CustomerAccountAppeal, CustomerAccountAudit } from '../models/accountManagement.js';
 import {
   CustomerError,
   hashPassword,
   hashSessionToken,
   newSessionToken,
 } from '../utils/customerSecurity.js';
+import { AuthChallenge, TrustedDevice } from '../models/authChallenge.js';
 import { discountFor } from './customerRules.js';
 
 export type Role = 'admin' | 'staff' | 'customer';
-export type UserView = { id: string; name: string; email: string; phone: string; role: Role };
+export type AccountStatus = 'active' | 'suspended';
+export type UserView = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: Role;
+  accountStatus: AccountStatus;
+  accountStatusReason: string;
+  accountStatusChangedAt: string | null;
+};
 export type AddressInput = {
   label: string;
   name: string;
@@ -47,6 +60,14 @@ export const userView = (value: Record<string, unknown>): UserView => ({
   email: String(value.email),
   phone: String(value.phone ?? ''),
   role: value.role as Role,
+  accountStatus: value.accountStatus === 'suspended' ? 'suspended' : 'active',
+  accountStatusReason: String(value.accountStatusReason ?? ''),
+  accountStatusChangedAt:
+    value.accountStatusChangedAt instanceof Date
+      ? value.accountStatusChangedAt.toISOString()
+      : typeof value.accountStatusChangedAt === 'string'
+        ? value.accountStatusChangedAt
+        : null,
 });
 export const addressView = (value: AddressRecord) => ({
   id: String(value._id),
@@ -73,14 +94,29 @@ export class CustomerRepository {
     }).lean();
     if (!session) return undefined;
     const user = await CustomerUser.findById(session.userId).lean();
-    return user ? userView(user) : undefined;
+    return user &&
+      (user.emailVerification !== 'required' || user.verifiedAt) &&
+      user.accountStatus !== 'suspended' &&
+      Number(user.authVersion ?? 0) === Number(session.authVersion ?? 0)
+      ? userView(user)
+      : undefined;
   }
-  async createSession(userId: string) {
+  async createSession(userId: string, days = 30, expectedVersion?: number) {
+    const user = await CustomerUser.findById(userId).lean();
+    if (
+      !user ||
+      (user.emailVerification === 'required' && !user.verifiedAt) ||
+      user.accountStatus === 'suspended' ||
+      (expectedVersion !== undefined && Number(user.authVersion ?? 0) !== expectedVersion)
+    )
+      throw new CustomerError(401, 'Vui lòng đăng nhập lại.');
+    const version = Number(user.authVersion ?? 0);
     const token = newSessionToken();
     await CustomerSession.create({
       userId,
       tokenHash: hashSessionToken(token),
-      expiresAt: new Date(Date.now() + 30 * 86400000),
+      expiresAt: new Date(Date.now() + days * 86400000),
+      authVersion: version,
     });
     return token;
   }
@@ -350,14 +386,21 @@ export async function bootstrapAdmin(env: NodeJS.ProcessEnv = process.env) {
 }
 
 export async function initializeCustomerIndexes() {
+  // Explicit migration: pre-feature accounts retain verified status (absent marker), with version zero.
+  await CustomerUser.updateMany({ authVersion: { $exists: false } }, { $set: { authVersion: 0 } });
   await Promise.all(
     [
       CustomerUser,
       CustomerSession,
+      AuthChallenge,
+      TrustedDevice,
       CustomerVoucher,
       CustomerWallet,
       CustomerReview,
       CustomerTicket,
+      ChatHandoff,
+      CustomerAccountAppeal,
+      CustomerAccountAudit,
     ].map((model) => model.init()),
   );
 }

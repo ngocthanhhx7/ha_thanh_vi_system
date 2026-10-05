@@ -1,0 +1,45 @@
+.auth-panel form {
+  display: grid;
+  gap: 16px;
+}
+.auth-remember {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.auth-remember input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 16px 0;
+}
+.auth-links button {
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.auth-links button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.auth-reset {
+  max-width: 580px;
+  margin-inline: auto;
+}
+.auth-reset form {
+  display: grid;
+  gap: 18px;
+}
+.auth-reset h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+}

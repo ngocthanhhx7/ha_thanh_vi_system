@@ -1,28 +1,49 @@
 import { CartContents } from '../components/CartContents';
-import { useEffect, useState } from 'react';
+import { ViOiChat } from '../components/ViOiChat';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
+  ArrowUpRight,
+  Bell,
+  Gift,
+  Headphones,
+  LogOut,
+  MapPin,
+  MessageCircle,
   Menu,
   Phone,
+  Package,
   Search,
   ShoppingBag,
+  Star,
   UserRound,
-  X,
-  MessageCircle,
   Mail,
-  MapPin,
 } from 'lucide-react';
 import { useShop } from '../hooks/useShop';
 import { Modal } from '../components/Modal';
+import { customerApi, CustomerApiError, type CustomerUser } from '../services/customerApi';
+import { useNotificationCenter } from '../components/NotificationCenter';
+import './public-shell.css';
+const accountSections = [
+  { id: 'notifications', label: 'Thông báo', icon: Bell },
+  { id: 'orders', label: 'Đơn hàng của tôi', icon: Package },
+  { id: 'profile', label: 'Thông tin tài khoản', icon: UserRound },
+  { id: 'addresses', label: 'Sổ địa chỉ', icon: MapPin },
+  { id: 'vouchers', label: 'Ví ưu đãi', icon: Gift },
+  { id: 'reviews', label: 'Đánh giá sản phẩm', icon: Star },
+  { id: 'support', label: 'Hỗ trợ & đổi trả', icon: MessageCircle },
+];
 const links = [
   ['/', 'Trang chủ'],
   ['/cau-chuyen', 'Câu chuyện'],
   ['/san-pham', 'Sản phẩm'],
+  ['/tin-tuc', 'Tin tức'],
   ['/ve-chung-toi', 'Về chúng tôi'],
   ['/lien-he', 'Liên hệ'],
 ];
 export function Layout() {
+  const { unreadCount } = useNotificationCenter();
   const {
     content: { site, products },
     cart,
@@ -31,13 +52,72 @@ export function Layout() {
   const navigate = useNavigate();
   const [panel, setPanel] = useState<'menu' | 'search' | 'cart' | null>(null);
   const [query, setQuery] = useState('');
-  const [mascot, setMascot] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [accountUser, setAccountUser] = useState<CustomerUser | null>(null);
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountError, setAccountError] = useState('');
+  const accountMenu = useRef<HTMLDivElement>(null);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     setPanel(null);
     const title = links.find((x) => x[0] === location.pathname)?.[1] || 'Khám phá';
-    document.title = title + ' | Hà Thành Vị';
+    document.title =
+      (location.pathname === '/tin-tuc' ? 'Tin tức ẩm thực Hà Nội' : title) + ' | Hà Thành Vị';
   }, [location.pathname]);
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    let active = true;
+    setAccountLoading(true);
+    setAccountError('');
+    customerApi
+      .me()
+      .then(({ user }) => {
+        if (active) setAccountUser(user);
+      })
+      .catch((reason) => {
+        if (!active) return;
+        setAccountUser(null);
+        if (!(reason instanceof CustomerApiError && reason.status === 401))
+          setAccountError(reason instanceof Error ? reason.message : 'Chưa tải được tài khoản.');
+      })
+      .finally(() => {
+        if (active) setAccountLoading(false);
+      });
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!accountMenu.current?.contains(event.target as Node)) setAccountMenuOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setAccountMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      active = false;
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [accountMenuOpen]);
+  useEffect(() => {
+    const refreshAccount = () => {
+      customerApi
+        .me()
+        .then(({ user }) => setAccountUser(user))
+        .catch(() => setAccountUser(null));
+    };
+    window.addEventListener('customer-session-changed', refreshAccount);
+    return () => window.removeEventListener('customer-session-changed', refreshAccount);
+  }, []);
+  async function logoutFromAccountMenu() {
+    try {
+      await customerApi.logout();
+      setAccountUser(null);
+      setAccountError('');
+      setAccountMenuOpen(false);
+      window.dispatchEvent(new Event('customer-session-changed'));
+    } catch (reason) {
+      setAccountError(reason instanceof Error ? reason.message : 'Chưa thể đăng xuất.');
+    }
+  }
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
   return (
     <>
@@ -70,9 +150,127 @@ export function Layout() {
           >
             <Search size={21} />
           </button>
-          <Link className="icon-button account-button" aria-label="Tài khoản" to="/tai-khoan">
-            <UserRound size={21} />
-          </Link>
+          <div className="account-menu-wrap" ref={accountMenu}>
+            <button
+              type="button"
+              className="icon-button account-button"
+              aria-label={
+                'Mở menu tài khoản' + (unreadCount ? `, ${unreadCount} thông báo chưa đọc` : '')
+              }
+              aria-expanded={accountMenuOpen}
+              aria-controls="account-dropdown"
+              onClick={() => setAccountMenuOpen((open) => !open)}
+            >
+              <UserRound size={21} />
+              {unreadCount > 0 && <span className="account-notification-dot" aria-hidden="true" />}
+            </button>
+            {accountMenuOpen && (
+              <div className="account-dropdown" id="account-dropdown">
+                <div className="account-dropdown-heading">
+                  <strong>{accountUser?.name || 'Tài khoản của bạn'}</strong>
+                  <span>
+                    {accountLoading
+                      ? 'Đang kiểm tra tài khoản…'
+                      : accountUser
+                        ? accountUser.role === 'admin'
+                          ? 'Quản trị viên'
+                          : accountUser.role === 'staff'
+                            ? 'Nhân viên Hà Thành Vị'
+                            : accountUser.email
+                        : 'Đăng nhập để quản lý đơn hàng và ưu đãi'}
+                  </span>
+                </div>
+                {accountError && (
+                  <p className="account-dropdown-error" role="alert">
+                    {accountError}
+                  </p>
+                )}
+                {accountLoading ? (
+                  <p className="account-dropdown-loading" role="status">
+                    Đang tải các lối tắt…
+                  </p>
+                ) : accountUser ? (
+                  <>
+                    <nav className="account-dropdown-links" aria-label="Tài khoản của tôi">
+                      {accountSections.map(({ id, label, icon: Icon }) => (
+                        <Link
+                          key={id}
+                          to={`/tai-khoan?section=${id}`}
+                          onClick={() => setAccountMenuOpen(false)}
+                        >
+                          <Icon size={18} />
+                          {id === 'notifications' && unreadCount > 0
+                            ? `${label} · ${unreadCount} mới`
+                            : label}
+                        </Link>
+                      ))}
+                    </nav>
+                    {accountUser.role !== 'customer' && (
+                      <div className="account-dropdown-group">
+                        <span>Công việc</span>
+                        <Link to="/quan-tri?tab=orders" onClick={() => setAccountMenuOpen(false)}>
+                          <Package size={18} /> Đơn hàng
+                        </Link>
+                        <Link to="/quan-tri?tab=tickets" onClick={() => setAccountMenuOpen(false)}>
+                          <MessageCircle size={18} /> Chăm sóc khách hàng
+                        </Link>
+                        <Link to="/quan-tri?tab=chat" onClick={() => setAccountMenuOpen(false)}>
+                          <Headphones size={18} /> Tư vấn chat
+                        </Link>
+                        {accountUser.role === 'admin' && (
+                          <>
+                            <Link
+                              to="/quan-tri?tab=vouchers"
+                              onClick={() => setAccountMenuOpen(false)}
+                            >
+                              <Gift size={18} /> Quản lý ưu đãi
+                            </Link>
+                            <Link
+                              to="/quan-tri?tab=users"
+                              onClick={() => setAccountMenuOpen(false)}
+                            >
+                              <UserRound size={18} /> Quản lý nhân sự
+                            </Link>
+                            <Link
+                              to="/admin?tab=products"
+                              onClick={() => setAccountMenuOpen(false)}
+                            >
+                              <ArrowUpRight size={18} /> Quản trị sản phẩm
+                            </Link>
+                            <Link to="/admin?tab=site" onClick={() => setAccountMenuOpen(false)}>
+                              <ArrowUpRight size={18} /> Nội dung thương hiệu
+                            </Link>
+                            <Link to="/admin?tab=stats" onClick={() => setAccountMenuOpen(false)}>
+                              <ArrowUpRight size={18} /> Thống kê cửa hàng
+                            </Link>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      className="account-dropdown-logout"
+                      onClick={() => void logoutFromAccountMenu()}
+                    >
+                      <LogOut size={18} /> Đăng xuất
+                    </button>
+                  </>
+                ) : (
+                  <nav className="account-dropdown-links" aria-label="Truy cập tài khoản">
+                    <Link to="/tai-khoan" onClick={() => setAccountMenuOpen(false)}>
+                      <UserRound size={18} /> Đăng nhập hoặc tạo tài khoản
+                    </Link>
+                    <Link to="/tra-cuu-don-hang" onClick={() => setAccountMenuOpen(false)}>
+                      <Package size={18} /> Tra cứu đơn hàng
+                    </Link>
+                    <Link to="/gio-hang" onClick={() => setAccountMenuOpen(false)}>
+                      <ShoppingBag size={18} /> Giỏ hàng của bạn
+                    </Link>
+                  </nav>
+                )}
+              </div>
+            )}
+          </div>
           <button
             className="icon-button cart-button"
             aria-label={'Mở giỏ hàng, ' + count + ' sản phẩm'}
@@ -156,36 +354,7 @@ export function Layout() {
           <span>Được chăm chút bởi Ngọc Thành</span>
         </div>
       </footer>
-      <div className="mascot-widget">
-        {mascot && (
-          <div className="mascot-message">
-            <button
-              className="icon-button"
-              aria-label="Đóng lời chào"
-              onClick={() => setMascot(false)}
-            >
-              <X size={16} />
-            </button>
-            <strong>Chào bạn, mời một chút Hà Nội!</strong>
-            <p>Mình giúp bạn chọn bánh và quà tặng nhé.</p>
-            <a href={site.zalo} target="_blank" rel="noreferrer">
-              Trò chuyện qua Zalo <ArrowRight size={16} />
-            </a>
-          </div>
-        )}
-        <button
-          className="mascot-toggle"
-          aria-label="Mở lời chào và hỗ trợ"
-          aria-expanded={mascot}
-          onClick={() => setMascot((v) => !v)}
-        >
-          <img src="/brand/artisan-baking.webp" alt="" />
-          <span>
-            <MessageCircle size={14} />
-            Mình ở đây!
-          </span>
-        </button>
-      </div>
+      <ViOiChat />
       {panel && (
         <Modal
           title={

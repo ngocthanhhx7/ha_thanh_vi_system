@@ -7,6 +7,13 @@ export type Product = {
   weight: string;
   flavor: string;
   description: string;
+  tagline?: string;
+  packaging?: string;
+  packageContents?: string[];
+  ingredients?: string;
+  ingredientImage?: string;
+  allergens?: string;
+  storage?: string;
   image: string;
   price: number | null;
   featured: boolean;

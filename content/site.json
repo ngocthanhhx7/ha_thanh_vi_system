@@ -16,62 +16,72 @@
     {
       "id": "banh-cha-truyen-thong",
       "slug": "banh-cha-truyen-thong",
-      "name": "Bánh chả truyền thống",
+      "name": "Bánh Chả Hà Nội – Vị Truyền Thống",
       "category": "banh-cha",
       "weight": "350g",
-      "flavor": "Truyền thống",
-      "description": "Vị bánh chả thân quen trong túi zip tiện lợi. Một thức quà nhỏ cho những phút nghỉ ngơi cùng tách trà.",
-      "image": "/brand/pastry.webp",
+      "flavor": "Thơm béo, ngọt dịu, đậm hương lá chanh",
+      "description": "Mang đậm hương vị bánh chả Hà Nội xưa với lớp vỏ thơm giòn, nhân bánh béo bùi và hương lá chanh đặc trưng. Vị ngọt vừa phải, giản dị mà cuốn hút – đặc biệt ngon khi thưởng thức cùng một tách trà nóng.",
+      "image": "/brand/pouch-traditional-lime-leaf-350g-v2.webp",
       "price": 79000,
-      "featured": true
+      "featured": true,
+      "packaging": "Túi zip",
+      "packageContents": ["1 túi zip bánh chả 350g – Vị Truyền Thống"]
     },
     {
       "id": "banh-cha-socola",
       "slug": "banh-cha-socola",
-      "name": "Bánh chả socola",
+      "name": "Bánh Chả Hà Nội – Vị Socola Trứng Muối",
       "category": "banh-cha",
       "weight": "350g",
-      "flavor": "Socola",
-      "description": "Một cách thưởng thức bánh chả mới mẻ với vị socola, dành cho những cuộc hẹn và buổi chiều thảnh thơi.",
-      "image": "/brand/pastry.webp",
+      "flavor": "Ngọt thơm socola, béo mặn trứng muối",
+      "description": "Một phiên bản mới lạ của bánh chả truyền thống, kết hợp vị socola thơm ngọt cùng trứng muối béo mặn, tạo nên sự cân bằng thú vị trong từng miếng bánh. Vừa quen thuộc, vừa hiện đại – dành cho những ai thích khám phá hương vị mới.",
+      "image": "/brand/pouch-chocolate-salted-egg-350g-v2.webp",
       "price": 89000,
-      "featured": false
+      "featured": false,
+      "packaging": "Túi zip",
+      "packageContents": ["1 túi zip bánh chả 350g – Vị Socola Trứng Muối"]
     },
     {
       "id": "banh-cha-matcha",
       "slug": "banh-cha-matcha",
-      "name": "Bánh chả matcha",
+      "name": "Bánh Chả Hà Nội – Vị Matcha Trứng Muối",
       "category": "banh-cha",
       "weight": "350g",
-      "flavor": "Matcha",
-      "description": "Bánh chả kết hợp vị matcha, được gói trong túi zip 350g để cùng bạn chia sẻ những khoảnh khắc thường ngày.",
-      "image": "/brand/pastry.webp",
+      "flavor": "Thanh nhẹ vị matcha, béo bùi trứng muối",
+      "description": "Sự kết hợp hài hòa giữa matcha thanh nhẹ và trứng muối béo bùi, mang đến một hương vị bánh chả mới mẻ nhưng vẫn giữ nét duyên truyền thống. Thích hợp để nhâm nhi cùng trà hoặc thưởng thức như một món ăn vặt nhẹ nhàng.",
+      "image": "/brand/pouch-matcha-salted-egg-350g-v2.webp",
       "price": 89000,
-      "featured": false
+      "featured": false,
+      "packaging": "Túi zip",
+      "packageContents": ["1 túi zip bánh chả 350g – Vị Matcha Trứng Muối"]
     },
     {
       "id": "set-qua-thuong",
       "slug": "set-qua-thuong",
-      "name": "Hộp quà Hà Nội",
+      "name": "Nhã Sắc Hà Thành",
       "category": "qua-tang",
-      "weight": "500g + trà sen",
+      "weight": "Đang xác nhận khối lượng set",
       "flavor": "Mix 3 vị",
-      "description": "Hộp bánh chả mix 500g cùng 1 búp sen trong hộp trà. Lời quan tâm được gửi gắm qua một món quà tinh tế.",
-      "image": "/brand/gift.webp",
+      "description": "Set quà thường Nhã Sắc Hà Thành. Gánh chút hương Hà Thành, gửi trao chút tình.",
+      "image": "/brand/gift-box-standard-nha-sac-ha-thanh.webp",
       "price": 249000,
-      "featured": true
+      "featured": true,
+      "tagline": "Gánh chút hương Hà Thành, gửi trao chút tình.",
+      "packaging": "Set quà thường"
     },
     {
       "id": "set-qua-cao-cap",
       "slug": "set-qua-cao-cap",
-      "name": "Hộp quà Tinh Hoa",
+      "name": "Nhã Vị Kinh Kỳ",
       "category": "qua-tang",
-      "weight": "500g + trà sen + đĩa sứ",
+      "weight": "Đang xác nhận khối lượng set",
       "flavor": "Mix 3 vị",
-      "description": "Hộp bánh chả mix 500g, 2 búp sen trong hộp trà và 1 đĩa sứ gốm cao cấp. Một trải nghiệm biếu tặng mang cảm hứng văn hóa Hà Nội.",
-      "image": "/brand/gift-premium.webp",
+      "description": "Set quà cao cấp Nhã Vị Kinh Kỳ. Gánh vị quê nhà, trao trọn tình thân.",
+      "image": "/brand/gift-box-premium-nha-vi-kinh-ky.webp",
       "price": 399000,
-      "featured": true
+      "featured": true,
+      "tagline": "Gánh vị quê nhà, trao trọn tình thân.",
+      "packaging": "Set quà cao cấp"
     }
   ]
 }

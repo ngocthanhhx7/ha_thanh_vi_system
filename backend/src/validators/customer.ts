@@ -13,9 +13,14 @@ export const registrationSchema = z
       .max(254)
       .transform((v) => v.toLowerCase()),
     password: z.string().min(10).max(128),
+    confirmPassword: z.string().min(10).max(128),
     phone,
   })
-  .strict();
+  .strict()
+  .refine((v) => v.password === v.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'Mật khẩu xác nhận chưa khớp.',
+  });
 export const loginSchema = z
   .object({
     email: z
@@ -23,6 +28,7 @@ export const loginSchema = z
       .max(254)
       .transform((v) => v.toLowerCase()),
     password: z.string().min(1).max(128),
+    rememberDevice: z.boolean().default(false),
   })
   .strict();
 export const addressInputSchema = z
@@ -81,3 +87,33 @@ export const claimSchema = z
       .regex(/^[A-Z0-9_-]{3,80}$/),
   })
   .strict();
+
+const authEmail = z
+  .email()
+  .max(254)
+  .transform((v) => v.toLowerCase());
+export const verificationSchema = z
+  .object({
+    email: authEmail,
+    code: z.string().regex(/^\d{6}$/),
+    rememberDevice: z.boolean().default(false),
+  })
+  .strict();
+export const authEmailSchema = z.object({ email: authEmail }).strict();
+export const loginVerificationSchema = z
+  .object({ challengeId: z.string().regex(/^[a-f0-9]{64}$/), code: z.string().regex(/^\d{6}$/) })
+  .strict();
+export const loginResendSchema = z
+  .object({ challengeId: z.string().regex(/^[a-f0-9]{64}$/) })
+  .strict();
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().regex(/^[a-f0-9]{64}$/),
+    password: z.string().min(10).max(128),
+    confirmPassword: z.string().min(10).max(128),
+  })
+  .strict()
+  .refine((v) => v.password === v.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'Mật khẩu xác nhận chưa khớp.',
+  });

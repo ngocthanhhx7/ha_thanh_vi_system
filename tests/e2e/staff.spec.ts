@@ -38,6 +38,7 @@ async function prepare(
   role: 'staff' | 'admin' | 'customer' = 'staff',
   orders: Order[] = [],
 ) {
+  await page.route('**/api/**', (route) => route.fulfill(json({})));
   await page.route('**/api/content', (route) => route.fulfill(json(content)));
   await page.route('**/api/auth/me', (route) =>
     route.fulfill(
@@ -51,6 +52,22 @@ async function prepare(
         },
       }),
     ),
+  );
+  await page.route('**/api/notifications*', (route) =>
+    route.fulfill(json({ notifications: [], unread: 0, total: 0, page: 1, limit: 1 })),
+  );
+  await page.route('**/api/admin/appeals', (route) => route.fulfill(json({ appeals: [] })));
+  await page.route('**/api/staff/dashboard', (route) =>
+    route.fulfill(
+      json({
+        orders: { pending: 0, returnRequested: 0, byStatus: [], daily: [] },
+        support: { open: 0 },
+        chat: { waiting: 0, assignedToMe: 0 },
+      }),
+    ),
+  );
+  await page.route('**/api/staff/chat-handoffs/summary', (route) =>
+    route.fulfill(json({ waiting: 0, unread: 0 })),
   );
   await page.route(/\/api\/admin\/orders\?/, (route) =>
     route.fulfill(json({ orders, total: orders.length })),
@@ -78,7 +95,8 @@ test('staff advances an order and records its real carrier, tracking number and 
     };
     return route.fulfill(json(orders[0]));
   });
-  await page.goto('/quan-tri');
+  await page.goto('/quan-tri?tab=orders');
+  await page.getByRole('button', { name: 'Tất cả đơn hàng', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Đơn HTV-STAFF-001' })).toBeVisible();
   await page.getByRole('combobox', { name: 'Bước xử lý', exact: true }).selectOption('shipping');
   await page.getByLabel('Đơn vị vận chuyển', { exact: true }).fill('GHN');
@@ -119,8 +137,7 @@ test('staff can reply to a customer ticket and see the persisted response', asyn
     tickets[0].replies.push({ message: body.reply, createdAt: '2026-10-04T11:00:00Z' });
     return route.fulfill(json({ ticket: tickets[0] }));
   });
-  await page.goto('/quan-tri');
-  await page.getByRole('button', { name: 'Chăm sóc khách hàng', exact: true }).click();
+  await page.goto('/quan-tri?tab=tickets');
   await expect(page.locator('.staff-ticket')).toContainText('Tôi cần kiểm tra ngày giao hàng.');
   await page.getByRole('combobox', { name: 'Trạng thái', exact: true }).selectOption('in_progress');
   await page
@@ -139,6 +156,81 @@ test('staff can reply to a customer ticket and see the persisted response', asyn
   });
 });
 
+test('staff inbox notifies, claims, replies to, and resolves a Vị Ơi handoff', async ({ page }) => {
+  await prepare(page);
+  const handoff = {
+    id: 'handoff-1',
+    status: 'waiting',
+    customerType: 'guest',
+    assignedStaffName: null,
+    assignedStaffId: null,
+    createdAt: '2026-10-04T10:00:00Z',
+    updatedAt: '2026-10-04T10:00:00Z',
+    lastMessageAt: '2026-10-04T10:00:00Z',
+    lastMessagePreview: 'Mình cần tư vấn set quà.',
+    staffUnreadCount: 1,
+    customerUnreadCount: 0,
+    messages: [
+      {
+        id: 'customer-message',
+        sender: 'customer',
+        content: 'Mình cần tư vấn set quà.',
+        authorName: null,
+        createdAt: '2026-10-04T10:00:00Z',
+      },
+    ],
+  };
+  await page.route('**/api/staff/chat-handoffs/summary', (route) =>
+    route.fulfill(json({ waiting: handoff.status === 'waiting' ? 1 : 0, unread: 1 })),
+  );
+  await page.route('**/api/staff/chat-handoffs', (route) =>
+    route.fulfill(json({ handoffs: [handoff], summary: { waiting: 1, unread: 1 } })),
+  );
+  await page.route('**/api/staff/chat-handoffs/handoff-1', (route) =>
+    route.fulfill(json({ handoff })),
+  );
+  await page.route('**/api/staff/chat-handoffs/handoff-1/claim', (route) => {
+    handoff.status = 'assigned';
+    handoff.assignedStaffId = 'operator-1';
+    handoff.assignedStaffName = 'Ngọc Thành';
+    handoff.updatedAt = '2026-10-04T10:02:00Z';
+    return route.fulfill(json({ handoff }));
+  });
+  await page.route('**/api/staff/chat-handoffs/handoff-1/messages', (route) => {
+    const body = route.request().postDataJSON();
+    handoff.messages.push({
+      id: 'staff-message',
+      sender: 'staff',
+      content: body.message,
+      authorName: 'Ngọc Thành',
+      createdAt: '2026-10-04T10:03:00Z',
+    });
+    handoff.lastMessagePreview = body.message;
+    handoff.updatedAt = '2026-10-04T10:03:00Z';
+    return route.fulfill(json({ handoff }));
+  });
+  await page.route('**/api/staff/chat-handoffs/handoff-1/resolve', (route) => {
+    handoff.status = 'resolved';
+    handoff.updatedAt = '2026-10-04T10:04:00Z';
+    return route.fulfill(json({ handoff }));
+  });
+
+  await page.goto('/quan-tri?tab=chat');
+  await expect(page.getByRole('link', { name: 'Hộp thư Vị Ơi' })).toBeVisible();
+  await page.getByRole('button', { name: /Khách vãng lai/ }).click();
+  await expect(page.locator('.staff-chat-transcript')).toContainText('Mình cần tư vấn set quà.');
+  await page.getByRole('button', { name: 'Nhận xử lý', exact: true }).click();
+  await page
+    .getByLabel('Phản hồi khách hàng', { exact: true })
+    .fill('Mình sẽ gợi ý set phù hợp với dịp tặng nhé.');
+  await page.getByRole('button', { name: 'Gửi phản hồi', exact: true }).click();
+  await expect(page.locator('.staff-chat-transcript')).toContainText(
+    'Mình sẽ gợi ý set phù hợp với dịp tặng nhé.',
+  );
+  await page.getByRole('button', { name: 'Kết thúc tư vấn', exact: true }).click();
+  await expect(page.locator('.staff-chat-closed')).toContainText('Cuộc tư vấn đã kết thúc');
+});
+
 test('admin creates staff credentials and issues an automatic voucher with exact conditions', async ({
   page,
 }) => {
@@ -147,11 +239,21 @@ test('admin creates staff credentials and issues an automatic voucher with exact
   const vouchers: Record<string, unknown>[] = [];
   let staffBody: unknown;
   let voucherBody: Record<string, unknown> | undefined;
-  await page.route('**/api/admin/users', (route) => route.fulfill(json({ users })));
+  await page.route('**/api/admin/users**', (route) =>
+    route.fulfill(json({ users, total: users.length, page: 1, limit: 25 })),
+  );
   await page.route('**/api/admin/staff', (route) => {
     staffBody = route.request().postDataJSON();
-    users.push({ id: 'new-staff', ...route.request().postDataJSON(), role: 'staff' });
-    return route.fulfill(json({ user: users[0] }, 201));
+    const user = {
+      id: 'new-staff',
+      ...route.request().postDataJSON(),
+      role: 'staff',
+      accountStatus: 'active',
+      accountStatusReason: '',
+      accountStatusChangedAt: null,
+    };
+    users.push(user);
+    return route.fulfill(json({ user }, 201));
   });
   await page.route('**/api/admin/vouchers', (route) => {
     if (route.request().method() === 'POST') {
@@ -161,8 +263,8 @@ test('admin creates staff credentials and issues an automatic voucher with exact
     }
     return route.fulfill(json({ vouchers }));
   });
-  await page.goto('/quan-tri');
-  await page.getByRole('button', { name: 'Nhân sự', exact: true }).click();
+  await page.goto('/quan-tri?tab=users');
+  await page.getByRole('button', { name: 'Thêm nhân viên', exact: true }).click();
   await page.getByLabel('Họ tên', { exact: true }).fill('Nhân viên bán hàng');
   await page.getByLabel('Email', { exact: true }).fill('staff@example.com');
   await page.getByLabel('Số điện thoại', { exact: true }).fill('0912345678');
@@ -171,14 +273,14 @@ test('admin creates staff credentials and issues an automatic voucher with exact
   await expect(page.locator('.staff-page .form-status')).toContainText(
     'Đã tạo tài khoản nhân viên.',
   );
-  await expect(page.locator('table tbody')).toContainText('staff@example.com');
+  await expect(page.locator('.admin-account-card')).toContainText('staff@example.com');
   expect(staffBody).toEqual({
     name: 'Nhân viên bán hàng',
     email: 'staff@example.com',
     phone: '0912345678',
     password: 'initialPassword123',
   });
-  await page.getByRole('button', { name: 'Voucher', exact: true }).click();
+  await page.getByRole('link', { name: 'Ưu đãi', exact: true }).click();
   await page.getByLabel('Mã ưu đãi', { exact: true }).fill('HATHANH10');
   await page.getByLabel('Tên chiến dịch', { exact: true }).fill('Ưu đãi khai trương');
   await page.getByRole('combobox', { name: 'Loại', exact: true }).selectOption('percent');
@@ -239,14 +341,12 @@ test('customers cannot see or request management data; staff sees only order and
       }),
     ),
   );
-  await page.reload();
-  await expect(page.getByRole('heading', { name: 'Điều hành cửa hàng' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Đơn hàng', exact: true })).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Chăm sóc khách hàng', exact: true }),
-  ).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Nhân sự', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Voucher', exact: true })).toHaveCount(0);
+  await page.goto('/quan-tri?tab=orders');
+  await expect(page.getByRole('heading', { name: 'Quản lý đơn hàng' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Đơn hàng', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Chăm sóc khách', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Nhân sự & tài khoản', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Ưu đãi', exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Chỉnh nội dung', exact: true })).toHaveCount(0);
 });
 
@@ -256,7 +356,8 @@ test('unpaid payOS order cannot be selected for fulfillment in the staff interfa
   await prepare(page, 'staff', [
     { ...baseOrder, status: 'pending', paymentMethod: 'payos', paymentStatus: 'unpaid' },
   ]);
-  await page.goto('/quan-tri');
+  await page.goto('/quan-tri?tab=orders');
+  await page.getByRole('button', { name: 'Chờ thanh toán', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Đơn HTV-STAFF-001' })).toBeVisible();
   await expect(page.locator('.managed-order')).toContainText('Đơn VietQR cần xác nhận thanh toán');
   const states = await page
@@ -279,7 +380,8 @@ test('admin marks a returned COD order for refund and confirms only the recorded
     orders[0] = { ...orders[0], ...body };
     return route.fulfill(json(orders[0]));
   });
-  await page.goto('/quan-tri');
+  await page.goto('/quan-tri?tab=orders');
+  await page.getByRole('button', { name: 'Đã đóng', exact: true }).click();
   const refund = page.getByRole('combobox', { name: /Đối soát hoàn tiền/ });
   await expect(page.locator('.managed-order')).toContainText(
     'thao tác này không chuyển tiền tự động',
@@ -294,4 +396,92 @@ test('admin marks a returned COD order for refund and confirms only the recorded
     { status: 'returned', paymentStatus: 'refund_pending' },
     { status: 'returned', paymentStatus: 'refunded' },
   ]);
+});
+
+test('admin filters audit events and understands repeated authentication failures', async ({
+  page,
+}) => {
+  await prepare(page, 'admin');
+  const requests: URLSearchParams[] = [];
+  await page.route('**/api/admin/system-logs*', (route) => {
+    requests.push(new URL(route.request().url()).searchParams);
+    return route.fulfill(
+      json({
+        logs: [
+          {
+            id: 'audit-1',
+            actorName: 'Ngọc Thành',
+            actorRole: 'admin',
+            actorIp: '192.0.2.15',
+            actorUserAgent: 'HTV-test-browser',
+            requestId: 'request-audit-example',
+            outcome: 'failure',
+            reasonCode: 'HTTP_401',
+            event: 'POST /auth/login',
+            severity: 'warning',
+            method: 'POST',
+            path: '/auth/login',
+            statusCode: 401,
+            createdAt: '2026-10-05T11:30:00.000Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 50,
+        anomalies: [
+          {
+            type: 'repeated_auth_failures',
+            count: 5,
+            threshold: 5,
+            windowMinutes: 15,
+            actorIp: '192.0.2.15',
+            latestAt: '2026-10-05T11:30:00.000Z',
+          },
+        ],
+      }),
+    );
+  });
+  await page.goto('/quan-tri?tab=logs');
+  await expect(page.getByText('Nhiều lần xác thực thất bại từ cùng một địa chỉ IP')).toBeVisible();
+  await expect(page.getByText('Tín hiệu cần rà soát', { exact: false })).toBeVisible();
+  await expect(page.getByText('Đăng nhập tài khoản', { exact: true })).toBeVisible();
+  await expect(page.locator('.workspace-log-plain-result')).toBeVisible();
+
+  await page.getByLabel('Tìm người dùng, IP, request ID, mã hoặc từ khóa').fill('192.0.2.15');
+  await expect.poll(() => requests.at(-1)?.get('q')).toBe('192.0.2.15');
+  await page.getByLabel('Người thực hiện').selectOption('admin');
+  await expect.poll(() => requests.at(-1)?.get('actorRole')).toBe('admin');
+  await page.locator('.workspace-log-details summary').click();
+  await expect(page.getByText('POST /auth/login')).toBeVisible();
+  await expect(page.getByText('request-audit-example')).toBeVisible();
+});
+
+test('order workspace starts with a prioritized queue and sends search and filter criteria to the API', async ({
+  page,
+}) => {
+  const orders = [
+    { ...baseOrder, id: 'return-1', code: 'HTV-RETURN-001', status: 'return_requested' },
+    { ...baseOrder, id: 'pending-1', code: 'HTV-PENDING-002', status: 'pending' },
+  ];
+  await prepare(page, 'staff', orders);
+  const requests: URLSearchParams[] = [];
+  await page.route(/\/api\/admin\/orders\?/, (route) => {
+    requests.push(new URL(route.request().url()).searchParams);
+    return route.fulfill(json({ orders, total: orders.length, page: 1, limit: 20 }));
+  });
+  await page.goto('/quan-tri?tab=orders');
+  await expect(page.getByRole('button', { name: 'Cần xử lý', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.locator('.order-queue-row').first()).toContainText('Yêu cầu trả hàng');
+  await expect.poll(() => requests.at(-1)?.get('queue')).toBe('needs_action');
+  await page
+    .getByLabel('Tìm mã đơn, người nhận, email, số điện thoại hoặc sản phẩm')
+    .fill('HTV-RETURN');
+  await expect.poll(() => requests.at(-1)?.get('q')).toBe('HTV-RETURN');
+  await page.getByLabel('Phương thức').selectOption('cod');
+  await expect.poll(() => requests.at(-1)?.get('paymentMethod')).toBe('cod');
+  await page.getByRole('button', { name: 'Đang giao', exact: true }).click();
+  await expect.poll(() => requests.at(-1)?.get('queue')).toBe('shipping');
 });

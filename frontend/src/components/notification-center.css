@@ -1,0 +1,114 @@
+.notification-toast-stack {
+  position: fixed;
+  z-index: 1200;
+  top: calc(88px + env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+  display: grid;
+  gap: 10px;
+  width: min(390px, calc(100vw - 28px));
+  pointer-events: none;
+}
+.notification-toast {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 28px;
+  align-items: start;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid #dfd3c2;
+  border-radius: 14px;
+  background: #fffefa;
+  box-shadow: 0 14px 38px #2e211c25;
+  color: #382f27;
+  pointer-events: auto;
+  animation: notification-toast-in 0.22s ease-out both;
+}
+.notification-toast.is-success {
+  border-color: #c9ddce;
+}
+.notification-toast.is-warning {
+  border-color: #e8c797;
+  background: #fffaf0;
+}
+.notification-toast-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #f1e8d9;
+  color: #79583a;
+}
+.notification-toast.is-success .notification-toast-icon {
+  background: #e7f1e8;
+  color: #34704a;
+}
+.notification-toast.is-warning .notification-toast-icon {
+  background: #fff0d4;
+  color: #94631a;
+}
+.notification-toast-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.notification-toast-copy > strong {
+  color: #4f312b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.notification-toast-copy > p {
+  margin: 0;
+  color: #756b60;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.notification-toast-copy > a {
+  width: fit-content;
+  margin-top: 3px;
+  color: #823d35;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.notification-toast > button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #82786c;
+  cursor: pointer;
+}
+.notification-toast > button:hover {
+  background: #f1ece4;
+  color: #4d4034;
+}
+@keyframes notification-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 600px) {
+  .notification-toast-stack {
+    top: calc(72px + env(safe-area-inset-top));
+    right: 10px;
+    width: calc(100vw - 20px);
+  }
+  .notification-toast {
+    padding: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notification-toast {
+    animation: none;
+  }
+}

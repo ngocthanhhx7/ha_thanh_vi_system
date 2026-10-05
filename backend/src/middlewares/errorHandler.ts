@@ -43,9 +43,10 @@ export function createErrorHandler(
         .json({ message: 'Hiện hệ thống chưa thể lưu dữ liệu. Vui lòng thử lại sau.' });
       return;
     }
-    res.status(status === 503 ? 503 : 500).json({
+    const serverStatus = status >= 500 && status <= 599 ? status : 500;
+    res.status(serverStatus).json({
       message:
-        status === 503
+        serverStatus === 503
           ? 'Dịch vụ hiện chưa khả dụng. Vui lòng thử lại sau.'
           : 'Đã xảy ra lỗi máy chủ.',
     });

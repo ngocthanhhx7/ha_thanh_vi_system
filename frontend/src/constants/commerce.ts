@@ -26,6 +26,7 @@ export type Order = {
   payOsException?: string;
   paymentReviewAt?: string;
   carrier?: string;
+  isOwnOrder?: boolean;
   shippingEvents?: { status: string; description: string; location?: string; occurredAt: string }[];
 };
 export type OrderInput = {

@@ -56,10 +56,24 @@ export const checkoutSchema = z
 
 export const idempotencyKeySchema = z.string().uuid();
 export const orderIdSchema = z.string().regex(/^[a-f\d]{24}$/i);
-export const adminOrderQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-});
+export const adminOrderQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    q: z.string().trim().max(120).default(''),
+    queue: z
+      .enum(['needs_action', 'awaiting_payment', 'fulfillment', 'shipping', 'closed', 'all'])
+      .default('all'),
+    status: z.enum(ORDER_STATUSES).optional(),
+    paymentStatus: z.enum(PAYMENT_STATUSES).optional(),
+    paymentMethod: z.enum(PAYMENT_METHODS).optional(),
+    from: z.coerce.date().optional(),
+    to: z.coerce.date().optional(),
+    sort: z.enum(['priority', 'oldest', 'newest', 'total-desc']).default('priority'),
+  })
+  .refine((value) => !value.from || !value.to || value.from <= value.to, {
+    message: 'Ngày bắt đầu phải trước ngày kết thúc.',
+  });
 export const adminOrderUpdateSchema = z
   .object({
     status: z.enum(ORDER_STATUSES).optional(),

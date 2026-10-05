@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CartContents } from '../components/CartContents';
+import { useNotificationCenter } from '../components/NotificationCenter';
 import { useShop } from '../hooks/useShop';
 import { api } from '../services/api';
 import { pricingNotice, type CommerceConfig, type Customer } from '../constants/commerce';
@@ -13,13 +14,33 @@ import {
   type VoucherWalletItem,
 } from '../services/customerApi';
 import { rememberOrder } from '../utils/orderSession';
+import './commerce-public.css';
 
 export function CartPage() {
   return (
-    <section className="section commerce-page">
-      <p className="eyebrow">THỨC QUÀ BẠN ĐÃ CHỌN</p>
-      <h1>Giỏ hàng của bạn</h1>
-      <CartContents />
+    <section className="section commerce-page htv-commerce-public htv-commerce-cart">
+      <header className="commerce-intro">
+        <p className="eyebrow">THỨC QUÀ BẠN ĐÃ CHỌN</p>
+        <h1>Giỏ hàng của bạn</h1>
+        <p className="commerce-lead">Xem lại lựa chọn và điều chỉnh giỏ hàng trước khi đặt mua.</p>
+        <ol className="commerce-steps" aria-label="Các bước đặt hàng">
+          <li aria-current="step">
+            <span>01</span>
+            <span>Giỏ hàng</span>
+          </li>
+          <li>
+            <span>02</span>
+            <span>Thông tin nhận hàng</span>
+          </li>
+          <li>
+            <span>03</span>
+            <span>Theo dõi đơn hàng</span>
+          </li>
+        </ol>
+      </header>
+      <div className="commerce-panel commerce-cart-panel">
+        <CartContents />
+      </div>
     </section>
   );
 }
@@ -30,6 +51,7 @@ export function Checkout() {
     clearCart,
   } = useShop();
   const navigate = useNavigate();
+  const { notify } = useNotificationCenter();
   const [config, setConfig] = useState<CommerceConfig | null>(null);
   const [configError, setConfigError] = useState('');
   const [customer, setCustomer] = useState<Customer>({
@@ -183,6 +205,13 @@ export function Checkout() {
         );
       rememberOrder(result.order.id, result.accessToken);
       clearCart();
+      notify({
+        title: 'Đặt hàng thành công',
+        message: `Hà Thành Vị đã tiếp nhận đơn ${result.order.code}. Bạn có thể theo dõi trạng thái bất cứ lúc nào.`,
+        href: '/don-hang/' + encodeURIComponent(result.order.id),
+        actionLabel: 'Theo dõi đơn hàng',
+        tone: 'success',
+      });
       // Show the retrieval key before the guest chooses to leave for payOS.
       navigate('/don-hang/' + encodeURIComponent(result.order.id));
     } catch (failure) {
@@ -193,38 +222,56 @@ export function Checkout() {
   }
   if (!cart.length) return <CartPage />;
   return (
-    <section className="section commerce-page">
-      <p className="eyebrow">GỬI MỘT CHÚT HÀ NỘI ĐẾN BẠN</p>
-      <h1>Thông tin đặt hàng</h1>
-      <p>
-        {user ? (
-          `Đơn hàng sẽ được lưu trong tài khoản ${user.name}.`
-        ) : (
-          <>
-            Mua hàng không cần tài khoản. Bạn sẽ nhận mã đơn và khóa tra cứu riêng.{' '}
-            <Link to="/tai-khoan">Đăng nhập để lưu địa chỉ và đơn mua.</Link>
-          </>
+    <section className="section commerce-page htv-commerce-public htv-checkout-page">
+      <header className="commerce-intro">
+        <p className="eyebrow">GỬI MỘT CHÚT HÀ NỘI ĐẾN BẠN</p>
+        <h1>Thông tin đặt hàng</h1>
+        <p className="commerce-lead">
+          {user ? (
+            `Đơn hàng sẽ được lưu trong tài khoản ${user.name}.`
+          ) : (
+            <>
+              Mua hàng không cần tài khoản. Bạn sẽ nhận mã đơn và khóa tra cứu riêng.{' '}
+              <Link to="/tai-khoan">Đăng nhập để lưu địa chỉ và đơn mua.</Link>
+            </>
+          )}
+        </p>
+        <ol className="commerce-steps" aria-label="Các bước đặt hàng">
+          <li>
+            <span>01</span>
+            <span>Giỏ hàng</span>
+          </li>
+          <li aria-current="step">
+            <span>02</span>
+            <span>Thông tin nhận hàng</span>
+          </li>
+          <li>
+            <span>03</span>
+            <span>Theo dõi đơn hàng</span>
+          </li>
+        </ol>
+      </header>
+      <div className="commerce-feedback">
+        {sessionLoading && <p role="status">Đang tải thông tin người nhận…</p>}
+        {sessionError && (
+          <p className="form-status" role="alert">
+            {sessionError} <Link to="/tai-khoan">Mở tài khoản</Link>
+          </p>
         )}
-      </p>
-      {sessionLoading && <p role="status">Đang tải thông tin người nhận…</p>}
-      {sessionError && (
-        <p className="form-status" role="alert">
-          {sessionError} <Link to="/tai-khoan">Mở tài khoản</Link>
-        </p>
-      )}
-      <p className="notice">{config?.pricingNotice || pricingNotice}</p>
-      {configError && (
-        <p className="form-status" role="alert">
-          {configError}
-        </p>
-      )}
-      {config && !config.enabled && (
-        <p className="form-status" role="alert">
-          Cửa hàng đang chuẩn bị mở bán. Chưa thể tiếp nhận đơn hàng trực tuyến.
-        </p>
-      )}
+        <p className="notice">{config?.pricingNotice || pricingNotice}</p>
+        {configError && (
+          <p className="form-status" role="alert">
+            {configError}
+          </p>
+        )}
+        {config && !config.enabled && (
+          <p className="form-status" role="alert">
+            Cửa hàng đang chuẩn bị mở bán. Chưa thể tiếp nhận đơn hàng trực tuyến.
+          </p>
+        )}
+      </div>
       <div className="checkout-grid">
-        <form onSubmit={submit} className="checkout-form">
+        <form onSubmit={submit} className="checkout-form commerce-panel">
           <fieldset disabled={busy || sessionLoading}>
             <legend>1. Người nhận và địa chỉ</legend>
             {user && addresses.length > 0 && (
@@ -415,7 +462,7 @@ export function Checkout() {
           </button>
           {!config && !configError && <p role="status">Đang kiểm tra khả năng đặt hàng…</p>}
         </form>
-        <aside className="checkout-summary">
+        <aside className="checkout-summary commerce-panel">
           <h2>Kiểm tra thức quà</h2>
           <CartContents checkoutLink={false} />
           {!validCart && (

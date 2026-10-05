@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Plus, Search, Star } from 'lucide-react';
+import { ArrowDown, ArrowRight, Plus, Search, Star, X } from 'lucide-react';
 import { useShop } from '../hooks/useShop';
 import { priceLabel } from '../utils/format';
 import { ProductArt, ProductCard } from '../components/ProductCard';
 import { customerApi, type ProductReview } from '../services/customerApi';
 import { NotFound } from './Editorial';
+import './products-public.css';
+
 export function Products() {
   const {
     content: { products },
@@ -19,20 +21,80 @@ export function Products() {
       (p.name + ' ' + p.flavor).toLocaleLowerCase('vi').includes(query.toLocaleLowerCase('vi')),
   );
   return (
-    <>
-      <div className="page-intro">
-        <p className="eyebrow">BỘ SƯU TẬP THỨC QUÀ</p>
-        <h1>Một chút Hà Nội, gửi đến bạn.</h1>
-        <p>
-          Từ túi bánh thân quen đến hộp quà ý nhị.
-          <br />
-          Chọn hương vị cho mình, chọn niềm vui cho người thương.
-        </p>
-        <img src="/brand/ornament.webp" alt="" />
-      </div>
-      <section className="section products-section">
-        <div className="catalog-toolbar">
-          <div className="filters" aria-label="Lọc sản phẩm">
+    <div className="public-products-page">
+      <section className="public-collection-hero" aria-labelledby="collection-title">
+        <div className="public-collection-copy">
+          <p className="eyebrow public-collection-eyebrow">BỘ SƯU TẬP THỨC QUÀ</p>
+          <h1 id="collection-title">
+            Một chút Hà Nội,
+            <br />
+            <em>gửi đến bạn.</em>
+          </h1>
+          <p className="public-collection-intro">
+            Từ túi bánh thân quen đến hộp quà ý nhị. Chọn hương vị cho mình, chọn niềm vui cho người
+            thương.
+          </p>
+          <div className="public-collection-footer">
+            <a className="button public-collection-cta" href="#danh-sach-san-pham">
+              Khám phá thức quà <ArrowDown size={17} aria-hidden="true" />
+            </a>
+            <span className="public-collection-signature">
+              <img src="/brand/ornament.webp" alt="" />
+              <span>
+                <strong>Hà Thành Vị</strong>
+                <small>Chọn một thức quà vừa ý</small>
+              </span>
+            </span>
+          </div>
+        </div>
+        <div className="public-collection-visual" role="group" aria-label="Gợi ý từ bộ sưu tập">
+          {products[0] ? (
+            <Link
+              className="public-collection-feature"
+              to={'/san-pham/' + products[0].slug}
+              aria-label={'Khám phá ' + products[0].name}
+            >
+              <ProductArt product={products[0]} />
+              <span className="public-collection-stamp" aria-hidden="true">
+                <img src="/brand/ornament.webp" alt="" />
+                <small>HÀ NỘI</small>
+              </span>
+              <span className="public-collection-caption">
+                <span className="eyebrow">GỢI Ý TỪ BỘ SƯU TẬP</span>
+                <strong>{products[0].name}</strong>
+                <span className="public-collection-price">
+                  {priceLabel(products[0].price)} <ArrowRight size={16} aria-hidden="true" />
+                </span>
+              </span>
+            </Link>
+          ) : (
+            <img className="public-collection-ornament" src="/brand/ornament.webp" alt="" />
+          )}
+          <span className="public-collection-orbit" aria-hidden="true" />
+        </div>
+      </section>
+
+      <section
+        className="section products-section public-catalog"
+        id="danh-sach-san-pham"
+        aria-labelledby="public-catalog-title"
+      >
+        <header className="public-catalog-heading">
+          <div>
+            <p className="eyebrow">THỨC QUÀ TỪ HÀ NỘI</p>
+            <h2 id="public-catalog-title">
+              Chọn món quà <em>vừa ý.</em>
+            </h2>
+          </div>
+          <p>Tìm một hương vị cho mình, hay một món quà gửi người thương.</p>
+        </header>
+
+        <div className="catalog-toolbar public-catalog-toolbar">
+          <div
+            className="filters public-filter-list"
+            role="group"
+            aria-label="Lọc sản phẩm theo nhóm"
+          >
             {[
               ['all', 'Tất cả'],
               ['banh-cha', 'Bánh chả'],
@@ -48,30 +110,49 @@ export function Products() {
               </button>
             ))}
           </div>
-          <label className="catalog-search">
-            <Search size={18} />
+          <label className="catalog-search public-catalog-search">
+            <Search size={18} aria-hidden="true" />
             <input
+              type="search"
               aria-label="Tìm trong bộ sưu tập"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Tìm thức quà của bạn"
             />
+            {query && (
+              <button
+                className="public-search-clear"
+                type="button"
+                aria-label="Xóa nội dung tìm kiếm"
+                onClick={() => setQuery('')}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            )}
           </label>
         </div>
-        <p className="result-count" aria-live="polite">
-          {filtered.length} thức quà dành cho bạn
-        </p>
-        <div className="product-grid">
+        <div className="public-results-line">
+          <p className="result-count" aria-live="polite">
+            {filtered.length} thức quà dành cho bạn
+          </p>
+          <span>{products.length} sản phẩm trong bộ sưu tập</span>
+        </div>
+        <div
+          className="product-grid public-product-grid"
+          role="region"
+          aria-label="Danh sách sản phẩm"
+        >
           {filtered.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
         {!filtered.length && (
-          <div className="empty-state">
+          <div className="empty-state public-empty-state" role="status">
+            <span className="eyebrow">THỬ MỘT LỰA CHỌN KHÁC</span>
             <h2>Chưa tìm thấy thức quà phù hợp</h2>
             <p>Thử một tên khác hoặc xem lại toàn bộ bộ sưu tập nhé.</p>
             <button
-              className="button"
+              className="button public-reset-button"
               onClick={() => {
                 setQuery('');
                 setParams({});
@@ -86,9 +167,10 @@ export function Products() {
           họa ý tưởng.
         </p>
       </section>
-    </>
+    </div>
   );
 }
+
 export function ProductDetail() {
   const { slug } = useParams();
   const {
@@ -100,15 +182,15 @@ export function ProductDetail() {
   if (!product) return <NotFound />;
   const quantity = cart.find((item) => item.productId === product.id)?.quantity || 0;
   return (
-    <section className="section detail-section">
-      <div className="breadcrumbs">
+    <div className="section detail-section public-product-detail">
+      <nav className="breadcrumbs" aria-label="Đường dẫn">
         <Link to="/">Trang chủ</Link>
         <span>/</span>
         <Link to="/san-pham">Sản phẩm</Link>
         <span>/</span>
         <span>{product.name}</span>
-      </div>
-      <div className="detail-grid">
+      </nav>
+      <div className="detail-grid public-detail-hero">
         <ProductArt product={product} />
         <div className="detail-copy">
           <p className="eyebrow">
@@ -117,12 +199,17 @@ export function ProductDetail() {
               : 'THỨC QUÀ CHO MỖI NGÀY'}
           </p>
           <h1>{product.name}</h1>
+          {product.tagline && <p className="product-tagline">{product.tagline}</p>}
           <p className="detail-price">{priceLabel(product.price)}</p>
           <p>{product.description}</p>
           <dl>
             <div>
-              <dt>Quy cách</dt>
+              <dt>Khối lượng</dt>
               <dd>{product.weight}</dd>
+            </div>
+            <div>
+              <dt>Đóng gói</dt>
+              <dd>{product.packaging || 'Đang cập nhật quy cách đóng gói'}</dd>
             </div>
             <div>
               <dt>Hương vị</dt>
@@ -148,13 +235,63 @@ export function ProductDetail() {
           </p>
         </div>
       </div>
+      <section
+        className="product-information public-product-information"
+        aria-label="Thông tin chi tiết sản phẩm"
+      >
+        <article>
+          <h2>Trong pack có gì?</h2>
+          {product.packageContents?.length ? (
+            <ul>
+              {product.packageContents.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>
+              Danh sách và số lượng sản phẩm trong set đang chờ xác nhận. Liên hệ shop để được tư
+              vấn trước khi đặt.
+            </p>
+          )}
+        </article>
+        <article>
+          <h2>Thành phần & thông tin trên nhãn</h2>
+          <p>
+            {product.ingredients ||
+              'Shop đang cập nhật bảng thành phần chính thức. Hương vị mô tả ở trên không thay thế danh sách thành phần trên nhãn.'}
+          </p>
+          {product.ingredientImage ? (
+            <a href={product.ingredientImage} target="_blank" rel="noreferrer">
+              <img
+                src={product.ingredientImage}
+                alt={'Bảng thành phần của ' + product.name}
+                loading="lazy"
+              />
+            </a>
+          ) : (
+            <p className="fine-print">
+              Ảnh bảng thành phần sẽ được bổ sung sau khi shop cung cấp nhãn sản phẩm.
+            </p>
+          )}
+          <p>
+            <strong>Thông tin dị ứng: </strong>
+            {product.allergens ||
+              'Chưa có thông tin xác nhận. Nếu bạn có dị ứng thực phẩm, vui lòng hỏi shop trước khi mua.'}
+          </p>
+          <p>
+            <strong>Bảo quản: </strong>
+            {product.storage ||
+              'Theo hướng dẫn trên bao bì chính thức; shop đang cập nhật thông tin.'}
+          </p>
+        </article>
+      </section>
       <VerifiedReviews productId={product.id} />
-      <div className="section-heading related-heading">
+      <div className="section-heading related-heading public-related-heading">
         <h2>
           Có thể bạn cũng <em>thích.</em>
         </h2>
       </div>
-      <div className="product-grid">
+      <div className="product-grid public-related-grid">
         {products
           .filter((p) => p.id !== product.id)
           .slice(0, 3)
@@ -162,7 +299,7 @@ export function ProductDetail() {
             <ProductCard key={p.id} product={p} />
           ))}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -195,7 +332,7 @@ function VerifiedReviews({ productId }: { productId: string }) {
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
     : 0;
   return (
-    <section className="product-reviews">
+    <section className="product-reviews public-product-reviews">
       <div className="section-heading related-heading">
         <h2>
           Cảm nhận từ <em>người thương.</em>

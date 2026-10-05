@@ -4,7 +4,7 @@ Cấu hình chuẩn bị ngày 05/10/2026: một EC2 chạy Docker Compose, Cadd
 
 ## 1. Chuẩn bị AWS
 
-- Tạo EC2 Linux x86_64, gắn Elastic IP, cài Docker Engine và Compose plugin theo tài liệu chính thức. Build cả hai ứng dụng trên EC2 cần đủ RAM/đĩa; điều chỉnh cấu hình theo tải thực tế.
+- Tạo EC2 Linux x86_64 hoặc ARM64, gắn Elastic IP, cài Docker Engine và Compose plugin theo tài liệu chính thức. Build cả hai ứng dụng trên EC2 cần đủ RAM/đĩa; điều chỉnh cấu hình theo tải thực tế.
 - Security Group cho phép TCP 80/443 từ Internet; UDP 443 tùy chọn cho HTTP/3. SSH TCP 22 chỉ từ IP quản trị, hoặc dùng Systems Manager Session Manager. Không mở 4000 hay 27017 ra Internet.
 - MongoDB production cần tài khoản riêng và allowlist IP của EC2. Không dùng MongoDB demo, tài khoản demo hay dữ liệu `.local`.
 - IAM role chỉ cấp quyền cần dùng; không lưu AWS access keys trong repository. Lập backup MongoDB, volume ảnh và dữ liệu TLS; thử phục hồi.

@@ -20,7 +20,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
         env:
-          HTV_VITE_DISABLE_API_PROXY: '1'
+          PLAYWRIGHT_WEB_SERVER_COMMAND: npm run dev
       - name: Validate AWS containers and Compose
         run: |
           cp deploy/aws/.env.production.example deploy/aws/.env.production

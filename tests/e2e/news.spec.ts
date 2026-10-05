@@ -12,11 +12,13 @@ test('changing news categories preserves the reading position', async ({ page })
   const before = await page.evaluate(() => window.scrollY);
   expect(before).toBeGreaterThan(100);
   for (const category of ['Trà & cốm', 'Ẩm thực Hà Nội', 'Tất cả']) {
-    await page.getByRole('button', { name: category, exact: true }).click();
-    await expect(page.getByRole('button', { name: category, exact: true })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    const filter = page.getByRole('button', { name: category, exact: true });
+    await expect(filter).toBeInViewport({ ratio: 1 });
+    const bounds = await filter.boundingBox();
+    expect(bounds).not.toBeNull();
+    // Measure app scrolling without locator.click's automatic viewport scrolling.
+    await page.mouse.click(bounds!.x + bounds!.width / 2, bounds!.y + bounds!.height / 2);
+    await expect(filter).toHaveAttribute('aria-pressed', 'true');
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before - 5);
     expect(await page.evaluate(() => window.scrollY)).toBeLessThan(before + 5);
   }

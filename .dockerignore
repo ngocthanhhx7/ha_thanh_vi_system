@@ -6,6 +6,10 @@
 **/.env
 **/.env.*
 **/*.log
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
 **/*.tsbuildinfo
 .local
 .codex

@@ -6,6 +6,10 @@ coverage/
 !.env.example
 !.env.production.example
 *.log
+*.pem
+*.key
+*.p12
+*.pfx
 .local/
 assets/originals/
 .DS_Store

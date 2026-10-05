@@ -14,6 +14,12 @@ const user = {
   role: 'customer',
 };
 
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/notifications*', (route) =>
+    route.fulfill(json({ notifications: [], unread: 0, total: 0, page: 1, limit: 10 })),
+  );
+});
+
 test('customer signs in, adds a default address, sees it at checkout and signs out', async ({
   page,
 }) => {

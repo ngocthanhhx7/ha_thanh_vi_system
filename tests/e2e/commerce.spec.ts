@@ -43,6 +43,9 @@ const json = (value: unknown, status = 200) => ({
 });
 
 async function prepare(page: Page, authenticated = false) {
+  await page.route('**/api/notifications*', (route) =>
+    route.fulfill(json({ notifications: [], unread: 0, total: 0, page: 1, limit: 10 })),
+  );
   await page.route('**/api/content', (route) => route.fulfill(json(content)));
   await page.route('**/api/commerce/config', (route) => route.fulfill(json(config)));
   await page.route('**/api/auth/me', (route) =>

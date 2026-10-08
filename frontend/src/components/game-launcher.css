@@ -1,0 +1,66 @@
+.game-launcher {
+  position: fixed;
+  left: 22px;
+  bottom: 26px;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #fff6df;
+  background: #7b1c29;
+  border: 1px solid #c89e54;
+  border-radius: 50px;
+  padding: 9px 17px 9px 13px;
+  box-shadow: 0 6px 24px #54251825;
+  font-size: 12px;
+  font-weight: 700;
+  transition: transform 0.2s;
+}
+.game-launcher:hover {
+  transform: translateY(-3px);
+}
+.game-launcher:focus-visible {
+  outline: 3px solid #be8a35;
+  outline-offset: 4px;
+}
+.game-launcher-cards {
+  position: relative;
+  display: block;
+  width: 37px;
+  height: 51px;
+  transform: rotate(-10deg);
+}
+.game-launcher-cards:before {
+  content: '';
+  position: absolute;
+  inset: 1px -5px 1px 5px;
+  background: #e2bd76;
+  border-radius: 5px;
+  transform: rotate(18deg);
+}
+.game-launcher-cards img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 5px;
+}
+@media (max-width: 600px) {
+  .game-launcher {
+    left: 12px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    padding: 8px 11px;
+    gap: 7px;
+    font-size: 10px;
+  }
+  .game-launcher-cards {
+    width: 27px;
+    height: 40px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-launcher {
+    transition: none;
+  }
+}

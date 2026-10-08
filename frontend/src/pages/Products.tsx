@@ -26,7 +26,7 @@ export function Products() {
         <div className="public-collection-copy">
           <p className="eyebrow public-collection-eyebrow">BỘ SƯU TẬP THỨC QUÀ</p>
           <h1 id="collection-title">
-            Một chút Hà Nội,
+            Một chút Hà{' '}Nội,
             <br />
             <em>gửi đến bạn.</em>
           </h1>
@@ -230,8 +230,8 @@ export function ProductDetail() {
             </button>
           </div>
           <p className="fine-print">
-            Hình minh họa. Thành phần, thông tin dị ứng, bảo quản, hạn sử dụng và giá bán sẽ được
-            xác nhận khi tư vấn.
+            Thành phần, thông tin dị ứng, bảo quản, hạn sử dụng và giá bán sẽ được xác nhận khi tư
+            vấn.
           </p>
         </div>
       </div>

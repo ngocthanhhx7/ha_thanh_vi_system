@@ -8,6 +8,7 @@ import { Contact } from '../pages/Contact';
 import { CartPage, Checkout } from '../pages/Checkout';
 import { OrderPage, OrderLookup, PaymentResult } from '../pages/Orders';
 import { ErrorPage } from '../pages/ErrorPage';
+const Games = lazy(() => import('../pages/Games').then((module) => ({ default: module.Games })));
 const News = lazy(() => import('../pages/News').then((module) => ({ default: module.News })));
 const Admin = lazy(() => import('../pages/Admin').then((module) => ({ default: module.Admin })));
 const Account = lazy(() =>
@@ -29,6 +30,7 @@ export function AppRoutes() {
         <Route index element={<Home />} />
         <Route path="cau-chuyen" element={<Story />} />
         <Route path="tin-tuc" element={<News />} />
+        <Route path="tro-choi" element={<Games />} />
         <Route path="san-pham" element={<Products />} />
         <Route path="san-pham/:slug" element={<ProductDetail />} />
         <Route path="ve-chung-toi" element={<About />} />

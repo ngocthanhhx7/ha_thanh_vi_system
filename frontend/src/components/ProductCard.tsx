@@ -18,7 +18,6 @@ export function ProductArt({ product }: { product: Product }) {
         height="700"
       />
       {product.category === 'qua-tang' && <span className="gift-ribbon" aria-hidden="true" />}
-      <span className="image-note">Hình minh họa</span>
     </div>
   );
 }

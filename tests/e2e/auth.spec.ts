@@ -13,6 +13,7 @@ const user = {
   role: 'customer',
 };
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/account/orders', (route) => route.fulfill(json({ orders: [] })));
   await page.route('**/api/content', (route) => route.fulfill(json(content)));
   await page.route('**/api/chat/config', (route) =>
     route.fulfill(json({ enabled: false, name: 'Vị Ơi', suggestions: [] })),

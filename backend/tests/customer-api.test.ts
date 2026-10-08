@@ -1036,7 +1036,10 @@ test('system audit captures correlated safe request metadata and logs are admin-
   assert.ok(logs.body.logs.some((item: { requestId: string }) => item.requestId === requestId));
   const filtered = await request(app)
     .get(
-      '/api/admin/system-logs?severity=info&outcome=success&actorRole=admin&method=PATCH&targetType=user&statusCode=200&from=2026-10-04T00:00:00.000Z&to=2026-10-06T00:00:00.000Z',
+      '/api/admin/system-logs?severity=info&outcome=success&actorRole=admin&method=PATCH&targetType=user&statusCode=200&from=' +
+        encodeURIComponent(new Date(Date.now() - 86400000).toISOString()) +
+        '&to=' +
+        encodeURIComponent(new Date(Date.now() + 86400000).toISOString()),
     )
     .set('Cookie', adminCookie);
   assert.equal(filtered.status, 200);

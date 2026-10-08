@@ -1,3 +1,4 @@
+import { GameLauncher } from '../components/GameLauncher';
 import { CartContents } from '../components/CartContents';
 import { ViOiChat } from '../components/ViOiChat';
 import { useEffect, useRef, useState } from 'react';
@@ -60,7 +61,10 @@ export function Layout() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     setPanel(null);
-    const title = links.find((x) => x[0] === location.pathname)?.[1] || 'Khám phá';
+    const title =
+      location.pathname === '/tro-choi'
+        ? 'Chơi cùng Hà Thành Vị'
+        : links.find((x) => x[0] === location.pathname)?.[1] || 'Khám phá';
     document.title =
       (location.pathname === '/tin-tuc' ? 'Tin tức ẩm thực Hà Nội' : title) + ' | Hà Thành Vị';
   }, [location.pathname]);
@@ -355,6 +359,7 @@ export function Layout() {
         </div>
       </footer>
       <ViOiChat />
+      <GameLauncher />
       {panel && (
         <Modal
           title={

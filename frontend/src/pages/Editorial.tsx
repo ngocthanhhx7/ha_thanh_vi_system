@@ -62,9 +62,11 @@ export function Story() {
         <div className="editorial-hero__copy">
           <p className="public-eyebrow">CÂU CHUYỆN HÀ THÀNH VỊ</p>
           <h1 id="story-title">
-            Hà Nội trong ký ức.
+            Hà{' '}Nội trong ký{' '}ức.
             <br />
-            <em>Thân thương trong từng vị.</em>
+            <em>
+              Thân{' '}thương trong từng{' '}vị.
+            </em>
           </h1>
           <p className="editorial-hero__description">{site.story}</p>
           <div className="editorial-actions">

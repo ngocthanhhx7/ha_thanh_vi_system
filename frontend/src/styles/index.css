@@ -487,14 +487,6 @@ svg {
   border-radius: inherit;
   pointer-events: none;
 }
-.hero-photo-caption {
-  position: absolute;
-  bottom: 22px;
-  left: 22px;
-  color: #fff3dc;
-  letter-spacing: 1.5px;
-  font-size: 8px;
-}
 .round-seal {
   background: var(--cream);
   color: var(--red);
@@ -679,15 +671,6 @@ svg {
   letter-spacing: 1.2px;
   padding: 8px 10px;
   color: var(--red);
-}
-.image-note {
-  position: absolute;
-  bottom: 10px;
-  right: 12px;
-  padding: 3px 6px;
-  background: #fff7e6d9;
-  font-size: 8px;
-  color: #705f50;
 }
 .product-info {
   padding: 23px 0 0;
@@ -1867,11 +1850,6 @@ footer .footer-small {
   .hero-note strong {
     font-size: 16px;
   }
-  .hero-photo-caption {
-    font-size: 6px;
-    bottom: 30px;
-    left: 25px;
-  }
   .scroll-cue {
     font-size: 6px;
     left: 24px;
@@ -1977,11 +1955,6 @@ footer .footer-small {
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-  }
-  .image-note {
-    font-size: 7px;
-    bottom: 6px;
-    right: 6px;
   }
   .story-feature {
     grid-template-columns: 1fr;

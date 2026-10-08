@@ -35,7 +35,6 @@ function ArticleCard({ article, featured = false }: { article: NewsArticle; feat
           decoding="async"
         />
         <span className="news-article-category">{category}</span>
-        <span className="news-illustration-label">Ảnh minh họa</span>
       </div>
       <div className="news-article-copy">
         {featured && (

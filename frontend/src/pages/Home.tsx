@@ -20,7 +20,15 @@ export function Home() {
           <h1>
             {site.heroTitle.split('\n').map((line, i) => (
               <span key={line} className={i ? 'hero-italic' : ''}>
-                {line}
+                {line.split(/(Hà\s+Nội)/g).map((part, partIndex) =>
+                  /^Hà\s+Nội$/.test(part) ? (
+                    <span key={`${part}-${partIndex}`} className="hero-no-break">
+                      {part}
+                    </span>
+                  ) : (
+                    part
+                  ),
+                )}
               </span>
             ))}
           </h1>
@@ -52,7 +60,6 @@ export function Home() {
               height="1000"
               fetchPriority="high"
             />
-            <span className="hero-photo-caption">BÁNH CHẢ & TRÀ THƠM · ẢNH MINH HỌA</span>
           </div>
           <div className="round-seal">
             <span>HÀ NỘI</span>
@@ -164,8 +171,7 @@ export function Home() {
             ))}
         </div>
         <p className="fine-print">
-          Ảnh bánh và phối cảnh nhận diện dùng để minh họa ý tưởng. Bao bì, hình ảnh sản phẩm thực
-          tế sẽ được cập nhật.
+          Thông tin bao bì và hình ảnh sản phẩm thực tế sẽ được cập nhật.
         </p>
       </section>
       <section className="story-feature home-story-feature">

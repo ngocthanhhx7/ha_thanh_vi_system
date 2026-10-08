@@ -29,12 +29,12 @@ export class NotificationService {
     }
   }
 
-  async user(userId: string, input: NotificationInput) {
+  async user(userId: string, input: NotificationInput, session?: mongoose.ClientSession) {
     if (!mongoose.isValidObjectId(userId)) return;
     await Notification.updateOne(
       { userId, eventKey: input.eventKey },
       { $setOnInsert: { userId, ...input } },
-      { upsert: true },
+      { upsert: true, ...(session ? { session } : {}) },
     );
   }
 

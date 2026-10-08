@@ -101,6 +101,16 @@
   line-height: 1.08;
 }
 
+.public-editorial--story .editorial-hero h1 {
+  font-size: clamp(38px, 3.6vw, 50px);
+  letter-spacing: -1.8px;
+  text-wrap: balance;
+}
+.public-editorial--story .editorial-hero h1 em {
+  display: block;
+  text-wrap: balance;
+}
+
 .editorial-hero h1 em,
 .about-hero h1 em,
 .contact-hero h1 em,
@@ -1045,6 +1055,12 @@ a.contact-channel:hover {
   }
 }
 
+@media (max-width: 760px) {
+  .public-editorial--story .editorial-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 700px) {
   .editorial-hero,
   .about-hero,
@@ -1071,6 +1087,14 @@ a.contact-channel:hover {
     letter-spacing: -1.5px;
   }
 
+  .public-editorial--story .editorial-hero h1 {
+    font-size: clamp(35px, 8vw, 42px);
+  }
+
+  .public-editorial--story .editorial-hero h1 em {
+    white-space: nowrap;
+  }
+
   .editorial-hero__description,
   .about-hero__copy > p:not(.public-eyebrow),
   .contact-hero__copy > p:not(.public-eyebrow) {
@@ -1093,13 +1117,46 @@ a.contact-channel:hover {
   }
 
   .editorial-hero__seal {
-    right: -15px;
+    right: -8px;
     width: 82px;
+    padding-inline: 5px;
   }
 
   .editorial-hero__seal img {
-    width: 27px;
-    height: 27px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .editorial-hero__seal span {
+    max-width: 100%;
+    font-size: 5px;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .editorial-hero__caption {
+    right: 5%;
+    bottom: 14px;
+    left: 5%;
+    width: 90%;
+    padding: 7px 9px;
+    box-sizing: border-box;
+    font-size: 9px;
+    line-height: 1.4;
+    letter-spacing: 0.2px;
+    overflow-wrap: anywhere;
+  }
+
+  .story-card__body {
+    min-width: 0;
+  }
+
+  .story-card__note,
+  .story-card h3,
+  .story-card__body > p:last-child {
+    overflow-wrap: anywhere;
   }
 
   .editorial-actions {
@@ -1327,6 +1384,16 @@ a.contact-channel:hover {
   .contact-note p {
     padding: 5px;
     font-size: 15px;
+  }
+}
+
+@media (max-width: 460px) {
+  .public-editorial--story .editorial-hero h1 {
+    font-size: 35px;
+  }
+
+  .public-editorial--story .editorial-hero h1 em {
+    white-space: normal;
   }
 }
 

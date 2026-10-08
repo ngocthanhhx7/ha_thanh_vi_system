@@ -79,6 +79,7 @@
   margin-top: 0;
 }
 .vi-chat-message {
+  min-width: 0;
   padding: 12px 14px;
   border-radius: 14px;
   margin: 13px 0;
@@ -95,7 +96,9 @@
   color: #6f593b;
 }
 .vi-chat-message p {
+  min-width: 0;
   margin: 7px 0;
+  overflow-wrap: anywhere;
 }
 .vi-chat-message ul,
 .vi-chat-message ol {
@@ -108,9 +111,11 @@
 }
 .vi-chat-message pre {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 .vi-chat-message a {
   color: #6b4029;
+  overflow-wrap: anywhere;
   text-decoration: underline;
 }
 .vi-chat-suggestions {
@@ -136,15 +141,30 @@
   border-radius: 12px;
 }
 .vi-chat-product {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: start;
+  gap: 4px 10px;
+  min-width: 0;
   border: 1px solid #d7c8b3;
   border-radius: 9px;
   padding: 9px;
   margin-top: 9px;
   font-size: 0.82rem;
   text-decoration: none !important;
+}
+.vi-chat-product > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.vi-chat-product > span {
+  white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.vi-chat-message table th,
+.vi-chat-message table td {
+  overflow-wrap: anywhere;
 }
 .vi-chat-source {
   display: inline-block;
@@ -384,7 +404,7 @@
 .vi-chat-welcome h3 {
   margin: 0 0 6px;
   color: #5c3325;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display, Georgia, serif);
   font-size: 1.25rem;
 }
 .vi-chat-welcome p:not(.vi-chat-eyebrow) {
@@ -658,6 +678,48 @@
   }
   .vi-chat-widget.is-open .vi-chat-compose {
     padding-bottom: calc(13px + env(safe-area-inset-bottom));
+  }
+  .vi-chat-scroll {
+    padding: 14px 12px 12px;
+  }
+  .vi-chat-message:not(.vi-chat-user) {
+    max-width: 100%;
+  }
+  .vi-chat-message.vi-chat-user {
+    max-width: 88%;
+  }
+  .vi-chat-message ul,
+  .vi-chat-message ol {
+    margin: 7px 0;
+    padding-inline-start: 1.2em;
+  }
+  .vi-chat-message li + li {
+    margin-top: 0.25em;
+  }
+  .vi-chat-contact {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px 12px;
+  }
+  .vi-chat-contact a {
+    display: flex;
+    min-width: 0;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 8px;
+    border: 1px solid #e7d8c4;
+    border-radius: 12px;
+    background: #fffaf2;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+  }
+  .vi-chat-compose textarea {
+    font-size: 16px;
+    line-height: 1.35;
   }
   .vi-chat-widget.is-open .vi-chat-toggle {
     display: none;

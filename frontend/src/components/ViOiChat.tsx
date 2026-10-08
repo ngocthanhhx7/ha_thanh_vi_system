@@ -578,7 +578,16 @@ export function ViOiChat() {
                       );
                     })}
                   {message.result?.sources
-                    ?.filter((source) => safeUrl(source.url))
+                    ?.filter((source) => {
+                      const href = safeUrl(source.url);
+                      if (!href) return false;
+                      return !message.result?.products?.some(
+                        (product) =>
+                          catalog.some(
+                            (known) => known.id === product.id && known.slug === product.slug,
+                          ) && href === '/san-pham/' + product.slug,
+                      );
+                    })
                     .map((source, i) => (
                       <a
                         className="vi-chat-source"

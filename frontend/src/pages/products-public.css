@@ -79,10 +79,11 @@
   margin: 0;
   color: var(--public-red);
   font-family: var(--font-display);
-  font-size: clamp(3.2rem, 6.1vw, 6.6rem);
+  font-size: clamp(3.2rem, 5.5vw, 6.6rem);
   font-weight: 400;
   letter-spacing: -0.065em;
   line-height: 0.99;
+  text-wrap: balance;
 }
 
 .public-collection-copy h1 em,
@@ -214,13 +215,6 @@
   z-index: 1;
   padding: 10px 13px;
   font-size: 0.56rem;
-}
-
-.public-collection-feature .image-note {
-  right: 18px;
-  bottom: 18px;
-  z-index: 1;
-  font-size: 0.62rem;
 }
 
 .public-collection-caption {
@@ -661,10 +655,6 @@
   object-fit: contain;
 }
 
-.public-detail-hero .image-note {
-  font-size: 0.65rem;
-}
-
 .public-detail-hero .detail-copy {
   max-width: 590px;
   padding-block: 20px;
@@ -962,8 +952,12 @@
     padding-block: 64px;
   }
 
+  .public-collection-copy {
+    container-type: inline-size;
+  }
+
   .public-collection-copy h1 {
-    font-size: clamp(3rem, 8vw, 4.5rem);
+    font-size: clamp(2.5rem, 9.5cqi, 4.5rem);
   }
 
   .public-collection-footer {
@@ -1056,7 +1050,7 @@
   }
 
   .public-collection-copy h1 {
-    font-size: clamp(3.15rem, 12vw, 4.6rem);
+    font-size: clamp(2.5rem, 9.5cqi, 4.6rem);
   }
 
   .public-collection-intro {

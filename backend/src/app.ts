@@ -1,3 +1,4 @@
+import { createGameRouter } from './routes/gameRoutes.js';
 import cors from 'cors';
 import express, { type ErrorRequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
@@ -175,6 +176,7 @@ export function createApp({
   commerceService.setVoucherRepository(customers.repository);
   app.use('/api', customers.middleware, systemAuditMiddleware, customers.csrf);
   app.use('/api', customers.router);
+  app.use('/api', createGameRouter());
 
   const contentService = new ContentService(repository, seedContent);
   const contactService = new ContactService(repository);

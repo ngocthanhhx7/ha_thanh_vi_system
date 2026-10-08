@@ -228,6 +228,7 @@ test('product mission sends paced visible-page heartbeats and stops after daily 
 }) => {
   const current = state();
   let heartbeats = 0;
+  const heartbeatTimes: number[] = [];
   let visited = false;
   await page.clock.install();
   await page.route('**/api/games**', async (r) => {
@@ -238,6 +239,7 @@ test('product mission sends paced visible-page heartbeats and stops after daily 
     }
     if (r.request().url().endsWith('/products-presence')) {
       expect(visited).toBeTruthy();
+      heartbeatTimes.push(await page.evaluate(() => Date.now()));
       heartbeats++;
       current.collection.productSeconds = Math.min(30, (heartbeats - 1) * 5);
       current.collection.productBonusClaimed = current.collection.productSeconds === 30;
@@ -250,10 +252,20 @@ test('product mission sends paced visible-page heartbeats and stops after daily 
   await expect.poll(() => heartbeats).toBe(1);
   for (let step = 1; step <= 6; step++) {
     await page.clock.runFor(5000);
-    await expect.poll(() => heartbeats).toBe(step + 1);
+    // Receipt of a mocked request precedes fetch/JSON completion and scheduling
+    // the next timer. Keep advancing the browser clock while awaiting it.
+    await expect
+      .poll(async () => {
+        await page.clock.runFor(100);
+        return heartbeats;
+      })
+      .toBe(step + 1);
   }
   await page.clock.runFor(15000);
   expect(heartbeats).toBe(7);
+  for (let index = 1; index < heartbeatTimes.length; index++) {
+    expect(heartbeatTimes[index] - heartbeatTimes[index - 1]).toBeGreaterThanOrEqual(5000);
+  }
   await page
     .getByRole('link', { name: 'Chơi cùng Hà Thành Vị, lật thẻ và sưu tập nhận ưu đãi' })
     .click();

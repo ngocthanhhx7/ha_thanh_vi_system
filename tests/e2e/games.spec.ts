@@ -101,6 +101,59 @@ test('memory reserves one attempt for two selections and hides a matched pair', 
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
   ).toBeTruthy();
 });
+test('memory responds during slow requests and closes mismatches without a refresh round trip', async ({
+  page,
+}) => {
+  const current = state();
+  let release: (() => void) | undefined;
+  let reads = 0;
+  await page.route('**/api/games**', async (r) => {
+    if (r.request().url().endsWith('/memory/flip')) {
+      const { index } = r.request().postDataJSON();
+      if (current.memory.firstIndex === null) {
+        await new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        current.memory.attempts--;
+        current.memory.firstIndex = index;
+        current.memory.cards[index].cardId = 'flour';
+      } else {
+        current.memory.firstIndex = null;
+        current.memory.cards[index].cardId = 'oil';
+        Object.assign(current.memory, { mismatchUntil: new Date(Date.now() + 1600).toISOString() });
+      }
+    } else if (r.request().method() === 'GET') {
+      reads++;
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+    await r.fulfill(json({ state: current }));
+  });
+  await page.goto('/tro-choi');
+  const first = page.locator('.games-memory-card').nth(0);
+  await first.click();
+  await expect(first).toHaveClass(/is-pending/, { timeout: 500 });
+  await expect(first).not.toHaveClass(/is-revealed/);
+  expect(
+    await first
+      .locator('.games-memory-turn')
+      .evaluate((el) => getComputedStyle(el).transitionProperty),
+  ).toContain('transform');
+  release!();
+  await expect(first).toHaveClass(/is-revealed/);
+  await page.getByRole('button', { name: 'Lật thẻ 2', exact: true }).click();
+  await expect(page.locator('.games-memory-card.is-revealed')).toHaveCount(2);
+  await expect(page.locator('.games-memory-card.is-revealed')).toHaveCount(0, { timeout: 2400 });
+  await expect(first).toBeEnabled();
+  await expect(first.locator('.games-memory-front img')).toHaveAttribute('src', /flour.webp$/);
+  await expect
+    .poll(() =>
+      first.locator('.games-memory-turn').evaluate((el) => getComputedStyle(el).transform),
+    )
+    .toBe('none');
+  expect(reads).toBe(0);
+  await expect(page.locator('.games-counter')).toContainText('3');
+});
+
 test('collection redemption confirms consumption and uses server inventory and voucher', async ({
   page,
 }) => {

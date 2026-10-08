@@ -19,6 +19,8 @@ export function Games() {
   const [guest, setGuest] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [pendingIndex, setPendingIndex] = useState<number | null>(null);
+  const revealedFaces = useRef<Record<number, string>>({});
   const [error, setError] = useState('');
   const [tab, setTab] = useState<'memory' | 'collection'>('memory');
   const [section, setSection] = useState<'missions' | 'rewards'>('missions');
@@ -29,6 +31,16 @@ export function Games() {
   const requestVersion = useRef(0);
   const retries = useRef(new Map<string, string>());
   const { notify } = useNotificationCenter();
+  const hasGame = state !== null;
+  useEffect(() => {
+    if (!hasGame || tab !== 'memory') return;
+    // Warm the public artwork, without exposing any hidden board positions.
+    for (const [id] of gameCards) {
+      const image = new Image();
+      image.src = gameImage(id);
+      void image.decode().catch(() => undefined);
+    }
+  }, [hasGame, tab]);
   const refresh = useCallback(async (enter = false) => {
     if (actionLock.current) return;
     const version = ++requestVersion.current;
@@ -64,16 +76,34 @@ export function Games() {
   }, [refresh]);
   useEffect(() => {
     if (!state?.memory.mismatchUntil) return;
+    const { round, mismatchUntil } = state.memory;
     const timer = setTimeout(
-      () => void refresh(),
-      Math.max(100, new Date(state.memory.mismatchUntil).getTime() - Date.now() + 150),
+      () =>
+        setState((current) => {
+          if (
+            !current ||
+            current.memory.round !== round ||
+            current.memory.mismatchUntil !== mismatchUntil
+          )
+            return current;
+          return {
+            ...current,
+            memory: {
+              ...current.memory,
+              mismatchUntil: null,
+              cards: current.memory.cards.map((card) => ({ ...card, cardId: null })),
+            },
+          };
+        }),
+      Math.max(0, new Date(mismatchUntil).getTime() - Date.now()),
     );
     return () => clearTimeout(timer);
-  }, [state?.memory.mismatchUntil, refresh]);
-  async function action(key: string, run: (id: string) => Promise<GameResult>) {
+  }, [state?.memory.round, state?.memory.mismatchUntil]);
+  async function action(key: string, run: (id: string) => Promise<GameResult>, index?: number) {
     if (actionLock.current) return;
     actionLock.current = true;
     setBusy(true);
+    setPendingIndex(index ?? null);
     setError('');
     ++requestVersion.current;
     const id = retries.current.get(key) || crypto.randomUUID();
@@ -81,6 +111,19 @@ export function Games() {
     try {
       const result = await run(id);
       retries.current.delete(key);
+      if (result.state.memory.round !== state?.memory.round) revealedFaces.current = {};
+      for (const card of result.state.memory.cards) {
+        if (card.cardId) revealedFaces.current[card.index] = card.cardId;
+      }
+      if (
+        index !== undefined &&
+        result.state.memory.cards[index].matched &&
+        state?.memory.firstIndex !== null &&
+        state?.memory.firstIndex !== undefined
+      ) {
+        const face = revealedFaces.current[state.memory.firstIndex];
+        if (face) revealedFaces.current[index] = face;
+      }
       setState(result.state);
       setConfirm(null);
       if (result.card) setDrawn(result.card);
@@ -105,6 +148,7 @@ export function Games() {
     } finally {
       actionLock.current = false;
       setBusy(false);
+      setPendingIndex(null);
     }
   }
   const memory = state?.memory;
@@ -210,7 +254,7 @@ export function Games() {
               {memory.cards.map((card) => (
                 <button
                   key={card.index}
-                  className={`games-memory-card${card.matched ? ' is-matched' : ''}${card.cardId ? ' is-revealed' : ''}`}
+                  className={`games-memory-card${card.matched ? ' is-matched' : ''}${card.cardId || card.matched ? ' is-revealed' : ''}${pendingIndex === card.index ? ' is-pending' : ''}`}
                   disabled={
                     busy ||
                     card.matched ||
@@ -226,13 +270,27 @@ export function Games() {
                         : `Lật thẻ ${card.index + 1}`
                   }
                   onClick={() =>
-                    void action(`flip-${memory.round}-${card.index}`, (id) =>
-                      gameApi.flip(card.index, id),
+                    void action(
+                      `flip-${memory.round}-${card.index}`,
+                      (id) => gameApi.flip(card.index, id),
+                      card.index,
                     )
                   }
                 >
-                  <img src={gameImage(card.cardId || 'card-back')} alt="" />
-                  <span>{card.index + 1}</span>
+                  <div className="games-memory-turn" aria-hidden="true">
+                    <div className="games-memory-back">
+                      <img src={gameImage('card-back')} alt="" />
+                      <span>{card.index + 1}</span>
+                    </div>
+                    <div className="games-memory-front">
+                      <img
+                        src={gameImage(
+                          card.cardId || revealedFaces.current[card.index] || 'card-back',
+                        )}
+                        alt=""
+                      />
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>

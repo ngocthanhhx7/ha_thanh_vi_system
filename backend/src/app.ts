@@ -174,6 +174,7 @@ export function createApp({
     auth: authOptions,
   });
   commerceService.setVoucherRepository(customers.repository);
+  app.locals.chatRealtime = { customers: customers.repository, allowedOrigins };
   app.use('/api', customers.middleware, systemAuditMiddleware, customers.csrf);
   app.use('/api', customers.router);
   app.use('/api', createGameRouter());
@@ -194,7 +195,10 @@ export function createApp({
   app.use('/api', createChatRouter(chatService));
   app.use(
     '/api',
-    createChatHandoffRouter(new ChatHandoffService(), { isDevelopment: config.isDevelopment }),
+    createChatHandoffRouter(new ChatHandoffService(), {
+      isDevelopment: config.isDevelopment,
+      allowedOrigins,
+    }),
   );
 
   app.get('/api/health', (_req, res) => {

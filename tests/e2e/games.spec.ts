@@ -107,9 +107,11 @@ test('memory responds during slow requests and closes mismatches without a refre
   const current = state();
   let release: (() => void) | undefined;
   let reads = 0;
+  const flips: number[] = [];
   await page.route('**/api/games**', async (r) => {
     if (r.request().url().endsWith('/memory/flip')) {
       const { index } = r.request().postDataJSON();
+      flips.push(index);
       if (current.memory.firstIndex === null) {
         await new Promise<void>((resolve) => {
           release = resolve;
@@ -133,25 +135,70 @@ test('memory responds during slow requests and closes mismatches without a refre
   await first.click();
   await expect(first).toHaveClass(/is-pending/, { timeout: 500 });
   await expect(first).not.toHaveClass(/is-revealed/);
-  expect(
-    await first
-      .locator('.games-memory-turn')
-      .evaluate((el) => getComputedStyle(el).transitionProperty),
-  ).toContain('transform');
+  await expect
+    .poll(() =>
+      first
+        .locator('.games-memory-turn')
+        .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m11),
+    )
+    .toBeGreaterThan(0.95);
+  const second = page.getByRole('button', { name: 'Lật thẻ 2', exact: true });
+  await expect(second).toBeEnabled();
+  await second.click();
+  await expect(second).toHaveClass(/is-pending/);
+  await expect(page.getByRole('button', { name: 'Lật thẻ 3', exact: true })).toBeDisabled();
+  expect(flips).toEqual([0]);
   release!();
-  await expect(first).toHaveClass(/is-revealed/);
-  await page.getByRole('button', { name: 'Lật thẻ 2', exact: true }).click();
   await expect(page.locator('.games-memory-card.is-revealed')).toHaveCount(2);
+  expect(flips).toEqual([0, 1]);
   await expect(page.locator('.games-memory-card.is-revealed')).toHaveCount(0, { timeout: 2400 });
   await expect(first).toBeEnabled();
   await expect(first.locator('.games-memory-front img')).toHaveAttribute('src', /flour.webp$/);
   await expect
     .poll(() =>
-      first.locator('.games-memory-turn').evaluate((el) => getComputedStyle(el).transform),
+      first
+        .locator('.games-memory-turn')
+        .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m11),
     )
-    .toBe('none');
+    .toBe(1);
   expect(reads).toBe(0);
   await expect(page.locator('.games-counter')).toContainText('3');
+});
+
+test('failed first selection cancels the queued card and retry keeps the request id', async ({
+  page,
+}) => {
+  const current = state();
+  const calls: { index: number; requestId: string }[] = [];
+  let release: (() => void) | undefined;
+  await page.route('**/api/games**', async (r) => {
+    if (r.request().url().endsWith('/memory/flip')) {
+      const body = r.request().postDataJSON();
+      calls.push(body);
+      if (calls.length === 1) {
+        await new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        await r.fulfill(json({ message: 'Kết nối gián đoạn' }, 503));
+        return;
+      }
+      current.memory.firstIndex = body.index;
+      current.memory.cards[body.index].cardId = 'flour';
+      current.memory.attempts--;
+    }
+    await r.fulfill(json({ state: current }));
+  });
+  await page.goto('/tro-choi');
+  await page.getByRole('button', { name: 'Lật thẻ 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Lật thẻ 2', exact: true }).click();
+  release!();
+  await expect(page.getByRole('alert')).toContainText('Kết nối gián đoạn');
+  expect(calls).toHaveLength(1);
+  await expect(page.locator('.games-memory-card.is-pending')).toHaveCount(0);
+  await expect(page.locator('.games-counter')).toContainText('4');
+  await page.getByRole('button', { name: 'Lật thẻ 1', exact: true }).click();
+  await expect(page.locator('.games-counter')).toContainText('3');
+  expect(calls[1]).toEqual(calls[0]);
 });
 
 test('collection redemption confirms consumption and uses server inventory and voucher', async ({

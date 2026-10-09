@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Check, Clock3, Gift, Layers3, Sparkles, Ticket } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { useNotificationCenter } from '../components/NotificationCenter';
+import { MemoryCard } from '../components/MemoryCard';
 import {
   GameApiError,
   gameApi,
@@ -20,6 +21,10 @@ export function Games() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [pendingIndex, setPendingIndex] = useState<number | null>(null);
+  const [queuedIndex, setQueuedIndex] = useState<number | null>(null);
+  const queuedFlip = useRef<number | null>(null);
+  const flipInFlight = useRef<number | null>(null);
+  const mounted = useRef(true);
   const revealedFaces = useRef<Record<number, string>>({});
   const [error, setError] = useState('');
   const [tab, setTab] = useState<'memory' | 'collection'>('memory');
@@ -32,6 +37,14 @@ export function Games() {
   const retries = useRef(new Map<string, string>());
   const { notify } = useNotificationCenter();
   const hasGame = state !== null;
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      queuedFlip.current = null;
+      ++requestVersion.current;
+    };
+  }, []);
   useEffect(() => {
     if (!hasGame || tab !== 'memory') return;
     // Warm the public artwork, without exposing any hidden board positions.
@@ -99,7 +112,12 @@ export function Games() {
     );
     return () => clearTimeout(timer);
   }, [state?.memory.round, state?.memory.mismatchUntil]);
-  async function action(key: string, run: (id: string) => Promise<GameResult>, index?: number) {
+  async function action(
+    key: string,
+    run: (id: string) => Promise<GameResult>,
+    index?: number,
+    before = state,
+  ) {
     if (actionLock.current) return;
     actionLock.current = true;
     setBusy(true);
@@ -110,18 +128,19 @@ export function Games() {
     retries.current.set(key, id);
     try {
       const result = await run(id);
+      if (!mounted.current) return;
       retries.current.delete(key);
-      if (result.state.memory.round !== state?.memory.round) revealedFaces.current = {};
+      if (result.state.memory.round !== before?.memory.round) revealedFaces.current = {};
       for (const card of result.state.memory.cards) {
         if (card.cardId) revealedFaces.current[card.index] = card.cardId;
       }
       if (
         index !== undefined &&
         result.state.memory.cards[index].matched &&
-        state?.memory.firstIndex !== null &&
-        state?.memory.firstIndex !== undefined
+        before?.memory.firstIndex !== null &&
+        before?.memory.firstIndex !== undefined
       ) {
-        const face = revealedFaces.current[state.memory.firstIndex];
+        const face = revealedFaces.current[before.memory.firstIndex];
         if (face) revealedFaces.current[index] = face;
       }
       setState(result.state);
@@ -137,6 +156,7 @@ export function Games() {
           tone: 'success',
         });
       }
+      return result;
     } catch (reason) {
       if (reason instanceof GameApiError && reason.status === 401) {
         setGuest(true);
@@ -149,6 +169,41 @@ export function Games() {
       actionLock.current = false;
       setBusy(false);
       setPendingIndex(null);
+    }
+  }
+  async function flip(index: number, current = state) {
+    if (!current) return;
+    const memory = current.memory;
+    if (actionLock.current) {
+      if (
+        flipInFlight.current !== null &&
+        memory.firstIndex === null &&
+        queuedFlip.current === null &&
+        index !== flipInFlight.current
+      ) {
+        queuedFlip.current = index;
+        setQueuedIndex(index);
+      }
+      return;
+    }
+    flipInFlight.current = index;
+    const result = await action(
+      `flip-${memory.round}-${index}`,
+      (id) => gameApi.flip(index, id),
+      index,
+      current,
+    );
+    flipInFlight.current = null;
+    const next = queuedFlip.current;
+    queuedFlip.current = null;
+    setQueuedIndex(null);
+    if (
+      result &&
+      next !== null &&
+      result.state.memory.round === memory.round &&
+      result.state.memory.firstIndex !== null
+    ) {
+      await flip(next, result.state);
     }
   }
   const memory = state?.memory;
@@ -252,46 +307,31 @@ export function Games() {
             </p>
             <div className="games-memory-grid">
               {memory.cards.map((card) => (
-                <button
-                  key={card.index}
-                  className={`games-memory-card${card.matched ? ' is-matched' : ''}${card.cardId || card.matched ? ' is-revealed' : ''}${pendingIndex === card.index ? ' is-pending' : ''}`}
+                <MemoryCard
+                  key={`${memory.round}-${card.index}`}
+                  card={card}
+                  face={card.cardId || revealedFaces.current[card.index] || null}
+                  pending={pendingIndex === card.index || queuedIndex === card.index}
                   disabled={
-                    busy ||
+                    (busy &&
+                      (pendingIndex === null ||
+                        memory.firstIndex !== null ||
+                        queuedIndex !== null)) ||
+                    pendingIndex === card.index ||
                     card.matched ||
                     !!card.cardId ||
                     !!memory.mismatchUntil ||
                     (memory.attempts === 0 && memory.firstIndex === null)
                   }
-                  aria-label={
+                  label={
                     card.matched
                       ? `Ô ${card.index + 1}, đã ghép`
                       : card.cardId
                         ? gameCardName(card.cardId)
                         : `Lật thẻ ${card.index + 1}`
                   }
-                  onClick={() =>
-                    void action(
-                      `flip-${memory.round}-${card.index}`,
-                      (id) => gameApi.flip(card.index, id),
-                      card.index,
-                    )
-                  }
-                >
-                  <div className="games-memory-turn" aria-hidden="true">
-                    <div className="games-memory-back">
-                      <img src={gameImage('card-back')} alt="" />
-                      <span>{card.index + 1}</span>
-                    </div>
-                    <div className="games-memory-front">
-                      <img
-                        src={gameImage(
-                          card.cardId || revealedFaces.current[card.index] || 'card-back',
-                        )}
-                        alt=""
-                      />
-                    </div>
-                  </div>
-                </button>
+                  onClick={() => void flip(card.index)}
+                />
               ))}
             </div>
             <p className="games-note">
@@ -337,7 +377,7 @@ export function Games() {
                   void action(`reward-${memory.round}`, () => gameApi.memoryReward(memory.round))
                 }
               >
-                {busy ? 'Đang xử lý…' : 'Nhận thưởng & chơi ván mới'}
+                {busy && pendingIndex === null ? 'Đang nhận thưởng…' : 'Nhận thưởng & chơi ván mới'}
               </button>
             </div>
           </aside>

@@ -3,7 +3,10 @@ import react from '@vitejs/plugin-react';
 const apiProxy =
   process.env.HTV_VITE_DISABLE_API_PROXY === '1'
     ? {}
-    : { '/api': 'http://127.0.0.1:4000', '/uploads': 'http://127.0.0.1:4000' };
+    : {
+        '/api': { target: 'http://127.0.0.1:4000', ws: true },
+        '/uploads': 'http://127.0.0.1:4000',
+      };
 
 export default defineConfig({
   plugins: [react()],

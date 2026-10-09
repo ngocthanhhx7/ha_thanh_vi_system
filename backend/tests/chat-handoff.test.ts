@@ -7,6 +7,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import { createApp } from '../src/app.js';
 import { ChatHandoff } from '../src/models/chatHandoff.js';
+import { chatChanges } from '../src/services/chatRealtime.js';
 import { CustomerSession, CustomerUser } from '../src/models/customer.js';
 import { MongoRepository } from '../src/services/contentRepository.js';
 import { initializeCustomerIndexes } from '../src/services/customerRepository.js';
@@ -90,6 +91,59 @@ before(
 
 beforeEach(async () => {
   await ChatHandoff.deleteMany({});
+});
+
+test('realtime tickets require matching guest cookie and strict origin; change events follow durable writes only', async () => {
+  const changed: string[] = [];
+  const capture = (id: string) => changed.push(id);
+  chatChanges.on('changed', capture);
+  try {
+    const { handoff, cookie } = await createHandoff();
+    assert.deepEqual(changed, [handoff.id]);
+    const path = `/api/chat/handoffs/${handoff.id}/realtime-ticket`;
+    assert.equal((await request(app).post(path).set(csrf)).status, 404);
+    assert.equal(
+      (
+        await request(app)
+          .post(path)
+          .set('Cookie', cookie!)
+          .set('X-Requested-With', 'XMLHttpRequest')
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await request(app)
+          .post(path)
+          .set('Cookie', cookie!)
+          .set(csrf)
+          .set('Origin', 'https://evil.example')
+      ).status,
+      403,
+    );
+    const ticket = await request(app).post(path).set('Cookie', cookie!).set(csrf);
+    assert.equal(ticket.status, 200);
+    assert.match(ticket.body.ticket, /^[\w-]{43}$/);
+    await request(app).get(`/api/chat/handoffs/${handoff.id}`).set('Cookie', cookie!);
+    assert.deepEqual(
+      changed,
+      [handoff.id],
+      'reads and subscriptions do not produce feedback loops',
+    );
+    const saved = await request(app)
+      .post(`/api/chat/handoffs/${handoff.id}/messages`)
+      .set('Cookie', cookie!)
+      .set(csrf)
+      .send({ message: 'Tôi muốn mua bánh' });
+    assert.equal(saved.status, 200);
+    assert.deepEqual(changed, [handoff.id, handoff.id]);
+    assert.equal(
+      (await ChatHandoff.findById(handoff.id).lean())?.messages.at(-1)?.content,
+      'Tôi muốn mua bánh',
+    );
+  } finally {
+    chatChanges.off('changed', capture);
+  }
 });
 
 after(async () => {

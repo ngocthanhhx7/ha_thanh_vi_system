@@ -1,3 +1,5 @@
+import { subscribeChat } from '../services/chatRealtime';
+import { newerChatSnapshot } from '../services/chatSnapshot';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Send, X, Headphones, Sparkles } from 'lucide-react';
@@ -138,6 +140,7 @@ export function ViOiChat() {
   const panel = useRef<HTMLElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
   const active = useRef(true);
+  const sessionEpoch = useRef(0);
   const speechTimer = useRef<number | null>(null);
   const activeAiRequest = useRef<AbortController | null>(null);
   const pendingAiMessage = useRef<string | null>(null);
@@ -157,8 +160,13 @@ export function ViOiChat() {
     setDraft(value);
   }
   function updateHandoff(value: ChatHandoff | null) {
-    handoffRef.current = value;
-    setHandoff(value);
+    const next = value ? newerChatSnapshot(handoffRef.current, value) : null;
+    handoffRef.current = next;
+    setHandoff(next);
+    if (next) {
+      handoffUpdatedAt.current = next.updatedAt;
+      setMessages(displayHandoffMessages(next));
+    }
   }
   useEffect(() => {
     if (draft) writeSessionValue(chatDraftStorageKey, draft);
@@ -166,6 +174,20 @@ export function ViOiChat() {
   }, [draft]);
   useEffect(() => {
     removeSessionValue(pendingMessageStorageKey);
+  }, []);
+  useEffect(() => {
+    const changed = () => {
+      ++sessionEpoch.current;
+      if (handoffRef.current?.customerType === 'account') {
+        updateHandoff(null);
+        setHandoffSession(null);
+        setMessages([]);
+        handoffUpdatedAt.current = '';
+        removeSessionValue(handoffSessionKey);
+      }
+    };
+    window.addEventListener('customer-session-changed', changed);
+    return () => window.removeEventListener('customer-session-changed', changed);
   }, []);
   function animateSpeaking() {
     setSpeaking(true);
@@ -207,14 +229,22 @@ export function ViOiChat() {
     if (!open || isStaffPage || !handoffSession || handoff?.status === 'resolved') return;
     let alive = true;
     const refresh = async () => {
+      const epoch = sessionEpoch.current;
       try {
         const result = await chatApi.getHandoff(handoffSession.id);
-        if (alive && result.handoff.updatedAt !== handoffUpdatedAt.current) {
+        if (
+          alive &&
+          epoch === sessionEpoch.current &&
+          (!handoffRef.current ||
+            new Date(result.handoff.updatedAt).getTime() >=
+              new Date(handoffRef.current.updatedAt).getTime()) &&
+          result.handoff.updatedAt !== handoffUpdatedAt.current
+        ) {
           const latest = result.handoff.messages.at(-1);
           const hasNewStaffReply = handoffUpdatedAt.current && latest?.sender === 'staff';
           handoffUpdatedAt.current = result.handoff.updatedAt;
           updateHandoff(result.handoff);
-          setMessages(displayHandoffMessages(result.handoff));
+
           if (hasNewStaffReply) animateSpeaking();
         }
       } catch {
@@ -222,10 +252,14 @@ export function ViOiChat() {
       }
     };
     void refresh();
-    const timer = window.setInterval(() => void refresh(), 7000);
+    const realtime = subscribeChat(handoffSession.id, () => void refresh());
+    const timer = window.setInterval(() => {
+      if (!realtime.connected()) void refresh();
+    }, 7000);
     return () => {
       alive = false;
       window.clearInterval(timer);
+      realtime.close();
     };
   }, [open, isStaffPage, handoffSession, handoff?.status]);
   function close() {
@@ -300,6 +334,7 @@ export function ViOiChat() {
     return undefined;
   }
   async function send(value: string, retry = false) {
+    const epoch = sessionEpoch.current;
     const text = value.trim();
     if (
       !text ||
@@ -324,9 +359,9 @@ export function ViOiChat() {
     try {
       if (handoff && handoffSession) {
         const result = await chatApi.sendHandoffMessage(handoff.id, text);
-        if (!active.current) return;
+        if (!active.current || epoch !== sessionEpoch.current) return;
         updateHandoff(result.handoff);
-        setMessages(displayHandoffMessages(result.handoff));
+
         removeSessionValue(pendingMessageStorageKey);
         return;
       }
@@ -339,7 +374,7 @@ export function ViOiChat() {
         requestController.signal,
         chatVisitorToken(),
       );
-      if (!active.current) return;
+      if (!active.current || epoch !== sessionEpoch.current) return;
       if (handoffRequestInFlight.current || handoffRef.current) return;
       if (result.available === false)
         throw new ChatApiError(
@@ -355,7 +390,7 @@ export function ViOiChat() {
       removeSessionValue(pendingMessageStorageKey);
       animateSpeaking();
     } catch (reason) {
-      if (!active.current) return;
+      if (!active.current || epoch !== sessionEpoch.current) return;
       if (requestController?.signal.aborted) return;
       const quotaReply = reason instanceof ChatApiError ? reason.response : undefined;
       if (quotaReply?.handoff && quotaReply.limit) {
@@ -384,6 +419,7 @@ export function ViOiChat() {
     }
   }
   async function requestStaff() {
+    const epoch = sessionEpoch.current;
     if (!handoffOffer || handoffBusyRef.current || handoffRef.current) return;
     handoffBusyRef.current = true;
     handoffRequestInFlight.current = true;
@@ -402,12 +438,12 @@ export function ViOiChat() {
         messages.map(({ role, content }) => ({ role, content })).slice(-30),
         accessToken,
       );
-      if (!active.current) return;
+      if (!active.current || epoch !== sessionEpoch.current) return;
       const session = { id: result.handoff.id };
       setHandoffSession(session);
       updateHandoff(result.handoff);
       setHandoffOffer(null);
-      setMessages(displayHandoffMessages(result.handoff));
+
       if (interruptedQuestion && draftRef.current.trim() === interruptedQuestion) updateDraft('');
       const sessionStored = writeSessionValue(handoffSessionKey, JSON.stringify(session));
       const tokenRemoved = removeSessionValue(pendingHandoffTokenKey);

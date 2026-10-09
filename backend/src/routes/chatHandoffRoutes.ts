@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { requireRole } from '../middlewares/customerAuth.js';
+import { csrfGuard, requireRole } from '../middlewares/customerAuth.js';
 import type { ChatHandoffService } from '../services/chatHandoffService.js';
 import { chatHandoffControllers } from '../controllers/chatHandoffController.js';
 
 export function createChatHandoffRouter(
   service: ChatHandoffService,
-  options: { isDevelopment: boolean },
+  options: { isDevelopment: boolean; allowedOrigins: Set<string> },
 ) {
   const router = Router();
   const controllers = chatHandoffControllers(service);
@@ -25,6 +25,19 @@ export function createChatHandoffRouter(
     message: { message: 'Bạn đã tải cuộc trò chuyện quá thường xuyên. Vui lòng thử lại sau.' },
   });
   const staff = requireRole('staff', 'admin');
+  router.post(
+    '/chat/handoffs/:id/realtime-ticket',
+    customerReadLimiter,
+    csrfGuard(options.allowedOrigins, true),
+    (req, res, next) => {
+      if (!req.get('origin') || !options.allowedOrigins.has(req.get('origin')!)) {
+        res.status(403).json({ message: 'Nguồn yêu cầu không hợp lệ.' });
+        return;
+      }
+      next();
+    },
+    controllers.realtimeTicket,
+  );
 
   router.post('/chat/handoffs', customerWriteLimiter, (req, res, next) =>
     controllers.create(req, res, next, options.isDevelopment),

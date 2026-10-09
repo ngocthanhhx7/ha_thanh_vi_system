@@ -30,34 +30,43 @@ export class GameService {
     if (mongoose.connection.readyState !== 1)
       throw new CustomerError(503, 'Trò chơi tạm thời chưa sẵn sàng.');
     if (action.kind === 'state') {
-      const existing = await GameState.findById(userId).lean();
+      const [existing, stock] = await Promise.all([
+        GameState.findById(userId).lean(),
+        GameStock.findById('banh-cha').lean(),
+      ]);
       const data = existing?.data || newGame(now);
       refreshGame(data, now);
-      const stock = await GameStock.findById('banh-cha').lean();
       return { state: publicGame(data, stock?.issued || 0) };
     }
     const drawRoll =
       action.kind === 'draw'
         ? { ordinary: INGREDIENTS[this.random(INGREDIENTS.length)], rare: this.random(100) < 5 }
         : null;
-    // Unique account/stock records exist before opening a transaction, including first-visit races.
-    try {
-      await GameState.updateOne(
-        { _id: userId },
-        { $setOnInsert: { data: newGame(now) } },
-        { upsert: true },
-      );
-    } catch (e) {
-      if ((e as { code?: number }).code !== 11000) throw e;
+    // Only entry/visit actions may create progress. A flip cannot exist before entry;
+    // avoiding these upserts removes two network round trips from every card reveal.
+    if (action.kind === 'enter' || action.kind === 'visit' || action.kind === 'presence') {
+      try {
+        await GameState.updateOne(
+          { _id: userId },
+          { $setOnInsert: { data: newGame(now) } },
+          { upsert: true },
+        );
+      } catch (e) {
+        if ((e as { code?: number }).code !== 11000) throw e;
+      }
     }
-    try {
-      await GameStock.updateOne(
-        { _id: 'banh-cha' },
-        { $setOnInsert: { issued: 0 } },
-        { upsert: true },
-      );
-    } catch (e) {
-      if ((e as { code?: number }).code !== 11000) throw e;
+    // Initialize the scarce-card counter only for an actual rare candidate. The
+    // conditional increment remains inside the draw transaction and never resets it.
+    if (drawRoll?.rare) {
+      try {
+        await GameStock.updateOne(
+          { _id: 'banh-cha' },
+          { $setOnInsert: { issued: 0 } },
+          { upsert: true },
+        );
+      } catch (e) {
+        if ((e as { code?: number }).code !== 11000) throw e;
+      }
     }
     const key =
       action.kind === 'flip' || action.kind === 'draw'
@@ -76,7 +85,8 @@ export class GameService {
           { $inc: { revision: 1 } },
           { session, new: true },
         );
-        if (!doc) throw new CustomerError(503, 'Không tìm thấy tiến độ.');
+        if (!doc)
+          throw new CustomerError(409, 'Vui lòng vào trò chơi trước khi thực hiện thao tác.');
         const data = doc.data;
         refreshGame(data, now);
         const receipt = key

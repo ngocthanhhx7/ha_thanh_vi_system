@@ -1,4 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { subscribeChat } from '../services/chatRealtime';
+import { newerChatSnapshot } from '../services/chatSnapshot';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
 import { customerApi, type CustomerUser, type SupportTicket } from '../services/customerApi';
@@ -456,6 +458,7 @@ function TicketEditor({ ticket, onSaved }: { ticket: SupportTicket; onSaved: () 
   );
 }
 function StaffChatInbox({ currentUser }: { currentUser: CustomerUser }) {
+  const selectedRequest = useRef('');
   const [handoffs, setHandoffs] = useState<ChatHandoff[]>([]);
   const [selected, setSelected] = useState<ChatHandoff | null>(null);
   const [reply, setReply] = useState('');
@@ -466,19 +469,25 @@ function StaffChatInbox({ currentUser }: { currentUser: CustomerUser }) {
 
   useEffect(() => {
     let alive = true;
+    let request = 0;
     const load = async () => {
+      const current = ++request;
       try {
         const result = await chatApi.staffHandoffs();
-        if (alive) setHandoffs(result.handoffs);
+        if (alive && current === request) setHandoffs(result.handoffs);
       } catch (reason) {
         if (alive) setError(errorText(reason));
       }
     };
     void load();
-    const timer = window.setInterval(() => void load(), 15000);
+    const realtime = subscribeChat('staff', () => void load());
+    const timer = window.setInterval(() => {
+      if (!realtime.connected()) void load();
+    }, 15000);
     return () => {
       alive = false;
       window.clearInterval(timer);
+      realtime.close();
     };
   }, [version]);
 
@@ -488,23 +497,36 @@ function StaffChatInbox({ currentUser }: { currentUser: CustomerUser }) {
     const load = async () => {
       try {
         const result = await chatApi.staffHandoff(selected.id);
-        if (alive && result.handoff.updatedAt !== selected.updatedAt) setSelected(result.handoff);
+        if (alive)
+          setSelected((current) =>
+            current?.id === result.handoff.id
+              ? newerChatSnapshot(current, result.handoff)
+              : current,
+          );
       } catch (reason) {
         if (alive) setError(errorText(reason));
       }
     };
-    const timer = window.setInterval(() => void load(), 7000);
+    const realtime = subscribeChat('staff', (id) => {
+      if (!id || id === selected.id) void load();
+    });
+    const timer = window.setInterval(() => {
+      if (!realtime.connected()) void load();
+    }, 7000);
     return () => {
       alive = false;
       window.clearInterval(timer);
+      realtime.close();
     };
   }, [selected?.id, selected?.updatedAt]);
 
   async function openHandoff(id: string) {
+    selectedRequest.current = id;
     setError('');
     try {
       const result = await chatApi.staffHandoff(id);
-      setSelected(result.handoff);
+      if (selectedRequest.current === id)
+        setSelected((current) => newerChatSnapshot(current, result.handoff));
     } catch (reason) {
       setError(errorText(reason));
     }
@@ -516,7 +538,9 @@ function StaffChatInbox({ currentUser }: { currentUser: CustomerUser }) {
     setError('');
     try {
       const result = await chatApi.claimHandoff(selected.id);
-      setSelected(result.handoff);
+      setSelected((current) =>
+        current?.id === result.handoff.id ? newerChatSnapshot(current, result.handoff) : current,
+      );
       setNotice('Bạn đã tiếp nhận yêu cầu tư vấn.');
       setVersion((value) => value + 1);
     } catch (reason) {
@@ -533,7 +557,9 @@ function StaffChatInbox({ currentUser }: { currentUser: CustomerUser }) {
     setError('');
     try {
       const result = await chatApi.replyHandoff(selected.id, reply.trim());
-      setSelected(result.handoff);
+      setSelected((current) =>
+        current?.id === result.handoff.id ? newerChatSnapshot(current, result.handoff) : current,
+      );
       setReply('');
       setNotice('Đã gửi phản hồi cho khách.');
       setVersion((value) => value + 1);
@@ -550,7 +576,9 @@ function StaffChatInbox({ currentUser }: { currentUser: CustomerUser }) {
     setError('');
     try {
       const result = await chatApi.resolveHandoff(selected.id);
-      setSelected(result.handoff);
+      setSelected((current) =>
+        current?.id === result.handoff.id ? newerChatSnapshot(current, result.handoff) : current,
+      );
       setNotice('Đã kết thúc cuộc tư vấn.');
       setVersion((value) => value + 1);
     } catch (reason) {
@@ -814,10 +842,14 @@ export function StaffDashboard() {
       }
     };
     void poll();
-    const timer = window.setInterval(() => void poll(), 20000);
+    const realtime = subscribeChat('staff', () => void poll());
+    const timer = window.setInterval(() => {
+      if (!realtime.connected()) void poll();
+    }, 20000);
     return () => {
       alive = false;
       window.clearInterval(timer);
+      realtime.close();
     };
   }, [user]);
   useEffect(() => {

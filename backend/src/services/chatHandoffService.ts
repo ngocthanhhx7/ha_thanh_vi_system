@@ -1,3 +1,4 @@
+import { publishChatChange } from './chatRealtime.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { Types } from 'mongoose';
 import { ChatHandoff } from '../models/chatHandoff.js';
@@ -101,6 +102,13 @@ function view(record: {
 }
 
 export class ChatHandoffService {
+  async canSubscribe(id: string, userId?: string, token?: string) {
+    return !!(await ChatHandoff.exists({
+      _id: this.validId(id),
+      ...this.customerAccess(userId, token),
+    }));
+  }
+
   private validId(id: string) {
     if (!/^[a-f\d]{24}$/i.test(id)) throw new CustomerError(404, 'Không tìm thấy cuộc tư vấn.');
     return new Types.ObjectId(id);
@@ -191,6 +199,7 @@ export class ChatHandoffService {
         ...(!input.userId ? { accessToken } : {}),
       };
     }
+    publishChatChange(String(record._id));
     return {
       handoff: view(record.toObject()),
       ...(!input.userId ? { accessToken } : {}),
@@ -264,6 +273,7 @@ export class ChatHandoffService {
       { new: true },
     ).lean();
     if (!updated) throw new CustomerError(409, 'Cuộc tư vấn vừa thay đổi. Vui lòng tải lại.');
+    publishChatChange(id);
     return view(updated);
   }
 
@@ -333,7 +343,10 @@ export class ChatHandoffService {
       },
       { new: true },
     ).lean();
-    if (record) return view(record);
+    if (record) {
+      publishChatChange(id);
+      return view(record);
+    }
     const alreadyClaimed = await ChatHandoff.findOne({
       _id: objectId,
       status: 'assigned',
@@ -398,6 +411,7 @@ export class ChatHandoffService {
     ).lean();
     if (!record)
       throw new CustomerError(409, 'Yêu cầu đã kết thúc hoặc đang do nhân viên khác xử lý.');
+    publishChatChange(id);
     return view(record);
   }
 
@@ -422,6 +436,7 @@ export class ChatHandoffService {
     ).lean();
     if (!record)
       throw new CustomerError(409, 'Hãy nhận yêu cầu trước khi kết thúc hoặc tải lại hàng đợi.');
+    publishChatChange(id);
     return view(record);
   }
 }

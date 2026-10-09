@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { containsCredentialOrPaymentData, containsPII } from '../validators/chat.js';
 import type { ChatHandoffService } from '../services/chatHandoffService.js';
 import { notificationService } from '../services/notificationService.js';
+import { issueChatTicket } from '../services/chatRealtime.js';
+import { CustomerRepository } from '../services/customerRepository.js';
+import { sessionToken } from '../middlewares/customerAuth.js';
 
 const transcriptSchema = z
   .object({
@@ -48,6 +51,29 @@ export function chatHandoffControllers(service: ChatHandoffService) {
   };
 
   return {
+    async realtimeTicket(req: Request, res: Response, next: NextFunction) {
+      try {
+        const id = idFrom(req);
+        const token = accessTokenFrom(req, id);
+        const userId = req.user?.id;
+        const session = sessionToken(req.get('cookie'));
+        const valid = async () => {
+          if (userId) {
+            const user = session ? await new CustomerRepository().sessionUser(session) : undefined;
+            if (user?.id !== userId) return false;
+          }
+          return service.canSubscribe(id, userId, token);
+        };
+        if (!(await valid())) {
+          res.status(404).json({ message: 'Không tìm thấy cuộc tư vấn.' });
+          return;
+        }
+        res.setHeader('Cache-Control', 'no-store');
+        res.json({ ticket: issueChatTicket({ handoffId: id, valid }) });
+      } catch (error) {
+        next(error);
+      }
+    },
     async create(req: Request, res: Response, next: NextFunction, isDevelopment: boolean) {
       const parsed = parse(transcriptSchema, req.body);
       if (!parsed.success) {

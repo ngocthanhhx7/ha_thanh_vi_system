@@ -9,6 +9,7 @@ import { initializeCustomerIndexes } from './services/customerRepository.js';
 import type { OrderRepository } from './services/orderRepository.js';
 import { UnavailableOrderRepository } from './services/unavailableOrderRepository.js';
 import type { SiteContent } from './validators/content.js';
+import { attachChatRealtime } from './services/chatRealtime.js';
 
 async function start() {
   const config = readConfig();
@@ -47,12 +48,14 @@ async function start() {
   const server = app.listen(config.port, () => {
     console.log(`Ha Thanh Vi API listening on port ${config.port}`);
   });
+  const realtime = attachChatRealtime(server, app.locals.chatRealtime);
 
   let shuttingDown = false;
   const shutdown = async () => {
     if (shuttingDown) return;
     shuttingDown = true;
     reconciliation?.stop();
+    realtime.disconnectSockets(true);
     server.close(async () => {
       await disconnectDatabase().catch(() => undefined);
       process.exit(0);

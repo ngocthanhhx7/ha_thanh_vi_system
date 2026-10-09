@@ -305,3 +305,73 @@ test('HTTP routes enforce authentication, CSRF, body validation, and no-store st
     state.body.state.memory.cards.every((card: { cardId: unknown }) => card.cardId === null),
   );
 });
+
+test('active flips do not perform initialization upserts or touch global stock writes', async () => {
+  const svc = new GameService(),
+    id = uid();
+  await svc.act(id, { kind: 'enter' }, now);
+  const calls: { collection: string; method: string }[] = [];
+  const previous = mongoose.get('debug');
+  mongoose.set('debug', (collection: string, method: string) => {
+    calls.push({ collection, method });
+  });
+  try {
+    await svc.act(id, { kind: 'flip', index: 0, requestId: randomUUID() }, now);
+  } finally {
+    mongoose.set('debug', previous);
+  }
+  assert.equal(
+    calls.filter(
+      (call) => call.collection === GameStock.collection.name && call.method !== 'findOne',
+    ).length,
+    0,
+  );
+  // Lock, receipt read/insert, state save and stock display read: five model operations.
+  assert.equal(calls.length, 5);
+});
+
+test('concurrent distinct flip requests serialize a pair and replay does not spend again', async () => {
+  const svc = new GameService(),
+    id = uid();
+  await svc.act(id, { kind: 'enter' }, now);
+  const board = (await GameState.findById(id))!.data.board;
+  const matching = board.findIndex((card, index) => index !== 0 && card === board[0]);
+  const first = { kind: 'flip' as const, index: 0, requestId: randomUUID() };
+  const second = { kind: 'flip' as const, index: matching, requestId: randomUUID() };
+  await Promise.all([svc.act(id, first, now), svc.act(id, second, now)]);
+  await Promise.all([svc.act(id, first, now), svc.act(id, second, now)]);
+  const data = (await GameState.findById(id))!.data;
+  assert.equal(data.attempts, 3);
+  assert.equal(data.firstIndex, null);
+  assert.deepEqual(
+    [...data.matched].sort((a, b) => a - b),
+    [0, matching],
+  );
+  assert.equal(await GameReceipt.countDocuments({ userId: id }), 2);
+});
+
+test('same card raced with different request ids rejects the second without spending', async () => {
+  const svc = new GameService(),
+    id = uid();
+  await svc.act(id, { kind: 'enter' }, now);
+  const results = await Promise.allSettled(
+    Array.from({ length: 2 }, () =>
+      svc.act(id, { kind: 'flip', index: 0, requestId: randomUUID() }, now),
+    ),
+  );
+  assert.equal(results.filter((result) => result.status === 'fulfilled').length, 1);
+  assert.equal(results.filter((result) => result.status === 'rejected').length, 1);
+  assert.equal((await GameState.findById(id))!.data.attempts, 3);
+  assert.equal(await GameReceipt.countDocuments({ userId: id }), 1);
+});
+
+test('flip without game entry cannot create progress or reveal a card', async () => {
+  const svc = new GameService(),
+    id = uid();
+  await assert.rejects(
+    svc.act(id, { kind: 'flip', index: 0, requestId: randomUUID() }, now),
+    (error: unknown) => (error as { status: number }).status === 409,
+  );
+  assert.equal(await GameState.countDocuments({ _id: id }), 0);
+  assert.equal(await GameReceipt.countDocuments({ userId: id }), 0);
+});

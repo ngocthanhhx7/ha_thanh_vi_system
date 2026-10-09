@@ -2,6 +2,97 @@ body {
   background-color: var(--cream);
   background-image: radial-gradient(ellipse at 94% 9%, #d9bd8621, transparent 430px);
 }
+.page-entry {
+  animation: page-enter 220ms ease-out;
+}
+.page-entry-initial {
+  animation: none;
+}
+.page-loading {
+  min-height: 46vh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+  color: var(--red);
+  text-align: center;
+}
+.page-loading p {
+  margin: 0;
+}
+.page-loading-mark {
+  font-size: 30px;
+  animation: loading-breathe 1.3s ease-in-out infinite;
+}
+.page-loading-placeholder {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 460px);
+}
+.page-loading-placeholder span,
+.account-dropdown-skeleton span {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: #ddc7a64d;
+  animation: loading-breathe 1.3s ease-in-out infinite;
+}
+.page-loading-placeholder span:nth-child(2) {
+  width: 82%;
+}
+.page-loading-placeholder span:nth-child(3) {
+  width: 60%;
+}
+.account-dropdown-skeleton {
+  display: grid;
+  gap: 14px;
+  padding: 4px 0 18px;
+}
+.account-dropdown-skeleton span:nth-child(2) {
+  width: 85%;
+}
+.account-dropdown-skeleton span:nth-child(3) {
+  width: 65%;
+}
+.account-dropdown-loading > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  color: var(--red);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+@keyframes page-enter {
+  from {
+    opacity: 0.75;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes loading-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-entry,
+  .page-loading-mark,
+  .page-loading-placeholder span,
+  .account-dropdown-skeleton span {
+    animation: none;
+  }
+}
 .announcement {
   position: relative;
   isolation: isolate;
@@ -12,7 +103,7 @@ body {
   position: absolute;
   z-index: 0;
   inset: 0;
-  background: url('/brand/pattern.webp') right 30% center / 220px auto repeat;
+  background: url('/brand/pattern-optimized.webp') right 30% center / 220px auto repeat;
   content: '';
   opacity: 0.09;
   pointer-events: none;
@@ -99,7 +190,7 @@ footer::before {
   z-index: 0;
   inset: 0 0 0 auto;
   width: min(48%, 660px);
-  background: url('/brand/pattern.webp') right top / 360px auto repeat;
+  background: url('/brand/pattern-optimized.webp') right top / 360px auto repeat;
   content: '';
   opacity: 0.09;
   pointer-events: none;

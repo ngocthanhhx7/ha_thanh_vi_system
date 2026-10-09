@@ -1,7 +1,8 @@
 import { GameLauncher } from '../components/GameLauncher';
 import { CartContents } from '../components/CartContents';
 import { ViOiChat } from '../components/ViOiChat';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { PageLoading } from '../components/PageLoading';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -61,6 +62,7 @@ export function Layout() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     setPanel(null);
+    setAccountMenuOpen(false);
     const title =
       location.pathname === '/tro-choi'
         ? 'Chơi cùng Hà Thành Vị'
@@ -190,9 +192,17 @@ export function Layout() {
                   </p>
                 )}
                 {accountLoading ? (
-                  <p className="account-dropdown-loading" role="status">
-                    Đang tải các lối tắt…
-                  </p>
+                  <div className="account-dropdown-loading" role="status" aria-busy="true">
+                    <span className="visually-hidden">Đang tải các lối tắt…</span>
+                    <div className="account-dropdown-skeleton" aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                    <Link to="/tra-cuu-don-hang" onClick={() => setAccountMenuOpen(false)}>
+                      Tra cứu đơn hàng <ArrowRight size={16} />
+                    </Link>
+                  </div>
                 ) : accountUser ? (
                   <>
                     <nav className="account-dropdown-links" aria-label="Tài khoản của tôi">
@@ -293,7 +303,13 @@ export function Layout() {
         </div>
       </header>
       <main id="main-content">
-        <Outlet />
+        <Suspense key={location.pathname} fallback={<PageLoading />}>
+          <div
+            className={location.key === 'default' ? 'page-entry page-entry-initial' : 'page-entry'}
+          >
+            <Outlet />
+          </div>
+        </Suspense>
       </main>
       <section className="closing-strip">
         <img src="/brand/ornament.webp" alt="" />

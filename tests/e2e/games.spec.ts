@@ -95,6 +95,17 @@ test('memory reserves one attempt for two selections and hides a matched pair', 
   await expect(page.getByRole('button', { name: 'Bột mì', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Lật thẻ 2', exact: true }).click();
   await expect(page.locator('.games-memory-card.is-matched')).toHaveCount(2);
+  const second = page.locator('.games-memory-card').nth(1);
+  await expect
+    .poll(() =>
+      second
+        .locator('.games-memory-turn')
+        .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m11),
+    )
+    .toBeLessThan(-0.99);
+  await page.waitForTimeout(900);
+  expect(await second.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.95);
+  await expect.poll(() => second.evaluate((el) => Number(getComputedStyle(el).opacity))).toBe(0);
   await expect(page.locator('.games-counter')).toContainText('3');
   await expect(page.locator('.games-progress')).toContainText('1/10');
   expect(
@@ -122,7 +133,8 @@ test('memory responds during slow requests and closes mismatches without a refre
       } else {
         current.memory.firstIndex = null;
         current.memory.cards[index].cardId = 'oil';
-        Object.assign(current.memory, { mismatchUntil: new Date(Date.now() + 1600).toISOString() });
+        // Transaction + transmission has already consumed the server's viewing window.
+        Object.assign(current.memory, { mismatchUntil: new Date(Date.now() - 4000).toISOString() });
       }
     } else if (r.request().method() === 'GET') {
       reads++;
@@ -146,12 +158,26 @@ test('memory responds during slow requests and closes mismatches without a refre
   await expect(second).toBeEnabled();
   await second.click();
   await expect(second).toHaveClass(/is-pending/);
+  const collectionTab = page.locator('.games-switch button').nth(1);
+  await expect(collectionTab).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Lật thẻ 3', exact: true })).toBeDisabled();
   expect(flips).toEqual([0]);
   release!();
   await expect(page.locator('.games-memory-card.is-revealed')).toHaveCount(2);
   expect(flips).toEqual([0, 1]);
-  await expect(page.locator('.games-memory-card.is-revealed')).toHaveCount(0, { timeout: 2400 });
+  await expect
+    .poll(() =>
+      page
+        .locator('.games-memory-card')
+        .nth(1)
+        .locator('.games-memory-turn')
+        .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m11),
+    )
+    .toBeLessThan(-0.99);
+  await page.waitForTimeout(900);
+  await expect(page.locator('.games-memory-card.is-revealed')).toHaveCount(2);
+  await expect(collectionTab).toBeDisabled();
+  await expect(page.locator('.games-memory-card.is-revealed')).toHaveCount(0, { timeout: 3000 });
   await expect(first).toBeEnabled();
   await expect(first.locator('.games-memory-front img')).toHaveAttribute('src', /flour.webp$/);
   await expect
@@ -163,6 +189,48 @@ test('memory responds during slow requests and closes mismatches without a refre
     .toBe(1);
   expect(reads).toBe(0);
   await expect(page.locator('.games-counter')).toContainText('3');
+  await expect(collectionTab).toBeEnabled();
+  await collectionTab.click();
+  await expect(page.getByRole('button', { name: /Rút một thẻ/ })).toBeEnabled();
+});
+
+test('a failed ingredient image shows its real name for the full pair viewing window', async ({
+  page,
+}) => {
+  const current = state();
+  await page.route('**/brand/game/cards/oil.webp', (route) => route.abort());
+  await page.route('**/api/games**', async (route) => {
+    if (route.request().url().endsWith('/memory/flip')) {
+      const { index } = route.request().postDataJSON();
+      if (current.memory.firstIndex === null) {
+        current.memory.firstIndex = index;
+        current.memory.attempts--;
+        current.memory.cards[index].cardId = 'flour';
+      } else {
+        current.memory.firstIndex = null;
+        current.memory.cards[index].cardId = 'oil';
+        Object.assign(current.memory, { mismatchUntil: new Date(Date.now() - 4000).toISOString() });
+      }
+    }
+    await route.fulfill(json({ state: current }));
+  });
+  await page.goto('/tro-choi');
+  await page.getByRole('button', { name: 'Lật thẻ 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Lật thẻ 2', exact: true }).click();
+  const second = page.locator('.games-memory-card').nth(1);
+  await expect
+    .poll(() =>
+      second
+        .locator('.games-memory-turn')
+        .evaluate((element) => new DOMMatrix(getComputedStyle(element).transform).m11),
+    )
+    .toBeLessThan(-0.99);
+  await expect(second.locator('.games-memory-front-fallback')).toHaveText('Dầu ăn');
+  await expect(second.locator('.games-memory-front-fallback')).toBeVisible();
+  await page.waitForTimeout(900);
+  await expect(second).toHaveClass(/is-revealed/);
+  await expect(page.locator('.games-memory-card.is-revealed')).toHaveCount(0, { timeout: 3000 });
+  await expect(page.locator('.games-switch button').nth(1)).toBeEnabled();
 });
 
 test('failed first selection cancels the queued card and retry keeps the request id', async ({
@@ -201,6 +269,38 @@ test('failed first selection cancels the queued card and retry keeps the request
   expect(calls[1]).toEqual(calls[0]);
 });
 
+test('a resumed first card stays visible with its matching second card', async ({ page }) => {
+  const current = state();
+  current.memory.firstIndex = 0;
+  current.memory.cards[0].cardId = 'flour';
+  current.memory.attempts = 3;
+  await page.route('**/api/games**', async (route) => {
+    if (route.request().url().endsWith('/memory/flip')) {
+      current.memory.firstIndex = null;
+      for (const index of [0, 1]) {
+        current.memory.cards[index].matched = true;
+        current.memory.cards[index].cardId = null;
+      }
+    }
+    await route.fulfill(json({ state: current }));
+  });
+  await page.goto('/tro-choi');
+  await page.getByRole('button', { name: 'Lật thẻ 2', exact: true }).click();
+  for (const index of [0, 1]) {
+    const card = page.locator('.games-memory-card').nth(index);
+    await expect(card.locator('.games-memory-front img')).toHaveAttribute('src', /flour.webp$/);
+    await expect
+      .poll(() =>
+        card
+          .locator('.games-memory-turn')
+          .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m11),
+      )
+      .toBeLessThan(-0.99);
+    expect(await card.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.95);
+  }
+  await expect(page.locator('.games-counter')).toContainText('3');
+});
+
 test('collection redemption confirms consumption and uses server inventory and voucher', async ({
   page,
 }) => {
@@ -232,7 +332,8 @@ test('collection redemption confirms consumption and uses server inventory and v
   await page.getByRole('button', { name: 'Xác nhận đổi thẻ' }).click();
   await expect(page.getByRole('dialog')).toContainText('TEST-GAME-9');
   expect(redeemed).toBe(1);
-  await page.keyboard.press('Escape');
+  await page.evaluate(() => window.dispatchEvent(new Event('customer-session-changed')));
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('.games-collectible').filter({ hasText: 'Bánh chả' })).toContainText(
     'Đang có: 1',
   );

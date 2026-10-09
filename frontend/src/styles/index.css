@@ -1320,7 +1320,7 @@ footer .footer-small {
 }
 .about-collage:before {
   content: '';
-  background: url('/brand/pattern.webp') center/500px;
+  background: url('/brand/pattern-optimized.webp') center/500px;
   opacity: 0.18;
   position: absolute;
   inset: 0;

@@ -237,7 +237,7 @@
   border: 1px solid #bc873688;
   border-radius: 48% 48% 8px 8px;
   background-color: #f3e6d0;
-  background-image: url('/brand/pattern.webp');
+  background-image: url('/brand/pattern-optimized.webp');
   background-position: center;
   background-size: 290px;
   box-shadow: 17px 18px 0 #7c202c12;
@@ -436,7 +436,7 @@
   align-content: center;
   padding: 54px 24px;
   background-color: var(--public-ink);
-  background-image: linear-gradient(#70202bdc, #70202bdc), url('/brand/pattern.webp');
+  background-image: linear-gradient(#70202bdc, #70202bdc), url('/brand/pattern-optimized.webp');
   background-position: center;
   background-size: auto, 400px;
   color: var(--public-paper);
@@ -487,7 +487,7 @@
   padding: clamp(30px, 5vw, 58px);
   border: 1px solid var(--public-line);
   background: var(--public-cream);
-  background-image: url('/brand/pattern.webp');
+  background-image: url('/brand/pattern-optimized.webp');
   background-position: right 20px center;
   background-repeat: no-repeat;
   background-size: 210px;
@@ -525,7 +525,7 @@
   padding: 26px 26px 50px;
   border: 1px solid #bc873688;
   background-color: #f3e6d0;
-  background-image: url('/brand/pattern.webp');
+  background-image: url('/brand/pattern-optimized.webp');
   background-position: center;
   background-size: 260px;
 }
@@ -872,7 +872,7 @@ a.contact-channel:hover {
   padding: 14px 18px 14px 0;
   border: 1px solid var(--public-line);
   background-color: var(--public-cream);
-  background-image: url('/brand/pattern.webp');
+  background-image: url('/brand/pattern-optimized.webp');
   background-position: right center;
   background-size: 140px;
 }

@@ -1,13 +1,15 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { gameImage, type GameState } from '../services/gameApi';
+import { gameCardName, gameImage, type GameState } from '../services/gameApi';
 
 gsap.registerPlugin(useGSAP);
 
 export function MemoryCard({
   card,
   face,
+  displayPair,
+  onRevealed,
   pending,
   disabled,
   label,
@@ -15,6 +17,8 @@ export function MemoryCard({
 }: {
   card: GameState['memory']['cards'][number];
   face: string | null;
+  displayPair: boolean;
+  onRevealed: () => void;
   pending: boolean;
   disabled: boolean;
   label: string;
@@ -23,8 +27,13 @@ export function MemoryCard({
   const root = useRef<HTMLButtonElement>(null);
   const turn = useRef<HTMLDivElement>(null);
   const motion = useRef<gsap.core.Timeline | null>(null);
+  const frontImage = useRef<HTMLImageElement>(null);
+  const [imageFailed, setImageFailed] = useState(false);
+  const generation = useRef(0);
+  const revealCallback = useRef(onRevealed);
+  revealCallback.current = onRevealed;
   const revealed = !!card.cardId || card.matched;
-  useGSAP(
+  const { contextSafe } = useGSAP(
     () => {
       gsap.set(turn.current, { rotationY: revealed ? 180 : 0 });
       gsap.set(root.current, { opacity: card.matched ? 0 : 1 });
@@ -34,25 +43,45 @@ export function MemoryCard({
   useGSAP(
     () => {
       motion.current?.kill();
+      const version = ++generation.current;
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const timeline = gsap.timeline({ defaults: { ease: 'power2.inOut', overwrite: 'auto' } });
-      motion.current = timeline;
-      if (pending && !revealed) {
-        // A quick acknowledgement finishes face-down: network latency must never
-        // leave the card stranded edge-on or expose an invented ingredient.
-        timeline
-          .to(turn.current, { rotationY: 8, duration: reduced ? 0 : 0.08 })
-          .to(turn.current, { rotationY: 0, duration: reduced ? 0 : 0.12 });
-      } else {
-        timeline.to(turn.current, { rotationY: revealed ? 180 : 0, duration: reduced ? 0 : 0.24 });
-      }
-      if (card.matched) {
-        timeline
-          .to(root.current, { scale: 1.035, duration: reduced ? 0 : 0.12 })
-          .to(root.current, { opacity: 0, scale: 0.96, duration: reduced ? 0 : 0.16 });
-      }
+      const animate = contextSafe(() => {
+        if (generation.current !== version || !root.current || !turn.current) return;
+        if (displayPair) gsap.set(root.current, { opacity: 1, scale: 1 });
+        const timeline = gsap.timeline({ defaults: { ease: 'power2.inOut', overwrite: 'auto' } });
+        motion.current = timeline;
+        if (pending && !revealed) {
+          // A quick acknowledgement finishes face-down: network latency must never
+          // leave the card stranded edge-on or expose an invented ingredient.
+          timeline
+            .to(turn.current, { rotationY: 8, duration: reduced ? 0 : 0.08 })
+            .to(turn.current, { rotationY: 0, duration: reduced ? 0 : 0.12 });
+        } else {
+          timeline.to(turn.current, {
+            rotationY: revealed ? 180 : 0,
+            duration: reduced ? 0 : 0.24,
+            onComplete: () => {
+              if (revealed) revealCallback.current();
+            },
+          });
+        }
+        if (card.matched && !displayPair) {
+          timeline
+            .to(root.current, { scale: 1.035, duration: reduced ? 0 : 0.12 })
+            .to(root.current, { opacity: 0, scale: 0.96, duration: reduced ? 0 : 0.16 });
+        }
+      });
+      // Do not start the viewing clock before the ingredient pixels are decoded.
+      if (revealed && frontImage.current)
+        void frontImage.current
+          .decode()
+          .catch(() => {
+            if (generation.current === version && root.current) setImageFailed(true);
+          })
+          .then(animate);
+      else animate();
     },
-    { scope: root, dependencies: [revealed, pending, card.matched] },
+    { scope: root, dependencies: [revealed, pending, card.matched, displayPair, face] },
   );
   return (
     <button
@@ -69,7 +98,18 @@ export function MemoryCard({
           <span>{card.index + 1}</span>
         </div>
         <div className="games-memory-front">
-          <img src={gameImage(face || 'card-back')} alt="" width="480" height="720" />
+          <img
+            ref={frontImage}
+            src={gameImage(face || 'card-back')}
+            alt=""
+            width="480"
+            height="720"
+            onLoad={() => setImageFailed(false)}
+            onError={() => setImageFailed(true)}
+          />
+          {imageFailed && face && (
+            <div className="games-memory-front-fallback">{gameCardName(face)}</div>
+          )}
         </div>
       </div>
       {pending && <i className="games-memory-pending" aria-hidden="true" />}

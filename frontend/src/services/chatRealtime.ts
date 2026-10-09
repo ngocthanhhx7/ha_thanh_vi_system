@@ -1,4 +1,4 @@
-import { io } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 
 type Change = (id?: string) => void;
 const connections = new Map<
@@ -16,61 +16,68 @@ export function subscribeChat(scope: 'staff' | string, onChange: Change) {
   if (!connection) {
     const listeners = new Set<Change>();
     let closed = false;
-    const socket = io({
-      path: '/api/realtime/socket.io',
-      autoConnect: false,
-      withCredentials: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 15000,
-      auth: async (done) => {
-        if (scope === 'staff') {
-          done({ mode: 'staff' });
-          return;
-        }
-        try {
-          const response = await fetch(
-            `/api/chat/handoffs/${encodeURIComponent(scope)}/realtime-ticket`,
-            {
-              method: 'POST',
-              credentials: 'same-origin',
-              headers: { 'X-Requested-With': 'XMLHttpRequest' },
-              signal: AbortSignal.timeout(10000),
-            },
-          );
-          if (!response.ok) throw new Error('Unauthorized');
-          const { ticket } = await response.json();
-          if (!closed) done({ ticket });
-        } catch {
-          if (!closed) done({ ticket: '' });
-        }
-      },
-    });
+    let socket: Socket | undefined;
     const notify = (id?: string) => {
       for (const listener of listeners) listener(id);
     };
-    socket.on('connect', () => notify());
-    socket.on('chat:changed', (event: { id?: unknown }) => {
-      if (typeof event?.id === 'string') notify(event.id);
-    });
-    const reset = () => {
-      socket.disconnect();
+    const start = async () => {
+      const { io } = await import('socket.io-client');
+      if (closed) return;
+      socket = io({
+        path: '/api/realtime/socket.io',
+        autoConnect: false,
+        withCredentials: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 15000,
+        auth: async (done) => {
+          if (scope === 'staff') {
+            done({ mode: 'staff' });
+            return;
+          }
+          try {
+            const response = await fetch(
+              `/api/chat/handoffs/${encodeURIComponent(scope)}/realtime-ticket`,
+              {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: AbortSignal.timeout(10000),
+              },
+            );
+            if (!response.ok) throw new Error('Unauthorized');
+            const { ticket } = await response.json();
+            if (!closed) done({ ticket });
+          } catch {
+            if (!closed) done({ ticket: '' });
+          }
+        },
+      });
+      socket.on('connect', () => notify());
+      socket.on('chat:changed', (event: { id?: unknown }) => {
+        if (typeof event?.id === 'string') notify(event.id);
+      });
       socket.connect();
+    };
+    const reset = () => {
+      socket?.disconnect();
+      socket?.connect();
       notify();
     };
     window.addEventListener('customer-session-changed', reset);
     const retry = window.setInterval(() => {
-      if (!socket.connected && !socket.active && document.visibilityState === 'visible')
+      if (socket && !socket.connected && !socket.active && document.visibilityState === 'visible')
         socket.connect();
     }, 15000);
-    socket.connect();
+    // REST polling remains available if the transport chunk cannot be downloaded.
+    void start().catch(() => undefined);
     connection = {
       listeners,
-      connected: () => socket.connected,
+      connected: () => socket?.connected ?? false,
       close: () => {
         closed = true;
         clearInterval(retry);
         window.removeEventListener('customer-session-changed', reset);
-        socket.disconnect();
+        socket?.disconnect();
       },
     };
     connections.set(scope, connection);

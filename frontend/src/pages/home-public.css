@@ -1,4 +1,25 @@
+/* Match the bundled fonts' text widths while they load so the mobile hero keeps its rows. */
+@font-face {
+  font-family: 'Home Serif Fallback';
+  src: local('Times New Roman'), local('Liberation Serif');
+  font-style: normal;
+  size-adjust: 118.26%;
+}
+@font-face {
+  font-family: 'Home Serif Fallback';
+  src: local('Times New Roman Italic'), local('Liberation Serif Italic');
+  font-style: italic;
+  size-adjust: 112.48%;
+}
+@font-face {
+  font-family: 'Home UI Fallback';
+  src: local('Arial'), local('Liberation Sans');
+  font-weight: 100 900;
+  size-adjust: 124.19%;
+}
 .home-hero {
+  --font-display: 'Noto Serif', 'Home Serif Fallback', serif;
+  font-family: Archivo, 'Home UI Fallback', Arial, sans-serif;
   width: min(100%, 1600px);
   min-height: min(760px, calc(100svh - 118px));
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr);
@@ -12,7 +33,7 @@
 .home-hero::before {
   position: absolute;
   inset: 0 44% 0 0;
-  background: url('/brand/pattern.webp') left center / 520px auto repeat;
+  background: url('/brand/pattern-optimized.webp') left center / 520px auto repeat;
   content: '';
   opacity: 0.09;
   pointer-events: none;
@@ -100,7 +121,7 @@
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: url('/brand/pattern.webp') center / 250px auto repeat;
+  background: url('/brand/pattern-optimized.webp') center / 250px auto repeat;
   content: '';
   opacity: 0.16;
   pointer-events: none;
@@ -220,14 +241,14 @@
   border: 1px solid #ddc9aa;
   background:
     linear-gradient(110deg, #f6eddfed 0%, #fbf5e9f4 56%, #f5ead8e8 100%),
-    url('/brand/pattern.webp') right center / cover;
+    url('/brand/pattern-optimized.webp') right center / cover;
   box-shadow: 0 18px 52px #552f1b0b;
 }
 .home-intro::before {
   position: absolute;
   z-index: -1;
   inset: 0 0 0 54%;
-  background: url('/brand/pattern.webp') right center / 360px auto repeat;
+  background: url('/brand/pattern-optimized.webp') right center / 360px auto repeat;
   content: '';
   opacity: 0.1;
   pointer-events: none;
@@ -285,14 +306,15 @@
   border: 1px solid #d8c09d;
   background:
     linear-gradient(90deg, #fbf5e9ed, #fbf5e9d9 52%, #fbf5e9ed),
-    url('/brand/pastry.webp') center 54% / cover;
+    image-set(url('/brand/pastry-960.webp') 1x, url('/brand/pastry-1280.webp') 2x) center 54% /
+      cover;
   box-shadow: 0 22px 60px #48271912;
 }
 .home-gift-callout::before {
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: url('/brand/pattern.webp') center / 340px auto repeat;
+  background: url('/brand/pattern-optimized.webp') center / 340px auto repeat;
   content: '';
   opacity: 0.07;
   pointer-events: none;

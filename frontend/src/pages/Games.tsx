@@ -15,11 +15,27 @@ import {
 } from '../services/gameApi';
 import './games.css';
 
+type PairView = { round: number; indices: number[]; ready: number[]; matched: boolean };
+
 export function Games() {
   const [state, setState] = useState<GameState | null>(null);
   const [guest, setGuest] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const [networkBusy, setBusy] = useState(false);
+  const [pairView, setPairView] = useState<PairView | null>(null);
+  const pairRef = useRef<PairView | null>(null);
+  const busy = networkBusy || pairView !== null;
+  function showPair(pair: PairView | null) {
+    pairRef.current = pair;
+    setPairView(pair);
+  }
+  const cardRevealed = useCallback((index: number) => {
+    const pair = pairRef.current;
+    if (!pair || !pair.indices.includes(index) || pair.ready.includes(index)) return;
+    const next = { ...pair, ready: [...pair.ready, index] };
+    pairRef.current = next;
+    setPairView(next);
+  }, []);
   const [pendingIndex, setPendingIndex] = useState<number | null>(null);
   const [queuedIndex, setQueuedIndex] = useState<number | null>(null);
   const queuedFlip = useRef<number | null>(null);
@@ -41,6 +57,7 @@ export function Games() {
     mounted.current = true;
     return () => {
       mounted.current = false;
+      pairRef.current = null;
       queuedFlip.current = null;
       ++requestVersion.current;
     };
@@ -55,11 +72,20 @@ export function Games() {
     }
   }, [hasGame, tab]);
   const refresh = useCallback(async (enter = false) => {
-    if (actionLock.current) return;
+    if (actionLock.current || pairRef.current) return;
     const version = ++requestVersion.current;
     try {
       const result = await (enter ? gameApi.enter() : gameApi.state());
       if (version !== requestVersion.current) return;
+      if (result.state.memory.mismatchUntil) {
+        const indices = result.state.memory.cards
+          .filter((card) => card.cardId)
+          .map((card) => card.index);
+        if (indices.length === 2) {
+          setTab('memory');
+          showPair({ round: result.state.memory.round, indices, ready: [], matched: false });
+        }
+      }
       setState(result.state);
       setGuest(false);
       setError('');
@@ -78,57 +104,73 @@ export function Games() {
     const visible = () => {
       if (document.visibilityState === 'visible' && !actionLock.current) void refresh(true);
     };
-    window.addEventListener('customer-session-changed', visible);
+    const sessionChanged = () => {
+      ++requestVersion.current;
+      actionLock.current = false;
+      queuedFlip.current = null;
+      flipInFlight.current = null;
+      revealedFaces.current = {};
+      retries.current.clear();
+      showPair(null);
+      setDrawn(null);
+      setReward(undefined);
+      setConfirm(null);
+      setState(null);
+      setQueuedIndex(null);
+      setPendingIndex(null);
+      setBusy(false);
+      setLoading(true);
+      void refresh(true);
+    };
+    window.addEventListener('customer-session-changed', sessionChanged);
     document.addEventListener('visibilitychange', visible);
     const interval = window.setInterval(visible, 60000);
     return () => {
       clearInterval(interval);
-      window.removeEventListener('customer-session-changed', visible);
+      window.removeEventListener('customer-session-changed', sessionChanged);
       document.removeEventListener('visibilitychange', visible);
     };
   }, [refresh]);
   useEffect(() => {
-    if (!state?.memory.mismatchUntil) return;
-    const { round, mismatchUntil } = state.memory;
-    const timer = setTimeout(
-      () =>
-        setState((current) => {
-          if (
-            !current ||
-            current.memory.round !== round ||
-            current.memory.mismatchUntil !== mismatchUntil
-          )
-            return current;
-          return {
-            ...current,
-            memory: {
-              ...current.memory,
-              mismatchUntil: null,
-              cards: current.memory.cards.map((card) => ({ ...card, cardId: null })),
-            },
-          };
-        }),
-      Math.max(0, new Date(mismatchUntil).getTime() - Date.now()),
-    );
+    if (!pairView || pairView.ready.length !== 2) return;
+    const timer = setTimeout(() => {
+      if (pairRef.current !== pairView) return;
+      if (!pairView.matched)
+        setState((current) =>
+          !current || current.memory.round !== pairView.round
+            ? current
+            : {
+                ...current,
+                memory: {
+                  ...current.memory,
+                  mismatchUntil: null,
+                  cards: current.memory.cards.map((card) =>
+                    pairView.indices.includes(card.index) ? { ...card, cardId: null } : card,
+                  ),
+                },
+              },
+        );
+      showPair(null);
+    }, 1600);
     return () => clearTimeout(timer);
-  }, [state?.memory.round, state?.memory.mismatchUntil]);
+  }, [pairView]);
   async function action(
     key: string,
     run: (id: string) => Promise<GameResult>,
     index?: number,
     before = state,
   ) {
-    if (actionLock.current) return;
+    if (actionLock.current || pairRef.current) return;
     actionLock.current = true;
     setBusy(true);
     setPendingIndex(index ?? null);
     setError('');
-    ++requestVersion.current;
+    const version = ++requestVersion.current;
     const id = retries.current.get(key) || crypto.randomUUID();
     retries.current.set(key, id);
     try {
       const result = await run(id);
-      if (!mounted.current) return;
+      if (!mounted.current || version !== requestVersion.current) return;
       retries.current.delete(key);
       if (result.state.memory.round !== before?.memory.round) revealedFaces.current = {};
       for (const card of result.state.memory.cards) {
@@ -140,8 +182,24 @@ export function Games() {
         before?.memory.firstIndex !== null &&
         before?.memory.firstIndex !== undefined
       ) {
-        const face = revealedFaces.current[before.memory.firstIndex];
-        if (face) revealedFaces.current[index] = face;
+        const first = before.memory.firstIndex;
+        const face = revealedFaces.current[first] || before.memory.cards[first].cardId;
+        if (face) {
+          revealedFaces.current[first] = face;
+          revealedFaces.current[index] = face;
+        }
+      }
+      if (
+        index !== undefined &&
+        before?.memory.firstIndex !== null &&
+        before?.memory.firstIndex !== undefined
+      ) {
+        showPair({
+          round: result.state.memory.round,
+          indices: [before.memory.firstIndex, index],
+          ready: [],
+          matched: result.state.memory.cards[index].matched,
+        });
       }
       setState(result.state);
       setConfirm(null);
@@ -158,6 +216,7 @@ export function Games() {
       }
       return result;
     } catch (reason) {
+      if (!mounted.current || version !== requestVersion.current) return;
       if (reason instanceof GameApiError && reason.status === 401) {
         setGuest(true);
         setState(null);
@@ -166,9 +225,11 @@ export function Games() {
         reason instanceof Error ? reason.message : 'Thao tác chưa hoàn tất. Vui lòng thử lại.',
       );
     } finally {
-      actionLock.current = false;
-      setBusy(false);
-      setPendingIndex(null);
+      if (mounted.current && version === requestVersion.current) {
+        actionLock.current = false;
+        setBusy(false);
+        setPendingIndex(null);
+      }
     }
   }
   async function flip(index: number, current = state) {
@@ -187,12 +248,14 @@ export function Games() {
       return;
     }
     flipInFlight.current = index;
+    const expectedVersion = requestVersion.current + 1;
     const result = await action(
       `flip-${memory.round}-${index}`,
       (id) => gameApi.flip(index, id),
       index,
       current,
     );
+    if (!mounted.current || expectedVersion !== requestVersion.current) return;
     flipInFlight.current = null;
     const next = queuedFlip.current;
     queuedFlip.current = null;
@@ -238,13 +301,21 @@ export function Games() {
         </div>
       </header>
       <div className="games-switch" role="group" aria-label="Chọn trò chơi">
-        <button aria-pressed={tab === 'memory'} onClick={() => setTab('memory')}>
+        <button
+          disabled={loading || busy}
+          aria-pressed={tab === 'memory'}
+          onClick={() => setTab('memory')}
+        >
           <Layers3 size={20} />
           <span>
             Lật thẻ làm bánh<small>Ghép đôi · Nhận 30.000đ</small>
           </span>
         </button>
-        <button aria-pressed={tab === 'collection'} onClick={() => setTab('collection')}>
+        <button
+          disabled={loading || busy}
+          aria-pressed={tab === 'collection'}
+          onClick={() => setTab('collection')}
+        >
           <Sparkles size={20} />
           <span>
             Sưu tập hương vị<small>Gom thẻ · Đổi quà</small>
@@ -311,6 +382,10 @@ export function Games() {
                   key={`${memory.round}-${card.index}`}
                   card={card}
                   face={card.cardId || revealedFaces.current[card.index] || null}
+                  displayPair={
+                    pairView?.round === memory.round && pairView.indices.includes(card.index)
+                  }
+                  onRevealed={() => cardRevealed(card.index)}
                   pending={pendingIndex === card.index || queuedIndex === card.index}
                   disabled={
                     (busy &&
@@ -377,7 +452,11 @@ export function Games() {
                   void action(`reward-${memory.round}`, () => gameApi.memoryReward(memory.round))
                 }
               >
-                {busy && pendingIndex === null ? 'Đang nhận thưởng…' : 'Nhận thưởng & chơi ván mới'}
+                {networkBusy && pendingIndex === null
+                  ? 'Đang nhận thưởng…'
+                  : pairView
+                    ? 'Đang xem kết quả…'
+                    : 'Nhận thưởng & chơi ván mới'}
               </button>
             </div>
           </aside>

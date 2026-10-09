@@ -5,6 +5,7 @@ import { AppRoutes } from '../routes/AppRoutes';
 import { NotificationCenterProvider } from '../components/NotificationCenter';
 import { ApiErrorRedirector } from './ApiErrorRedirector';
 import { AppErrorBoundary } from './AppErrorBoundary';
+import { PageLoading } from '../components/PageLoading';
 
 function RoutedApp() {
   const location = useLocation();
@@ -15,15 +16,9 @@ function RoutedApp() {
       <NotificationCenterProvider>
         <ShopProvider>
           <AppErrorBoundary
-            key={location.pathname === '/tin-tuc' ? location.pathname : location.key}
+            resetKey={location.pathname === '/tin-tuc' ? location.pathname : location.key}
           >
-            <Suspense
-              fallback={
-                <main className="section" role="status">
-                  Đang mở trang…
-                </main>
-              }
-            >
+            <Suspense fallback={<PageLoading />}>
               <AppRoutes />
             </Suspense>
           </AppErrorBoundary>

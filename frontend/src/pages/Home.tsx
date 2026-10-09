@@ -55,10 +55,13 @@ export function Home() {
           <div className="hero-photo">
             <img
               src="/brand/pastry.webp"
+              srcSet="/brand/pastry-640.webp 640w, /brand/pastry-960.webp 960w, /brand/pastry-1280.webp 1280w, /brand/pastry.webp 1500w"
+              sizes="(max-width: 640px) 560px, (max-width: 850px) 610px, (max-width: 1100px) 705px, 915px"
               alt="Minh họa bánh chả vàng giòn bên chén trà sen"
               width="1500"
               height="1000"
               fetchPriority="high"
+              loading="eager"
             />
           </div>
           <div className="round-seal">
@@ -176,16 +179,23 @@ export function Home() {
       </section>
       <section className="story-feature home-story-feature">
         <div className="story-feature-art">
-          <img className="story-pattern" src="/brand/pattern.webp" alt="" />
+          <img
+            className="story-pattern"
+            src="/brand/pattern-optimized.webp"
+            alt=""
+            loading="lazy"
+          />
           <img
             className="story-artisan one"
             src="/brand/artisan-mixing.webp"
             alt="Nhân vật trộn nhân bánh"
+            loading="lazy"
           />
           <img
             className="story-artisan two"
             src="/brand/artisan-baking.webp"
             alt="Nhân vật chăm chút khay bánh"
+            loading="lazy"
           />
           <span className="story-art-label">MỘT NÉT HÀ NỘI · MỘT VỊ THÂN QUEN</span>
         </div>

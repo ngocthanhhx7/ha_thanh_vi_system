@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { gameApi, gameImage } from '../services/gameApi';
+import { gameApi } from '../services/gameApi';
 import './game-launcher.css';
 
 export function GameLauncher() {
@@ -66,7 +66,7 @@ export function GameLauncher() {
       aria-label="Chơi cùng Hà Thành Vị, lật thẻ và sưu tập nhận ưu đãi"
     >
       <span className="game-launcher-cards" aria-hidden="true">
-        <img src={gameImage('card-back')} alt="" width="48" height="72" />
+        <img src="/brand/game/cards/card-back-launcher.webp" alt="" width="48" height="72" />
       </span>
       <span>Chơi & nhận quà</span>
     </Link>

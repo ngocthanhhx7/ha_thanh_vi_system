@@ -88,12 +88,43 @@ export class CustomerRepository {
   async sessionUser(token: string) {
     this.requireAvailable();
     if (!/^[a-f0-9]{64}$/.test(token)) return undefined;
-    const session = await CustomerSession.findOne({
-      tokenHash: hashSessionToken(token),
-      expiresAt: { $gt: new Date() },
-    }).lean();
+    // Resolve the session and current account in one database command. Keep live
+    // revocation/status checks, without a cache or two sequential network trips.
+    const [session] = await CustomerSession.aggregate<{
+      authVersion?: number;
+      user: Record<string, unknown>;
+    }>([
+      { $match: { tokenHash: hashSessionToken(token), expiresAt: { $gt: new Date() } } },
+      { $limit: 1 },
+      {
+        $lookup: {
+          from: CustomerUser.collection.name,
+          localField: 'userId',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                email: 1,
+                phone: 1,
+                role: 1,
+                accountStatus: 1,
+                accountStatusReason: 1,
+                accountStatusChangedAt: 1,
+                emailVerification: 1,
+                verifiedAt: 1,
+                authVersion: 1,
+              },
+            },
+          ],
+          as: 'user',
+        },
+      },
+      { $unwind: '$user' },
+      { $project: { _id: 0, authVersion: 1, user: 1 } },
+    ]);
     if (!session) return undefined;
-    const user = await CustomerUser.findById(session.userId).lean();
+    const user = session.user;
     return user &&
       (user.emailVerification !== 'required' || user.verifiedAt) &&
       user.accountStatus !== 'suspended' &&

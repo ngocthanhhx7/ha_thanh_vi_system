@@ -1,10 +1,8 @@
 import { subscribeChat } from '../services/chatRealtime';
 import { newerChatSnapshot } from '../services/chatSnapshot';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Send, X, Headphones, Sparkles } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { useShop } from '../hooks/useShop';
 import { ViOiMascot, type ViOiMascotMood } from './ViOiMascot';
 import {
@@ -16,6 +14,8 @@ import {
 } from '../services/chatApi';
 import { priceLabel } from '../utils/format';
 import './vi-oi-chat.css';
+
+const ChatMessage = lazy(() => import('./ChatMessage'));
 
 type Message = ChatHistory & {
   result?: ChatReply;
@@ -568,30 +568,9 @@ export function ViOiChat() {
                         ? 'Bạn'
                         : 'Vị Ơi'}
                   </span>
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    skipHtml
-                    urlTransform={(value) => safeUrl(value) || ''}
-                    components={{
-                      img: () => null,
-                      a: ({ href, children }) => {
-                        const url = safeUrl(href);
-                        return url ? (
-                          <a
-                            href={url}
-                            target={url.startsWith('/') ? undefined : '_blank'}
-                            rel="noopener noreferrer"
-                          >
-                            {children}
-                          </a>
-                        ) : (
-                          <span>{children}</span>
-                        );
-                      },
-                    }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
+                  <Suspense fallback={<p>{message.content}</p>}>
+                    <ChatMessage content={message.content} safeUrl={safeUrl} />
+                  </Suspense>
                   {message.result?.products
                     ?.filter((product) =>
                       catalog.some(

@@ -120,12 +120,25 @@ export class CustomerApiError extends Error {
   }
 }
 
+// Share only an active request. Completed account data is never cached.
+let activeSessionRequest: Promise<{ user: CustomerUser }> | undefined;
+let sessionGeneration = 0;
+const invalidateSessionRequest = () => {
+  sessionGeneration++;
+  activeSessionRequest = undefined;
+};
+if (typeof window !== 'undefined')
+  window.addEventListener('customer-session-changed', invalidateSessionRequest);
+
 async function customerRequest<T>(
   path: string,
   method = 'GET',
   body?: unknown,
   options: { silentUnauthorized?: boolean } = {},
 ): Promise<T> {
+  const changesSession =
+    method !== 'GET' && (path.startsWith('/auth/') || path === '/account/profile');
+  if (changesSession) invalidateSessionRequest();
   const response = await fetchWithErrorRouting(
     '/api' + path,
     {
@@ -137,6 +150,7 @@ async function customerRequest<T>(
     },
     path,
   );
+  if (changesSession) invalidateSessionRequest();
   if (response.status === 204) return undefined as T;
   const data = await response.json().catch(() => null);
   if (!response.ok && !(options.silentUnauthorized && response.status === 401))
@@ -155,7 +169,25 @@ async function customerRequest<T>(
 }
 
 export const customerApi = {
-  me: () => customerRequest<{ user: CustomerUser }>('/auth/me'),
+  me: () => {
+    if (!activeSessionRequest) {
+      const generation = sessionGeneration;
+      const pending = customerRequest<{ user: CustomerUser }>('/auth/me').then(
+        (result): { user: CustomerUser } | Promise<{ user: CustomerUser }> =>
+          generation === sessionGeneration ? result : customerApi.me(),
+        (error): Promise<{ user: CustomerUser }> => {
+          if (generation !== sessionGeneration) return customerApi.me();
+          throw error;
+        },
+      );
+      activeSessionRequest = pending;
+      const clear = () => {
+        if (activeSessionRequest === pending) activeSessionRequest = undefined;
+      };
+      void pending.then(clear, clear);
+    }
+    return activeSessionRequest;
+  },
   login: (body: { email: string; password: string; rememberDevice?: boolean }) =>
     customerRequest<{
       user?: CustomerUser;

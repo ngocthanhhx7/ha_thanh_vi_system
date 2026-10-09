@@ -1,5 +1,5 @@
 .home-hero {
-  --font-display: 'Noto Serif', 'Home Serif Fallback', serif;
+  --font-display: 'Home Serif Fallback', 'Noto Serif', serif;
   font-family: Archivo, 'Home UI Fallback', Arial, sans-serif;
   width: min(100%, 1600px);
   min-height: min(760px, calc(100svh - 118px));

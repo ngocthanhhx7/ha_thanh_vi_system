@@ -7,7 +7,7 @@
 - Những thành phần kiểm tra tài khoản cùng lúc gọi `/auth/me` riêng. Gộp promise đang chạy; không cache dữ liệu hoàn tất. Thay đổi phiên hủy hiệu lực phản hồi cũ.
 - Không có Cache-Control cho tài nguyên. Caddy cache một năm cho build assets có hash, một tuần cho ảnh/font brand có tên cố định, HTML phải xác minh lại. Các đường dẫn API/uploads vẫn đi qua proxy riêng.
 - Launcher hiển thị thẻ 48×72 nhưng tải ảnh 480×720. Thêm ảnh 96×144: 65.214 → 5.208 byte. Pattern 267.134 → 70.834 byte với đường dẫn mới; giữ bản gốc. Hero có các kích thước responsive, tải ưu tiên cao, preload chỉ khi vào trang chủ.
-- Font tải chậm làm tiêu đề đổi dòng rồi đẩy hero-photo xuống. Preload font sử dụng và chỉnh metric font dự phòng riêng cho hero. Font chính vẫn là bộ font thương hiệu.
+- Font tải chậm làm tiêu đề đổi dòng rồi đẩy hero-photo xuống. Preload font sử dụng; font dự phòng dùng bản rút gọn chính font thương hiệu được nhúng trong CSS, giữ nguyên metric và không phụ thuộc font có sẵn trên hệ điều hành. Trang chủ giải mã các font nhúng trước lần render đầu tiên, không chờ tải font qua HTTP.
 - Game tính thời gian xem từ mốc máy chủ trước transaction/mạng; cặp đúng bị fade ngay sau xoay. Đổi đồng hồ trình bày sang 1,6 giây sau khi cả hai ảnh giải mã và xoay mở hoàn tất. Giữ máy chủ quyết định kết quả/lượt/phần thưởng.
 
 ## Phạm vi và đo lường
@@ -18,7 +18,7 @@ Mốc trước sửa đo từ workstation bằng Lighthouse 13.5.0 mobile, cold 
 
 Độ trễ API/DB đọc riêng và giới hạn của phép đo được ghi tại [performance-backend.md](performance-backend.md). Không đo luồng game bằng cách phát thưởng/thay đổi tài khoản thật.
 
-Phép thử Chrome mobile tại máy, giữ font trễ 2 giây, cho CLS của hero giảm từ 0,12312 xuống 0,00199 sau khi chỉnh font dự phòng. Đây là phép thử kiểm soát, không phải điểm Lighthouse production. Tải trang đầu không có fade; hiệu ứng opacity 220 ms chỉ chạy khi điều hướng và tắt theo lựa chọn giảm chuyển động của người dùng.
+Phép thử Chrome mobile tại máy, giữ font trễ 2 giây, cho CLS giảm từ 0,12312 xuống 0,00028444 với font dự phòng nhúng. Cách dùng font hệ điều hành ban đầu đạt tại Windows nhưng không đạt Linux CI, nên đã được thay thế. Chi phí là thêm khoảng 45,5 kB gzip CSS dùng chung; chi tiết và script tái tạo ở [public-assets-performance.md](public-assets-performance.md). Đây là phép thử kiểm soát, không phải điểm Lighthouse production. Tải trang đầu không có fade; hiệu ứng opacity 220 ms chỉ chạy khi điều hướng và tắt theo lựa chọn giảm chuyển động của người dùng.
 
 Kiểm chứng trước triển khai: 120/120 test backend, bộ 114/114 test giao diện desktop/mobile và 18/18 kiểm tra game sau rà soát cuối, typecheck, lint và build đạt. Các kiểm tra game đo trạng thái xoay thực tế và độ hiển thị của cả hai thẻ, bao gồm phản hồi chậm, deadline máy chủ đã qua, ảnh tải lỗi có tên nguyên liệu thay thế, ván tiếp tục sau tải lại, chuyển tab, đổi phiên và retry khi lỗi mạng.
 

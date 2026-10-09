@@ -30,6 +30,14 @@ test('the mobile hero keeps its position when the bundled fonts arrive late', as
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   const hero = page.locator('.home-hero .hero-photo');
   await expect(hero).toBeVisible();
+  // While every network font is held, the portable brand subset must already be usable.
+  // This catches reliance on local Times/Arial fonts that may be absent on Linux/macOS.
+  expect(
+    await page.evaluate(() => document.fonts.check('40px "Home Serif Fallback"', 'Ắằ Đđ Ỡỡ Ựự Ỷỷ')),
+  ).toBe(true);
+  expect(
+    await page.evaluate(() => document.fonts.check('13px "Home UI Fallback"', 'Ớớ Ụụ Ỹỹ 0123')),
+  ).toBe(true);
   const before = await hero.boundingBox();
   expect(await page.evaluate(() => document.fonts.status)).toBe('loading');
   release();

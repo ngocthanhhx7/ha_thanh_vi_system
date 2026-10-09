@@ -3,7 +3,16 @@ import { ArrowDown, ArrowRight, Flower2, Gift, Coffee, Pause, Play } from 'lucid
 import { Link } from 'react-router-dom';
 import { useShop } from '../hooks/useShop';
 import { ProductCard, TextLink } from '../components/ProductCard';
+import './home-critical-fonts.css';
 import './home-public.css';
+// Decode the inline faces before the first hero layout, rather than swapping from an OS font.
+// The data is already in the route CSS; this does not wait for any network font request.
+export const homeFontsReady = Promise.all([
+  document.fonts.load('400 40px "Home Serif Fallback"'),
+  document.fonts.load('italic 400 40px "Home Serif Fallback"'),
+  document.fonts.load('400 13px "Home UI Fallback"'),
+]).catch(() => undefined);
+
 export function Home() {
   const [valuesRibbonPaused, setValuesRibbonPaused] = useState(false);
   const {

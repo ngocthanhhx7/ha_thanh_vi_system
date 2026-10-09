@@ -1,22 +1,3 @@
-/* Match the bundled fonts' text widths while they load so the mobile hero keeps its rows. */
-@font-face {
-  font-family: 'Home Serif Fallback';
-  src: local('Times New Roman'), local('Liberation Serif');
-  font-style: normal;
-  size-adjust: 118.26%;
-}
-@font-face {
-  font-family: 'Home Serif Fallback';
-  src: local('Times New Roman Italic'), local('Liberation Serif Italic');
-  font-style: italic;
-  size-adjust: 112.48%;
-}
-@font-face {
-  font-family: 'Home UI Fallback';
-  src: local('Arial'), local('Liberation Sans');
-  font-weight: 100 900;
-  size-adjust: 124.19%;
-}
 .home-hero {
   --font-display: 'Noto Serif', 'Home Serif Fallback', serif;
   font-family: Archivo, 'Home UI Fallback', Arial, sans-serif;

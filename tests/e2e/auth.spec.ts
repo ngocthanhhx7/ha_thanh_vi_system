@@ -59,7 +59,7 @@ test('registration confirms password then requires email OTP before creating a s
   await page.getByLabel('Tin cậy thiết bị này trong 30 ngày').check();
   await page.getByLabel('Mã xác minh', { exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Xác minh', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Xin chào, Bạn mới.' })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
 });
 test('new device login handles invalid OTP and preserves challenge for retry', async ({ page }) => {
   let attempts = 0;
@@ -89,7 +89,7 @@ test('new device login handles invalid OTP and preserves challenge for retry', a
   await expect(page.getByRole('alert')).toContainText('Mã chưa đúng');
   await page.getByLabel('Mã xác minh', { exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Xác minh', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Xin chào, Bạn mới.' })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
 });
 test('forgot and reset password use generic messaging and scrub token from URL', async ({
   page,
@@ -184,7 +184,7 @@ test('pending account login with verified password enters email verification fro
   await expect(page.getByRole('button', { name: 'Gửi lại mã', exact: true })).toBeEnabled();
   await page.getByLabel('Mã xác minh', { exact: true }).fill('123456');
   await page.getByRole('button', { name: 'Xác minh', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Xin chào, Bạn mới.' })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test('ordinary login rejection remains an error and does not enter OTP', async ({ page }) => {

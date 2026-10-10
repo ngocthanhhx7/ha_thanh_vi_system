@@ -30,6 +30,7 @@ import { createChatRouter } from './routes/chatRoutes.js';
 import { createChatHandoffRouter } from './routes/chatHandoffRoutes.js';
 import { ChatHandoffService } from './services/chatHandoffService.js';
 import { createAdminProductRouter } from './routes/adminProductRoutes.js';
+import { createAdminIngredientRouter } from './routes/adminIngredientRoutes.js';
 import { uploadDirectory } from './services/productImageService.js';
 import { systemAuditMiddleware } from './middlewares/systemAudit.js';
 
@@ -182,6 +183,7 @@ export function createApp({
   const contentService = new ContentService(repository, seedContent);
   const contactService = new ContactService(repository);
   app.use('/api', createAdminProductRouter(contentService, adminAuth, adminLimiter));
+  app.use('/api', createAdminIngredientRouter(contentService, adminAuth, adminLimiter));
   const chatService = new ChatService(
     contentService,
     {

@@ -10,6 +10,7 @@ import type { OrderRepository } from './services/orderRepository.js';
 import { UnavailableOrderRepository } from './services/unavailableOrderRepository.js';
 import type { SiteContent } from './validators/content.js';
 import { attachChatRealtime } from './services/chatRealtime.js';
+import { migrateIngredientCatalog } from './services/ingredientMigration.js';
 
 async function start() {
   const config = readConfig();
@@ -19,6 +20,7 @@ async function start() {
     try {
       await connectDatabase(config.mongoUri);
       await repository.seedIfAbsent(seedContent);
+      await migrateIngredientCatalog(repository, seedContent);
       await initializeCustomerIndexes();
     } catch {
       await disconnectDatabase().catch(() => undefined);

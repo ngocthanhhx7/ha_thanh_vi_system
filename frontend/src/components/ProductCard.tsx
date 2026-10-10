@@ -3,7 +3,13 @@ import { ArrowUpRight, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { type Product } from '../constants/catalog';
 import { useShop } from '../hooks/useShop';
-export function ProductArt({ product }: { product: Product }) {
+export function ProductArt({
+  product,
+  priority = false,
+}: {
+  product: Product;
+  priority?: boolean;
+}) {
   return (
     <div className={'product-art ' + (product.category === 'qua-tang' ? 'gift-art' : 'pastry-art')}>
       <img
@@ -13,7 +19,9 @@ export function ProductArt({ product }: { product: Product }) {
             ? 'Minh họa nhận diện cho ' + product.name
             : 'Ảnh bánh minh họa ý tưởng, không phải ảnh sản phẩm thực tế'
         }
-        loading="lazy"
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : undefined}
+        draggable={false}
         width="700"
         height="700"
       />

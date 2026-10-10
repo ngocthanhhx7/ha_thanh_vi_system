@@ -25,7 +25,8 @@
       "price": 79000,
       "featured": true,
       "packaging": "Túi zip",
-      "packageContents": ["1 túi zip bánh chả 350g – Vị Truyền Thống"]
+      "packageContents": ["1 túi zip bánh chả 350g – Vị Truyền Thống"],
+      "ingredientIds": ["flour", "sticky-rice", "lard", "sugar", "oil", "lime-leaf"]
     },
     {
       "id": "banh-cha-socola",
@@ -39,7 +40,17 @@
       "price": 89000,
       "featured": false,
       "packaging": "Túi zip",
-      "packageContents": ["1 túi zip bánh chả 350g – Vị Socola Trứng Muối"]
+      "packageContents": ["1 túi zip bánh chả 350g – Vị Socola Trứng Muối"],
+      "ingredientIds": [
+        "flour",
+        "sticky-rice",
+        "lard",
+        "sugar",
+        "oil",
+        "lime-leaf",
+        "salted-egg",
+        "cacao"
+      ]
     },
     {
       "id": "banh-cha-matcha",
@@ -53,7 +64,17 @@
       "price": 89000,
       "featured": false,
       "packaging": "Túi zip",
-      "packageContents": ["1 túi zip bánh chả 350g – Vị Matcha Trứng Muối"]
+      "packageContents": ["1 túi zip bánh chả 350g – Vị Matcha Trứng Muối"],
+      "ingredientIds": [
+        "flour",
+        "sticky-rice",
+        "lard",
+        "sugar",
+        "oil",
+        "lime-leaf",
+        "salted-egg",
+        "matcha"
+      ]
     },
     {
       "id": "set-qua-thuong",
@@ -67,7 +88,18 @@
       "price": 249000,
       "featured": true,
       "tagline": "Gánh chút hương Hà Thành, gửi trao chút tình.",
-      "packaging": "Set quà thường"
+      "packaging": "Set quà thường",
+      "ingredientIds": [
+        "flour",
+        "sticky-rice",
+        "lard",
+        "sugar",
+        "oil",
+        "lime-leaf",
+        "salted-egg",
+        "cacao",
+        "matcha"
+      ]
     },
     {
       "id": "set-qua-cao-cap",
@@ -81,7 +113,83 @@
       "price": 399000,
       "featured": true,
       "tagline": "Gánh vị quê nhà, trao trọn tình thân.",
-      "packaging": "Set quà cao cấp"
+      "packaging": "Set quà cao cấp",
+      "ingredientIds": [
+        "flour",
+        "sticky-rice",
+        "lard",
+        "sugar",
+        "oil",
+        "lime-leaf",
+        "salted-egg",
+        "cacao",
+        "matcha"
+      ]
+    }
+  ],
+  "ingredients": [
+    {
+      "id": "flour",
+      "name": "BỘT MÌ",
+      "image": "/brand/game/cards/flour.webp",
+      "description": "Bột mì là nguyên liệu chính tạo nên phần vỏ bánh. Khi được trộn và nướng, bột tạo kết cấu chắc, khô ráo và độ giòn đặc trưng cho bánh chả.",
+      "coreFlavor": "Tạo phần vỏ giòn, thơm và kết cấu đặc trưng của bánh."
+    },
+    {
+      "id": "sticky-rice",
+      "name": "BỘT NẾP",
+      "image": "/brand/game/cards/sticky-rice.webp",
+      "description": "Bột nếp được sử dụng với tỷ lệ nhỏ trong công thức, góp phần tạo độ kết dính và điều chỉnh kết cấu của khối bột.",
+      "coreFlavor": "Hỗ trợ độ kết dính và tạo kết cấu hài hòa cho bánh."
+    },
+    {
+      "id": "lard",
+      "name": "MỠ LỢN",
+      "image": "/brand/game/cards/lard.webp",
+      "description": "Mỡ lợn là thành phần đặc trưng của bánh chả truyền thống, tạo vị béo rõ rệt và góp phần làm phần nhân có độ ẩm, không bị quá khô sau khi nướng.",
+      "coreFlavor": "Tạo vị béo đặc trưng và độ mềm ẩm cho phần nhân."
+    },
+    {
+      "id": "sugar",
+      "name": "ĐƯỜNG",
+      "image": "/brand/game/cards/sugar.webp",
+      "description": "Đường tạo vị ngọt cho bánh, đồng thời cân bằng với vị béo của mỡ, vị mặn nhẹ và hương lá chanh trong tổng thể công thức.",
+      "coreFlavor": "Tạo vị ngọt và cân bằng tổng thể hương vị của bánh."
+    },
+    {
+      "id": "oil",
+      "name": "DẦU ĂN",
+      "image": "/brand/game/cards/oil.webp",
+      "description": "Dầu ăn bổ sung chất béo cho khối bột, giúp nguyên liệu dễ hòa quyện hơn và hạn chế cảm giác quá khô sau khi nướng.",
+      "coreFlavor": "Hỗ trợ độ mềm và độ ẩm của kết cấu bánh."
+    },
+    {
+      "id": "lime-leaf",
+      "name": "LÁ CHANH",
+      "image": "/brand/game/cards/lime-leaf.webp",
+      "description": "Lá chanh là một trong những nguyên liệu tạo nên mùi thơm dễ nhận biết của bánh chả Hà Nội. Hương lá chanh giúp cân bằng cảm giác béo và tạo nét riêng cho sản phẩm.",
+      "coreFlavor": "Hương thơm thanh, đặc trưng và gợi rõ nét vị bánh chả Hà Nội."
+    },
+    {
+      "id": "salted-egg",
+      "name": "TRỨNG MUỐI",
+      "image": "/brand/game/cards/salted-egg.webp",
+      "description": "Trứng muối được bổ sung trong hai phiên bản biến tấu của HÀ THÀNH VỊ, mang lại vị mặn, béo và giúp hương vị bánh có chiều sâu hơn.",
+      "coreFlavor": "Tạo vị mặn béo, làm rõ sự tương phản với nền bánh ngọt."
+    },
+    {
+      "id": "cacao",
+      "name": "BỘT CACAO",
+      "image": "/brand/game/cards/cacao.webp",
+      "description": "Bột cacao được sử dụng trong phiên bản socola trứng muối, tạo màu nâu và hương cacao đặc trưng, đồng thời bổ sung hậu vị hơi đắng nhẹ.",
+      "coreFlavor": "Hương cacao rõ nét, đắng nhẹ và cân bằng với vị ngọt, béo của bánh."
+    },
+    {
+      "id": "matcha",
+      "name": "BỘT MATCHA",
+      "image": "/brand/game/cards/matcha.webp",
+      "description": "Bột matcha được sử dụng trong phiên bản matcha trứng muối, tạo màu xanh và hương trà đặc trưng, với hậu vị hơi đắng và thanh.",
+      "coreFlavor": "Hương trà đặc trưng, hậu vị thanh và hơi đắng nhẹ, cân bằng với vị béo ngọt."
     }
   ]
 }

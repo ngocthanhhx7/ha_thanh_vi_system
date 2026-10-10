@@ -2,6 +2,7 @@ import { isIP } from 'node:net';
 import { z } from 'zod';
 export type SiteContent = z.infer<typeof contentSchema>;
 export type Product = SiteContent['products'][number];
+export type Ingredient = z.infer<typeof ingredientSchema>;
 export type ContactInput = z.infer<typeof contactSchema>;
 
 const text = (max: number) => z.string().trim().min(1).max(max);
@@ -53,6 +54,16 @@ const slug = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
   .max(100);
 
+export const ingredientSchema = z
+  .object({
+    id: slug,
+    name: text(160),
+    image: z.string().min(1).max(2048).refine(isSafeImage),
+    description: text(2000),
+    coreFlavor: text(1000),
+  })
+  .strict();
+
 export const productSchema = z
   .object({
     id: slug,
@@ -67,6 +78,11 @@ export const productSchema = z
     packageContents: z.array(text(300)).max(20).optional(),
     ingredients: text(2000).optional(),
     ingredientImage: z.string().max(2048).refine(isSafeImage).optional(),
+    ingredientIds: z
+      .array(slug)
+      .max(100)
+      .refine((ids) => new Set(ids).size === ids.length, 'Thành phần không được trùng.')
+      .optional(),
     allergens: text(1000).optional(),
     storage: text(1000).optional(),
     image: z
@@ -99,12 +115,40 @@ export const contentSchema = z
   .object({
     site: siteContentSchema,
     products: z.array(productSchema).max(200),
+    ingredients: z.array(ingredientSchema).max(100).optional(),
   })
   .strict()
   .superRefine((content, ctx) => {
+    const ingredientIds = new Set<string>();
+    const ingredientNames = new Set<string>();
+    for (const [index, ingredient] of (content.ingredients ?? []).entries()) {
+      if (ingredientIds.has(ingredient.id))
+        ctx.addIssue({
+          code: 'custom',
+          path: ['ingredients', index, 'id'],
+          message: 'ID thành phần không được trùng.',
+        });
+      const name = ingredient.name.normalize('NFC').toLocaleLowerCase('vi-VN');
+      if (ingredientNames.has(name))
+        ctx.addIssue({
+          code: 'custom',
+          path: ['ingredients', index, 'name'],
+          message: 'Tên thành phần không được trùng.',
+        });
+      ingredientIds.add(ingredient.id);
+      ingredientNames.add(name);
+    }
     const slugs = new Set<string>();
     const ids = new Set<string>();
     for (const [index, product] of content.products.entries()) {
+      for (const [position, id] of (product.ingredientIds ?? []).entries()) {
+        if (!ingredientIds.has(id))
+          ctx.addIssue({
+            code: 'custom',
+            path: ['products', index, 'ingredientIds', position],
+            message: 'Thành phần chưa có trong danh mục.',
+          });
+      }
       if (ids.has(product.id))
         ctx.addIssue({
           code: 'custom',

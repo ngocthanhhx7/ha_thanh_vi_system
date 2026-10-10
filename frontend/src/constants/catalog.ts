@@ -1,4 +1,11 @@
 import initialContent from '../../../content/site.json';
+export type Ingredient = {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  coreFlavor: string;
+};
 export type Product = {
   id: string;
   slug: string;
@@ -12,6 +19,7 @@ export type Product = {
   packageContents?: string[];
   ingredients?: string;
   ingredientImage?: string;
+  ingredientIds?: string[];
   allergens?: string;
   storage?: string;
   image: string;
@@ -19,5 +27,5 @@ export type Product = {
   featured: boolean;
 };
 export type Site = typeof initialContent.site;
-export type Content = { site: Site; products: Product[] };
+export type Content = { site: Site; products: Product[]; ingredients?: Ingredient[] };
 export const seed: Content = initialContent;

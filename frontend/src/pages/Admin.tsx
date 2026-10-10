@@ -16,6 +16,10 @@ import {
   YAxis,
 } from 'recharts';
 import { AdminSystemLogs, WorkspaceFrame, WorkspaceNotifications } from '../components/Workspace';
+import {
+  IngredientManagement,
+  ProductIngredientSelector,
+} from '../components/IngredientManagement';
 import { type Content, type Product } from '../constants/catalog';
 import { orderStatuses } from '../constants/commerce';
 import { useShop } from '../hooks/useShop';
@@ -24,7 +28,8 @@ import { customerApi, CustomerApiError, type CustomerUser } from '../services/cu
 import { priceLabel } from '../utils/format';
 import './admin.css';
 
-type AdminTab = 'overview' | 'products' | 'site' | 'stats' | 'notifications' | 'logs';
+type AdminTab =
+  'overview' | 'products' | 'ingredients' | 'site' | 'stats' | 'notifications' | 'logs';
 type ProductSort = 'name' | 'price' | 'category';
 type ProductPage = {
   products: Product[];
@@ -44,7 +49,15 @@ type Statistics = {
   dailyOrders: { date: string; orders: number; collected: number }[];
 };
 
-const tabValues: AdminTab[] = ['overview', 'products', 'site', 'stats', 'notifications', 'logs'];
+const tabValues: AdminTab[] = [
+  'overview',
+  'products',
+  'ingredients',
+  'site',
+  'stats',
+  'notifications',
+  'logs',
+];
 const categoryLabels: Record<string, string> = {
   'banh-cha': 'Bánh chả',
   'qua-tang': 'Quà tặng',
@@ -59,6 +72,7 @@ const emptyProduct = (): Product => ({
   flavor: '',
   description: '',
   image: '',
+  ingredientIds: [],
   price: null,
   featured: false,
 });
@@ -92,6 +106,10 @@ const tabHeadings: Record<AdminTab, { title: string; description: string }> = {
   products: {
     title: 'Quản lý sản phẩm',
     description: 'Tìm kiếm, lọc, sắp xếp và cập nhật catalog theo từng trang.',
+  },
+  ingredients: {
+    title: 'Quản lý thành phần',
+    description: 'Quản lý tên, ảnh và hương vị cốt lõi để chọn cho từng sản phẩm.',
   },
   site: {
     title: 'Nội dung website',
@@ -313,10 +331,9 @@ export function Admin() {
     setError('');
     setStatus('');
     try {
-      const latest = await request<{ products: Product[] }>('/admin/products');
-      await request('/admin/content', {
-        method: 'PUT',
-        body: JSON.stringify({ site: content.site, products: latest.products }),
+      await request('/admin/site', {
+        method: 'PATCH',
+        body: JSON.stringify(content.site),
       });
       setStatus('Đã lưu nội dung thương hiệu.');
       setContentRevision((revision) => revision + 1);
@@ -430,6 +447,7 @@ export function Admin() {
         {tab === 'overview' && <AdminAnalytics mode="overview" />}
 
         {tab === 'stats' && <AdminAnalytics mode="report" />}
+        {tab === 'ingredients' && <IngredientManagement />}
 
         {tab === 'products' && (
           <section className="admin-catalog workspace-panel" aria-labelledby="admin-products-title">
@@ -752,13 +770,15 @@ function ProductEditor({
 }) {
   const [draft, setDraft] = useState<Product>(value);
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState<'image' | 'ingredientImage' | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const disabled = busy || uploading !== null;
+  const [catalogReady, setCatalogReady] = useState(false);
+  const disabled = busy || uploading;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (!catalogReady || disabled) return;
     setBusy(true);
     setError('');
     try {
@@ -770,7 +790,7 @@ function ProductEditor({
     }
   }
 
-  async function upload(file: File | undefined, key: 'image' | 'ingredientImage') {
+  async function upload(file: File | undefined) {
     if (!file) return;
     setError('');
     setNotice('');
@@ -782,18 +802,18 @@ function ProductEditor({
       setError('Ảnh tối đa 5 MB.');
       return;
     }
-    setUploading(key);
+    setUploading(true);
     try {
       const result = await request<{ url: string; width: number; height: number }>(
         '/admin/uploads',
         { method: 'POST', headers: { 'Content-Type': file.type }, body: file },
       );
-      setDraft((previous) => ({ ...previous, [key]: result.url }));
+      setDraft((previous) => ({ ...previous, image: result.url }));
       setNotice('Đã tải ảnh. Lưu sản phẩm để cập nhật ảnh trên website.');
     } catch (reason) {
       setError(errorMessage(reason));
     } finally {
-      setUploading(null);
+      setUploading(false);
     }
   }
 
@@ -889,34 +909,33 @@ function ProductEditor({
               }
             />
           </label>
-          {(['image', 'ingredientImage'] as const).map((key) => (
-            <div key={key} className="admin-image-field">
-              <label className="field">
-                {key === 'image' ? 'Đường dẫn ảnh sản phẩm' : 'Đường dẫn ảnh bảng thành phần'}
-                <input
-                  value={draft[key] || ''}
-                  required={key === 'image'}
-                  onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
-                />
-              </label>
-              <label className="field">
-                {key === 'image' ? 'Tải ảnh sản phẩm' : 'Tải ảnh bảng thành phần'}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(event) => void upload(event.target.files?.[0], key)}
-                />
-                <small>JPEG, PNG hoặc WebP, tối đa 5 MB.</small>
-              </label>
-              {draft[key] && (
-                <img
-                  className="admin-image-preview"
-                  src={draft[key]}
-                  alt={key === 'image' ? 'Xem trước ảnh sản phẩm' : 'Xem trước bảng thành phần'}
-                />
-              )}
-            </div>
-          ))}
+          <ProductIngredientSelector
+            selected={draft.ingredientIds || []}
+            onChange={(ingredientIds) => setDraft((previous) => ({ ...previous, ingredientIds }))}
+            onReady={setCatalogReady}
+          />
+          <div className="admin-image-field">
+            <label className="field">
+              Đường dẫn ảnh sản phẩm
+              <input
+                value={draft.image}
+                required
+                onChange={(event) => setDraft({ ...draft, image: event.target.value })}
+              />
+            </label>
+            <label className="field">
+              Tải ảnh sản phẩm
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => void upload(event.target.files?.[0])}
+              />
+              <small>JPEG, PNG hoặc WebP, tối đa 5 MB.</small>
+            </label>
+            {draft.image && (
+              <img className="admin-image-preview" src={draft.image} alt="Xem trước ảnh sản phẩm" />
+            )}
+          </div>
           <label className="auth-remember">
             <input
               type="checkbox"
@@ -939,7 +958,7 @@ function ProductEditor({
         </p>
       )}
       <div className="admin-editor-actions">
-        <button className="button" disabled={disabled}>
+        <button className="button" disabled={disabled || !catalogReady}>
           {busy ? 'Đang lưu…' : create ? 'Tạo sản phẩm' : 'Lưu sản phẩm'}
         </button>
         <button

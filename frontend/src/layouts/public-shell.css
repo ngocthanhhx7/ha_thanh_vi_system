@@ -255,3 +255,8 @@ footer > * {
     mask-image: linear-gradient(180deg, #000, transparent 85%);
   }
 }
+.public-layout img {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}

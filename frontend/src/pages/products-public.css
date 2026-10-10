@@ -1,9 +1,13 @@
-.public-products-page {
+.public-products-page,
+.public-product-detail {
   --public-ink: #412c26;
   --public-red: #791f2a;
   --public-gold: #c38a36;
   --public-muted: #77675c;
   --public-line: #d9c7b3;
+}
+
+.public-products-page {
   overflow: hidden;
   background: var(--cream);
 }
@@ -596,8 +600,8 @@
 }
 
 .public-product-detail.section {
-  max-width: 1500px;
-  padding: clamp(28px, 4vw, 54px) clamp(24px, 6vw, 90px) clamp(72px, 9vw, 125px);
+  max-width: 1920px;
+  padding: clamp(28px, 4vw, 54px) clamp(24px, 3.5vw, 66px) clamp(72px, 9vw, 125px);
 }
 
 .public-product-detail .breadcrumbs {
@@ -621,34 +625,42 @@
 }
 
 .public-detail-hero {
-  grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
   align-items: center;
-  gap: clamp(42px, 7vw, 105px);
+  gap: clamp(28px, 3.5vw, 66px);
 }
 
-.public-detail-hero > .product-art {
+.public-product-detail .public-detail-hero > .product-art {
+  box-sizing: border-box;
+  width: 100%;
   height: auto;
-  min-height: 430px;
-  aspect-ratio: 1.02;
+  min-height: 0;
+  aspect-ratio: 1;
   border: 1px solid rgb(195 138 54 / 55%);
-  border-radius: 48% 48% 8px 8px;
+  border-radius: 18px;
   background: radial-gradient(ellipse at 48% 42%, #f5e5c5, #e7d5b8);
   box-shadow: 0 22px 62px rgb(70 31 33 / 10%);
 }
 
-.public-detail-hero > .product-art img {
+.public-product-detail .public-detail-hero > .product-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: transform 650ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-.public-detail-hero > .product-art:hover img {
+.public-product-detail .public-detail-hero > .product-art:hover img {
   transform: scale(1.035);
 }
 
-.public-detail-hero > .product-art.gift-art {
-  padding: clamp(48px, 8vw, 100px);
+.public-product-detail .public-detail-hero > .product-art.gift-art {
+  padding: clamp(30px, 4vw, 66px);
 }
 
-.public-detail-hero > .product-art.gift-art img {
+.public-product-detail .public-detail-hero > .product-art.gift-art img {
+  position: static;
   width: 100%;
   height: 100%;
   aspect-ratio: 1;
@@ -656,7 +668,7 @@
 }
 
 .public-detail-hero .detail-copy {
-  max-width: 590px;
+  max-width: 700px;
   padding-block: 20px;
 }
 
@@ -940,8 +952,8 @@
     gap: 38px;
   }
 
-  .public-detail-hero > .product-art {
-    min-height: 370px;
+  .public-product-detail .public-detail-hero > .product-art {
+    min-height: 0;
   }
 }
 
@@ -1017,7 +1029,7 @@
     gap: 34px;
   }
 
-  .public-detail-hero > .product-art {
+  .public-product-detail .public-detail-hero > .product-art {
     width: min(100%, 620px);
     min-height: 0;
     justify-self: center;
@@ -1193,12 +1205,12 @@
     gap: 26px;
   }
 
-  .public-detail-hero > .product-art {
+  .public-product-detail .public-detail-hero > .product-art {
     width: min(100%, 450px);
-    aspect-ratio: 0.98;
+    aspect-ratio: 1;
   }
 
-  .public-detail-hero > .product-art.gift-art {
+  .public-product-detail .public-detail-hero > .product-art.gift-art {
     padding: 52px;
   }
 

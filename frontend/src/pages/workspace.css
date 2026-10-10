@@ -157,6 +157,9 @@
 .workspace-mobile-top {
   display: none;
 }
+.workspace-mobile-logout-error {
+  display: none;
+}
 .workspace-page-heading {
   display: flex;
   justify-content: space-between;
@@ -784,6 +787,26 @@
     background: #352b23;
     color: #fff;
   }
+  .workspace-mobile-top > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #7e6956;
+    border-radius: 6px;
+    padding: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.72rem;
+    cursor: pointer;
+  }
+  .workspace-mobile-top > button:disabled {
+    opacity: 0.6;
+  }
+  .workspace-mobile-logout-error {
+    display: block;
+    margin: 12px 14px;
+  }
   .workspace-mobile-top .workspace-brand {
     display: flex;
     padding: 0;
@@ -791,11 +814,11 @@
   .workspace-mobile-top .workspace-brand-logo {
     width: 78px;
   }
-  .workspace-mobile-top > a:last-child {
+  .workspace-mobile-top > a[aria-label] {
     position: relative;
     color: #fff;
   }
-  .workspace-mobile-top > a:last-child span {
+  .workspace-mobile-top > a[aria-label] span {
     position: absolute;
     top: -7px;
     right: -9px;

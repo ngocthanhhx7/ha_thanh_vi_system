@@ -236,8 +236,14 @@ export function Account() {
           onAuthenticated={(verifiedUser) => {
             clearPrivateData();
             setUser(verifiedUser);
-            setSection('orders');
-            setSearchParams({ section: 'orders' });
+            navigate(
+              verifiedUser.role === 'admin'
+                ? '/admin?tab=overview'
+                : verifiedUser.role === 'staff'
+                  ? '/quan-tri?tab=dashboard'
+                  : '/',
+              { replace: true },
+            );
           }}
         />
       </section>
@@ -295,6 +301,7 @@ export function Account() {
                 setUser(null);
                 clearPrivateData();
                 window.dispatchEvent(new Event('customer-session-changed'));
+                navigate('/', { replace: true });
               }, 'Bạn đã đăng xuất.')
             }
           >

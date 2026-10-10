@@ -13,6 +13,7 @@ import {
   LogOut,
   MessageSquareText,
   Package,
+  Sprout,
   ShieldAlert,
   Users,
 } from 'lucide-react';
@@ -33,6 +34,7 @@ type WorkspaceTab =
   | 'users'
   | 'vouchers'
   | 'products'
+  | 'ingredients'
   | 'site'
   | 'stats'
   | 'notifications'
@@ -46,6 +48,7 @@ const labels: Record<WorkspaceTab, string> = {
   users: 'Nhân sự & tài khoản',
   vouchers: 'Ưu đãi',
   products: 'Sản phẩm',
+  ingredients: 'Thành phần',
   site: 'Nội dung website',
   stats: 'Báo cáo',
   notifications: 'Thông báo',
@@ -60,6 +63,7 @@ const iconFor: Record<WorkspaceTab, typeof House> = {
   users: Users,
   vouchers: Gift,
   products: Package,
+  ingredients: Sprout,
   site: FileText,
   stats: ChartNoAxesCombined,
   notifications: Bell,
@@ -69,7 +73,7 @@ const iconFor: Record<WorkspaceTab, typeof House> = {
 function hrefFor(tab: WorkspaceTab, role: CustomerUser['role']) {
   if (tab === 'dashboard')
     return role === 'admin' ? '/admin?tab=overview' : '/quan-tri?tab=dashboard';
-  if (['products', 'site', 'stats'].includes(tab)) return '/admin?tab=' + tab;
+  if (['products', 'ingredients', 'site', 'stats'].includes(tab)) return '/admin?tab=' + tab;
   return '/quan-tri?tab=' + tab;
 }
 
@@ -84,6 +88,7 @@ export function WorkspaceFrame({
 }) {
   const [unread, setUnread] = useState(0);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
   const navigate = useNavigate();
   const tabs: WorkspaceTab[] =
     user.role === 'admin'
@@ -93,6 +98,7 @@ export function WorkspaceFrame({
           'tickets',
           'chat',
           'products',
+          'ingredients',
           'users',
           'vouchers',
           'site',
@@ -122,10 +128,13 @@ export function WorkspaceFrame({
   async function logout() {
     if (loggingOut) return;
     setLoggingOut(true);
+    setLogoutError('');
     try {
       await customerApi.logout();
       window.dispatchEvent(new Event('customer-session-changed'));
-      navigate('/tai-khoan', { replace: true });
+      navigate('/', { replace: true });
+    } catch (reason) {
+      setLogoutError(reason instanceof Error ? reason.message : 'Chưa thể đăng xuất. Thử lại nhé.');
     } finally {
       setLoggingOut(false);
     }
@@ -177,6 +186,7 @@ export function WorkspaceFrame({
           })}
         </nav>
         <div className="workspace-sidebar-bottom">
+          {logoutError && <p role="alert">{logoutError}</p>}
           <Link to="/">
             <Boxes size={17} /> Xem website
           </Link>
@@ -203,7 +213,15 @@ export function WorkspaceFrame({
             <Bell size={20} />
             {unread > 0 && <span>{unread > 99 ? '99+' : unread}</span>}
           </Link>
+          <button type="button" onClick={() => void logout()} disabled={loggingOut}>
+            <LogOut size={17} aria-hidden="true" /> {loggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
+          </button>
         </div>
+        {logoutError && (
+          <p className="workspace-mobile-logout-error account-error" role="alert">
+            {logoutError}
+          </p>
+        )}
         <div className="workspace-page">{children}</div>
       </main>
     </div>

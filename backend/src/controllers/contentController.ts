@@ -61,5 +61,20 @@ export function contentControllers(content: ContentService, contacts: ContactSer
       next(error);
     }
   };
-  return { getContent, getProducts, getProduct, createContact, getAdminContent, putAdminContent };
+  const patchAdminSite: RequestHandler = async (req, res, next) => {
+    try {
+      res.json(await content.updateSite(req.body));
+    } catch (error) {
+      next(error);
+    }
+  };
+  return {
+    getContent,
+    getProducts,
+    getProduct,
+    createContact,
+    getAdminContent,
+    putAdminContent,
+    patchAdminSite,
+  };
 }

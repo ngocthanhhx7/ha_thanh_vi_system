@@ -1,6 +1,75 @@
 .admin-workspace {
   max-width: 1200px;
 }
+.admin-ingredient-list,
+.admin-ingredient-selector {
+  display: grid;
+  gap: 14px;
+}
+.admin-ingredient-selector h3,
+.admin-ingredient-selector p,
+.admin-ingredient-row h3,
+.admin-ingredient-row p {
+  margin: 0;
+}
+.admin-ingredient-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid #ded2bd;
+  border-radius: 12px;
+}
+.admin-ingredient-row > img {
+  flex: 0 0 72px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.admin-ingredient-row > div:not(.admin-row-actions) {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+.admin-ingredient-row p {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.admin-ingredient-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.admin-ingredient-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #f5eddf;
+  border: 1px solid #ded2bd;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.admin-ingredient-option img {
+  object-fit: contain;
+  border-radius: 4px;
+}
+.admin-ingredient-option input {
+  flex-shrink: 0;
+  accent-color: #8b2430;
+}
+@media (max-width: 700px) {
+  .admin-ingredient-row {
+    flex-wrap: wrap;
+  }
+  .admin-ingredient-row > div:not(.admin-row-actions) {
+    flex: 1;
+  }
+  .admin-ingredient-row .admin-row-actions {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+  }
+}
 .admin-toolbar {
   display: flex;
   align-items: center;

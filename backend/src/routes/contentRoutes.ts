@@ -11,6 +11,7 @@ export function createContentRouter(handlers: {
   publicLimiter: RequestHandler;
   getAdminContent: RequestHandler;
   putAdminContent: RequestHandler;
+  patchAdminSite: RequestHandler;
 }) {
   const router = Router();
   router.get('/content', handlers.getContent);
@@ -19,5 +20,6 @@ export function createContentRouter(handlers: {
   router.post('/contact', handlers.publicLimiter, handlers.createContact);
   router.get('/admin/content', handlers.adminLimiter, handlers.adminAuth, handlers.getAdminContent);
   router.put('/admin/content', handlers.adminLimiter, handlers.adminAuth, handlers.putAdminContent);
+  router.patch('/admin/site', handlers.adminLimiter, handlers.adminAuth, handlers.patchAdminSite);
   return router;
 }

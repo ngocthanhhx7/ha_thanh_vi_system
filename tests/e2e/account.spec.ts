@@ -77,6 +77,8 @@ test('customer signs in, adds a default address, sees it at checkout and signs o
   await page.getByLabel('Email', { exact: true }).fill(user.email);
   await page.getByLabel('Mật khẩu', { exact: true }).fill('customerPassword123');
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).last().click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto('/tai-khoan');
   await expect(page.getByRole('heading', { name: 'Xin chào, Khách Hà Nội.' })).toBeVisible();
   await page.getByRole('button', { name: 'Sổ địa chỉ', exact: true }).click();
   await page.getByRole('button', { name: 'Thêm địa chỉ', exact: true }).click();
@@ -97,7 +99,7 @@ test('customer signs in, adds a default address, sees it at checkout and signs o
   await expect(page.getByLabel('Địa chỉ giao hàng đầy đủ')).toHaveValue('12 Phố Trúc Bạch, Hà Nội');
   await page.goto('/tai-khoan');
   await page.getByRole('button', { name: 'Đăng xuất', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Mừng bạn trở lại' })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { name: 'Xin chào, Khách Hà Nội.' })).toHaveCount(0);
 });
 

@@ -121,13 +121,22 @@ export function Layout() {
       setAccountError('');
       setAccountMenuOpen(false);
       window.dispatchEvent(new Event('customer-session-changed'));
+      navigate('/', { replace: true });
     } catch (reason) {
       setAccountError(reason instanceof Error ? reason.message : 'Chưa thể đăng xuất.');
     }
   }
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
   return (
-    <div className={isGames ? 'public-layout game-shell' : 'public-layout'}>
+    <div
+      className={isGames ? 'public-layout game-shell' : 'public-layout'}
+      onContextMenu={(event) => {
+        if (event.target instanceof Element && event.target.closest('img')) event.preventDefault();
+      }}
+      onDragStart={(event) => {
+        if (event.target instanceof Element && event.target.closest('img')) event.preventDefault();
+      }}
+    >
       <a className="skip-link" href="#main-content">
         Đến nội dung chính
       </a>

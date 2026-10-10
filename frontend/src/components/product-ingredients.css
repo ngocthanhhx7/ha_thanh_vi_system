@@ -1,0 +1,199 @@
+.product-ingredients-section {
+  --public-red: #791f2a;
+  --public-line: #d9c7b3;
+  --public-ink: #412c26;
+  --public-muted: #77675c;
+  margin-top: clamp(45px, 6vw, 86px);
+}
+
+.product-ingredients > .modal {
+  max-width: 860px;
+  border-radius: 16px;
+}
+
+.product-ingredients {
+  min-width: 0;
+  padding: clamp(24px, 3.5vw, 48px) 0 24px;
+  border-block: 1px solid var(--public-line);
+}
+
+.ingredient-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding-inline: 4px;
+  margin-bottom: 30px;
+}
+
+.ingredient-heading .eyebrow {
+  color: var(--public-red);
+  font-size: 0.6rem;
+}
+.ingredient-heading h2,
+.ingredient-empty h2 {
+  margin: 8px 0 12px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.8rem, 3.4vw, 3rem);
+  color: var(--public-ink);
+}
+.ingredient-heading h2 em {
+  color: var(--public-red);
+}
+.ingredient-heading p:last-child {
+  font-size: 0.8rem;
+  color: var(--public-muted);
+}
+.ingredient-motion-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  flex-shrink: 0;
+  padding: 10px 15px;
+  border: 1px solid var(--public-line);
+  border-radius: 99px;
+  color: var(--public-red);
+  background: transparent;
+  cursor: pointer;
+}
+.ingredient-viewport {
+  container-type: inline-size;
+  overflow: hidden;
+  padding-block: 8px 18px;
+}
+.ingredient-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.ingredient-group {
+  display: flex;
+  justify-content: space-around;
+  gap: clamp(18px, 2.5vw, 34px);
+  padding-right: clamp(18px, 2.5vw, 34px);
+  min-width: 100cqw;
+  flex: none;
+}
+.ingredient-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 clamp(132px, 12vw, 175px);
+  width: clamp(132px, 12vw, 175px);
+  padding: 0;
+  border: 0;
+  color: var(--public-red);
+  background: transparent;
+  text-align: center;
+  cursor: pointer;
+}
+.ingredient-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 7px 18px rgb(70 31 33 / 10%);
+  transition: transform 180ms ease;
+}
+.ingredient-card:hover img {
+  transform: translateY(-5px);
+}
+.ingredient-card span {
+  margin-top: 16px;
+  font-size: 0.77rem;
+  font-weight: 600;
+}
+.ingredient-card small {
+  margin-top: 6px;
+  color: var(--public-muted);
+  font-size: 0.6rem;
+}
+.ingredient-card:focus-visible,
+.ingredient-motion-button:focus-visible {
+  outline: 2px solid var(--public-red);
+  outline-offset: 5px;
+}
+.product-ingredients.is-static .ingredient-viewport {
+  overflow-x: auto;
+}
+.product-ingredients.is-static .ingredient-track {
+  transform: none !important;
+  will-change: auto;
+}
+.ingredient-product-notes {
+  margin-top: 22px;
+  color: var(--public-muted);
+  font-size: 0.72rem;
+  line-height: 1.8;
+}
+.ingredient-product-notes p {
+  margin: 8px 0;
+}
+.ingredient-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 28px;
+}
+.ingredient-detail > img {
+  width: 100%;
+  height: auto;
+  max-height: 60dvh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+.ingredient-detail p {
+  font-size: 0.83rem;
+  line-height: 1.8;
+}
+.ingredient-detail .ingredient-core-label {
+  margin: 26px 0 8px;
+  color: var(--public-red);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+.ingredient-detail .ingredient-core-flavor {
+  color: var(--public-red);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.4rem;
+}
+@media (max-width: 560px) {
+  .ingredient-heading {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .ingredient-heading .eyebrow {
+    font-size: 0.5rem;
+  }
+  .ingredient-motion-button {
+    padding-inline: 12px;
+  }
+  .ingredient-motion-button span {
+    display: none;
+  }
+  .ingredient-card {
+    flex-basis: 132px;
+    width: 132px;
+  }
+  .ingredient-detail {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .ingredient-detail > img {
+    max-height: 38dvh;
+  }
+  .ingredient-detail .ingredient-core-label {
+    margin-top: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ingredient-card img {
+    transition: none;
+  }
+}

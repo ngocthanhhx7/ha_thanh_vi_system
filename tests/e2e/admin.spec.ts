@@ -16,6 +16,7 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/**', (route) => route.fulfill(json({})));
   await page.route('**/api/content', (route) => route.fulfill(json(content)));
   await page.route('**/api/admin/content', (route) => route.fulfill(json(content)));
+  await page.route('**/api/admin/ingredients', (route) => route.fulfill(json({ ingredients: [] })));
   await page.route('**/api/auth/me', (route) => route.fulfill(json({ user: admin })));
   await page.route('**/api/notifications*', (route) =>
     route.fulfill(json({ notifications: [], unread: 0, total: 0, page: 1, limit: 1 })),

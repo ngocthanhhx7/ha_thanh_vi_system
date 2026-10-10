@@ -4,6 +4,7 @@ import { ArrowDown, ArrowRight, Plus, Search, Star, X } from 'lucide-react';
 import { useShop } from '../hooks/useShop';
 import { priceLabel } from '../utils/format';
 import { ProductArt, ProductCard } from '../components/ProductCard';
+import { ProductIngredients } from '../components/ProductIngredients';
 import { customerApi, type ProductReview } from '../services/customerApi';
 import { NotFound } from './Editorial';
 import './products-public.css';
@@ -174,7 +175,7 @@ export function Products() {
 export function ProductDetail() {
   const { slug } = useParams();
   const {
-    content: { products, site },
+    content: { products, site, ingredients = [] },
     cart,
     add,
   } = useShop();
@@ -191,7 +192,7 @@ export function ProductDetail() {
         <span>{product.name}</span>
       </nav>
       <div className="detail-grid public-detail-hero">
-        <ProductArt product={product} />
+        <ProductArt product={product} priority />
         <div className="detail-copy">
           <p className="eyebrow">
             {product.category === 'qua-tang'
@@ -235,56 +236,7 @@ export function ProductDetail() {
           </p>
         </div>
       </div>
-      <section
-        className="product-information public-product-information"
-        aria-label="Thông tin chi tiết sản phẩm"
-      >
-        <article>
-          <h2>Trong pack có gì?</h2>
-          {product.packageContents?.length ? (
-            <ul>
-              {product.packageContents.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <p>
-              Danh sách và số lượng sản phẩm trong set đang chờ xác nhận. Liên hệ shop để được tư
-              vấn trước khi đặt.
-            </p>
-          )}
-        </article>
-        <article>
-          <h2>Thành phần & thông tin trên nhãn</h2>
-          <p>
-            {product.ingredients ||
-              'Shop đang cập nhật bảng thành phần chính thức. Hương vị mô tả ở trên không thay thế danh sách thành phần trên nhãn.'}
-          </p>
-          {product.ingredientImage ? (
-            <a href={product.ingredientImage} target="_blank" rel="noreferrer">
-              <img
-                src={product.ingredientImage}
-                alt={'Bảng thành phần của ' + product.name}
-                loading="lazy"
-              />
-            </a>
-          ) : (
-            <p className="fine-print">
-              Ảnh bảng thành phần sẽ được bổ sung sau khi shop cung cấp nhãn sản phẩm.
-            </p>
-          )}
-          <p>
-            <strong>Thông tin dị ứng: </strong>
-            {product.allergens ||
-              'Chưa có thông tin xác nhận. Nếu bạn có dị ứng thực phẩm, vui lòng hỏi shop trước khi mua.'}
-          </p>
-          <p>
-            <strong>Bảo quản: </strong>
-            {product.storage ||
-              'Theo hướng dẫn trên bao bì chính thức; shop đang cập nhật thông tin.'}
-          </p>
-        </article>
-      </section>
+      <ProductIngredients product={product} ingredients={ingredients} />
       <VerifiedReviews productId={product.id} />
       <div className="section-heading related-heading public-related-heading">
         <h2>

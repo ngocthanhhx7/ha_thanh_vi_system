@@ -48,6 +48,7 @@ const voucherSchema = new Schema(
     value: Number,
     minOrder: { type: Number, default: 0 },
     maxDiscount: { type: Number, default: 0 },
+    orderPercentCap: { type: Number, min: 1, max: 100 },
     startsAt: Date,
     expiresAt: Date,
     distribution: { type: String, enum: ['automatic', 'code', 'targeted'] },

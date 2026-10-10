@@ -15,12 +15,20 @@ export const gameCardName = (id: string) => gameCards.find(([key]) => key === id
 export type GameState = {
   memory: {
     round: number;
-    attempts: number;
+    status: 'idle' | 'playing' | 'won' | 'lost';
+    remainingRounds: number;
+    deadline: string | null;
+    serverNow: string;
+    bestMs: number | null;
+    lastPoints: number;
+    wins: number;
+    points: number;
+    earnedToday: number;
+    soonestExpiry: string | null;
     cards: { index: number; cardId: string | null; matched: boolean }[];
     firstIndex: number | null;
     mismatchUntil: string | null;
     complete: boolean;
-    missions: { welcome: boolean; daily: boolean; products: boolean; about: boolean };
   };
   collection: {
     day: string;
@@ -40,6 +48,7 @@ export type GameResult = {
   reward?: { code: string; name: string };
   card?: string;
   token?: string;
+  pointsAwarded?: number;
 };
 export class GameApiError extends Error {
   constructor(
@@ -70,10 +79,11 @@ async function call(path: string, body?: object): Promise<GameResult> {
 export const gameApi = {
   state: () => call(''),
   enter: () => call('/enter', {}),
-  visit: (page: 'products' | 'about') => call('/visit', { page }),
   presence: (token?: string) => call('/products-presence', { token }),
-  flip: (index: number, requestId: string) => call('/memory/flip', { index, requestId }),
-  memoryReward: (round: number) => call('/memory/reward', { round }),
+  startMemory: (round: number, requestId: string) => call('/memory/start', { round, requestId }),
+  flip: (index: number, requestId: string, round: number) =>
+    call('/memory/flip', { index, requestId, round }),
+  redeemMemory: (requestId: string) => call('/memory/redeem', { requestId }),
   draw: (requestId: string) => call('/collection/draw', { requestId }),
   redeem: (tier: 9 | 10) => call('/collection/redeem', { tier }),
 };

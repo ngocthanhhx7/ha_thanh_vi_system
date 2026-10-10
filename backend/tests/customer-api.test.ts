@@ -484,6 +484,58 @@ test('voucher checkout validates price server-side, automatic wallet grants, cap
   assert.equal(perUser.filter((result) => result.status === 409).length, 1);
 });
 
+test('personal point vouchers preserve their order cap in the wallet, admin toggles, quote and one-use checkout', async () => {
+  const voucher = await CustomerVoucher.create(
+    campaign('POINTS1', {
+      value: 100000,
+      orderPercentCap: 10,
+      distribution: 'targeted',
+      totalLimit: 1,
+      perUserLimit: 1,
+    }),
+  );
+  await CustomerWallet.create({
+    userId: customerId,
+    voucherId: voucher._id,
+    code: voucher.code,
+    grantSource: 'reward',
+  });
+  const wallet = await request(app).get('/api/account/vouchers').set('Cookie', customerCookie);
+  assert.equal(
+    wallet.body.vouchers.find((item: { code: string }) => item.code === 'POINTS1').orderPercentCap,
+    10,
+  );
+  for (const active of [false, true]) {
+    const update = await request(app)
+      .patch('/api/admin/vouchers/' + String(voucher._id))
+      .set(csrf)
+      .set('Cookie', adminCookie)
+      .send({ active });
+    assert.equal(update.status, 200, update.body.message);
+    assert.equal(update.body.voucher.orderPercentCap, 10);
+  }
+  const quote = await request(app)
+    .post('/api/account/vouchers/quote')
+    .set(csrf)
+    .set('Cookie', customerCookie)
+    .send({ code: 'POINTS1', items: checkoutBody.items });
+  assert.equal(quote.status, 200, quote.body.message);
+  const actualDiscount = Math.min(100000, Math.floor(quote.body.subtotal / 10));
+  assert.ok(actualDiscount < 100000);
+  assert.equal(quote.body.discount, actualDiscount);
+  assert.equal(quote.body.orderPercentCap, 10);
+  assert.equal(quote.body.voucherValue, 100000);
+  const otherCheckout = await checkout(otherCookie, { voucherCode: 'POINTS1' });
+  assert.equal(otherCheckout.status, 409);
+  assert.match(otherCheckout.body.message, /chưa được cấp/);
+  const ordered = await checkout(customerCookie, { voucherCode: 'POINTS1' });
+  assert.equal(ordered.status, 201, ordered.body.message);
+  assert.equal(ordered.body.order.discount, actualDiscount);
+  assert.equal((await checkout(customerCookie, { voucherCode: 'POINTS1' })).status, 409);
+  assert.equal(await CustomerVoucher.countDocuments({ code: 'POINTS1' }), 1);
+  assert.equal((await CustomerVoucher.findById(voucher._id))!.value, 100000);
+});
+
 test('admin voucher grants are visible only to intended customers and scheduled vouchers report their effective time', async () => {
   const create = (code: string, extra: Record<string, unknown> = {}) =>
     request(app)

@@ -21,11 +21,19 @@ function state() {
   return {
     memory: {
       round: 1,
-      attempts: 4,
+      status: 'playing' as 'idle' | 'playing' | 'won' | 'lost',
+      remainingRounds: 3,
+      deadline: new Date(Date.now() + 60000).toISOString() as string | null,
+      serverNow: new Date().toISOString(),
+      bestMs: null as number | null,
+      lastPoints: 0,
+      wins: 0,
+      points: 0,
+      earnedToday: 0,
+      soonestExpiry: null as string | null,
       firstIndex: null as number | null,
       mismatchUntil: null,
       complete: false,
-      missions: { welcome: true, daily: true, products: false, about: false },
       cards: Array.from({ length: 20 }, (_, index) => ({
         index,
         cardId: null as string | null,
@@ -66,7 +74,163 @@ test('game launcher opens guest rules without horizontal overflow', async ({ pag
   await page.getByText('Luật chơi & những điều cần biết', { exact: true }).click();
   await expect(page.locator('.games-rules')).toContainText('10 thẻ toàn hệ thống');
 });
-test('memory reserves one attempt for two selections and hides a matched pair', async ({
+test('memory starts a timed round, disables expired cards and has no mission grants', async ({
+  page,
+}) => {
+  await page.clock.install();
+  const current = state();
+  current.memory.status = 'idle';
+  current.memory.deadline = null;
+  let starts = 0;
+  await page.route('**/api/games**', async (route) => {
+    if (route.request().url().endsWith('/memory/start')) {
+      const body = route.request().postDataJSON();
+      expect(body.round).toBe(1);
+      expect(body.requestId).toMatch(/^[a-f0-9-]{36}$/);
+      starts++;
+      current.memory.status = 'playing';
+      current.memory.remainingRounds = 2;
+      current.memory.serverNow = new Date(await page.evaluate(() => Date.now())).toISOString();
+      current.memory.deadline = new Date(
+        Date.parse(current.memory.serverNow) + 60000,
+      ).toISOString();
+    }
+    current.memory.serverNow = new Date(await page.evaluate(() => Date.now())).toISOString();
+    if (
+      current.memory.deadline &&
+      Date.parse(current.memory.serverNow) >= Date.parse(current.memory.deadline)
+    ) {
+      current.memory.status = 'lost';
+    }
+    await route.fulfill(json({ state: current }));
+  });
+  await page.goto('/tro-choi');
+  await expect(page.getByRole('heading', { name: 'Đổi thưởng từ điểm' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Nhiệm vụ của bạn' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Lật thẻ 1', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Bắt đầu ván 60 giây', exact: true }).click();
+  await expect(page.getByRole('timer')).toContainText('01:00');
+  await expect(page.locator('.games-counter')).toContainText('2');
+  await expect(page.getByRole('button', { name: 'Lật thẻ 1', exact: true })).toBeEnabled();
+  await page.clock.runFor(61000);
+  await expect(page.getByRole('button', { name: 'Lật thẻ 1', exact: true })).toBeDisabled();
+  await expect(page.locator('.games-round-result')).toContainText('Hết giờ');
+  expect(starts).toBe(1);
+});
+test('memory exchanges every active point only after confirming its order cap and loss of remainder', async ({
+  page,
+}) => {
+  const current = state();
+  current.memory.status = 'idle';
+  current.memory.deadline = null;
+  current.memory.points = 3200;
+  current.memory.soonestExpiry = new Date(Date.now() + 86400000).toISOString();
+  let exchanges = 0;
+  await page.route('**/api/games**', async (route) => {
+    if (route.request().url().endsWith('/memory/redeem')) {
+      expect(Object.keys(route.request().postDataJSON())).toEqual(['requestId']);
+      expect(route.request().postDataJSON().requestId).toMatch(/^[a-f0-9-]{36}$/);
+      exchanges++;
+      current.memory.points = 0;
+      await route.fulfill(
+        json({ state: current, reward: { code: 'POINT-3200', name: 'Lật thẻ · giảm 3.200đ' } }),
+      );
+      return;
+    }
+    await route.fulfill(json({ state: current }));
+  });
+  await page.goto('/tro-choi');
+  await page.getByRole('button', { name: 'Đổi toàn bộ điểm', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('3.200');
+  await expect(page.getByRole('dialog')).toContainText('10%');
+  await expect(page.getByRole('dialog')).toContainText('Phần chưa dùng sẽ mất');
+  expect(exchanges).toBe(0);
+  await page.getByRole('button', { name: 'Xác nhận đổi điểm', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('POINT-3200');
+  await expect(page.getByRole('dialog')).toContainText('10%');
+  expect(exchanges).toBe(1);
+  await expect(page.locator('.games-point-balance')).toContainText('0');
+});
+test('points expiring in an open page close the old exchange confirmation', async ({ page }) => {
+  await page.clock.install();
+  const current = state();
+  current.memory.status = 'idle';
+  current.memory.deadline = null;
+  current.memory.points = 3200;
+  let expiry = 0;
+  await page.route('**/api/games**', async (route) => {
+    const now = await page.evaluate(() => Date.now());
+    if (!expiry) expiry = now + 5000;
+    current.memory.serverNow = new Date(now).toISOString();
+    current.memory.soonestExpiry = now < expiry ? new Date(expiry).toISOString() : null;
+    current.memory.points = now < expiry ? 3200 : 2800;
+    await route.fulfill(json({ state: current }));
+  });
+  await page.goto('/tro-choi');
+  await page.getByRole('button', { name: 'Đổi toàn bộ điểm', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.clock.runFor(6000);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('.games-point-balance')).toContainText('2.800');
+  await expect(
+    page.getByRole('button', { name: 'Chưa đủ 3.000 điểm', exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByRole('alert')).toContainText('Số điểm còn hạn đã thay đổi');
+});
+for (const wins of [1, 2]) {
+  test(`memory victory ${wins} preserves the final pair view before showing its points result`, async ({
+    page,
+  }) => {
+    const current = state();
+    current.memory.wins = wins - 1;
+    for (const card of current.memory.cards.slice(2)) card.matched = true;
+    await page.route('**/api/games**', async (route) => {
+      if (route.request().url().endsWith('/memory/flip')) {
+        const { index } = route.request().postDataJSON();
+        if (current.memory.firstIndex === null) {
+          current.memory.firstIndex = index;
+          current.memory.cards[index].cardId = 'flour';
+        } else {
+          current.memory.firstIndex = null;
+          current.memory.cards[0].cardId = current.memory.cards[1].cardId = null;
+          current.memory.cards[0].matched = current.memory.cards[1].matched = true;
+          current.memory.status = 'won';
+          current.memory.complete = true;
+          current.memory.wins = wins;
+          current.memory.bestMs = 41000;
+          current.memory.lastPoints = wins === 1 ? 0 : 250;
+          current.memory.points = current.memory.earnedToday = current.memory.lastPoints;
+        }
+      }
+      await route.fulfill(json({ state: current }));
+    });
+    await page.goto('/tro-choi');
+    await page.getByRole('button', { name: 'Lật thẻ 1', exact: true }).click();
+    await page.getByRole('button', { name: 'Lật thẻ 2', exact: true }).click();
+    const second = page.locator('.games-memory-card').nth(1);
+    await expect
+      .poll(() =>
+        second
+          .locator('.games-memory-turn')
+          .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m11),
+      )
+      .toBeLessThan(-0.99);
+    await page.waitForTimeout(900);
+    expect(await second.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(
+      0.95,
+    );
+    await expect(page.locator('.games-round-result')).toHaveCount(0);
+    await expect(page.locator('.games-round-result')).toContainText(
+      wins === 1 ? 'Chiến thắng đầu tiên' : 'Đã cộng 250 điểm',
+    );
+    await expect(page.locator('.games-personal-best')).toContainText('41 giây');
+    await expect(page.locator('.games-point-balance')).toContainText(String(current.memory.points));
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    ).toBeTruthy();
+  });
+}
+test('memory includes its round in selections and hides a matched pair after viewing', async ({
   page,
 }) => {
   const current = state();
@@ -74,8 +238,8 @@ test('memory reserves one attempt for two selections and hides a matched pair', 
     if (r.request().url().endsWith('/memory/flip')) {
       const body = r.request().postDataJSON();
       expect(body.requestId).toMatch(/^[a-f0-9-]{36}$/);
+      expect(body.round).toBe(current.memory.round);
       if (current.memory.firstIndex === null) {
-        current.memory.attempts--;
         current.memory.firstIndex = body.index;
         current.memory.cards[body.index].cardId = 'flour';
       } else {
@@ -127,7 +291,6 @@ test('memory responds during slow requests and closes mismatches without a refre
         await new Promise<void>((resolve) => {
           release = resolve;
         });
-        current.memory.attempts--;
         current.memory.firstIndex = index;
         current.memory.cards[index].cardId = 'flour';
       } else {
@@ -204,7 +367,6 @@ test('a failed ingredient image shows its real name for the full pair viewing wi
       const { index } = route.request().postDataJSON();
       if (current.memory.firstIndex === null) {
         current.memory.firstIndex = index;
-        current.memory.attempts--;
         current.memory.cards[index].cardId = 'flour';
       } else {
         current.memory.firstIndex = null;
@@ -252,7 +414,6 @@ test('failed first selection cancels the queued card and retry keeps the request
       }
       current.memory.firstIndex = body.index;
       current.memory.cards[body.index].cardId = 'flour';
-      current.memory.attempts--;
     }
     await r.fulfill(json({ state: current }));
   });
@@ -263,7 +424,7 @@ test('failed first selection cancels the queued card and retry keeps the request
   await expect(page.getByRole('alert')).toContainText('Kết nối gián đoạn');
   expect(calls).toHaveLength(1);
   await expect(page.locator('.games-memory-card.is-pending')).toHaveCount(0);
-  await expect(page.locator('.games-counter')).toContainText('4');
+  await expect(page.locator('.games-counter')).toContainText('3');
   await page.getByRole('button', { name: 'Lật thẻ 1', exact: true }).click();
   await expect(page.locator('.games-counter')).toContainText('3');
   expect(calls[1]).toEqual(calls[0]);
@@ -273,7 +434,6 @@ test('a resumed first card stays visible with its matching second card', async (
   const current = state();
   current.memory.firstIndex = 0;
   current.memory.cards[0].cardId = 'flour';
-  current.memory.attempts = 3;
   await page.route('**/api/games**', async (route) => {
     if (route.request().url().endsWith('/memory/flip')) {
       current.memory.firstIndex = null;
@@ -377,16 +537,13 @@ test('product mission sends paced visible-page heartbeats and stops after daily 
   const current = state();
   let heartbeats = 0;
   const heartbeatTimes: number[] = [];
-  let visited = false;
   await page.clock.install();
   await page.route('**/api/games**', async (r) => {
     if (r.request().url().endsWith('/visit')) {
-      expect(r.request().postDataJSON()).toEqual({ page: 'products' });
-      expect(r.request().headers().referer).toContain('/san-pham');
-      visited = true;
+      throw new Error('Legacy memory visits must not be sent');
     }
     if (r.request().url().endsWith('/products-presence')) {
-      expect(visited).toBeTruthy();
+      expect(r.request().headers().referer).toContain('/san-pham');
       heartbeatTimes.push(await page.evaluate(() => Date.now()));
       heartbeats++;
       current.collection.productSeconds = Math.min(30, (heartbeats - 1) * 5);

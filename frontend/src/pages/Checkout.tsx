@@ -71,6 +71,8 @@ export function Checkout() {
     code: string;
     discount: number;
     cart: string;
+    orderPercentCap?: number;
+    voucherValue?: number;
   } | null>(null);
   const [voucherBusy, setVoucherBusy] = useState(false);
   const [voucherError, setVoucherError] = useState('');
@@ -151,13 +153,22 @@ export function Checkout() {
     voucherQuote?.cart === cartSignature && voucherQuote.code === voucherCode.trim().toUpperCase()
       ? voucherQuote
       : null;
+  const selectedVoucher = vouchers.find((item) => item.code === voucherCode.trim().toUpperCase());
+  const voucherOrderCap = appliedVoucher?.orderPercentCap ?? selectedVoucher?.orderPercentCap;
+  const voucherFaceValue = appliedVoucher?.voucherValue ?? selectedVoucher?.value;
   async function applyVoucher() {
     setVoucherBusy(true);
     setVoucherError('');
     setVoucherQuote(null);
     try {
       const result = await customerApi.quoteVoucher(voucherCode.trim(), cart);
-      setVoucherQuote({ code: result.code, discount: result.discount, cart: cartSignature });
+      setVoucherQuote({
+        code: result.code,
+        discount: result.discount,
+        cart: cartSignature,
+        orderPercentCap: result.orderPercentCap,
+        voucherValue: result.voucherValue,
+      });
       setVoucherCode(result.code);
     } catch (reason) {
       setVoucherError(reason instanceof Error ? reason.message : 'Chưa thể áp dụng ưu đãi.');
@@ -425,6 +436,19 @@ export function Checkout() {
               {appliedVoucher && (
                 <p role="status">
                   Đã áp dụng {appliedVoucher.code}: giảm {priceLabel(appliedVoucher.discount)}.
+                </p>
+              )}
+              {voucherOrderCap !== undefined && voucherFaceValue !== undefined && (
+                <p className="fine-print">
+                  Ưu đãi trị giá {priceLabel(voucherFaceValue)}, giảm tối đa {voucherOrderCap}% giá
+                  trị hàng trong đơn (không gồm phí giao hàng). Dùng một lần; phần giá trị chưa dùng
+                  hết sẽ mất, không hoàn lại thành điểm.
+                  {appliedVoucher && voucherFaceValue > appliedVoucher.discount && (
+                    <>
+                      {' '}
+                      Phần còn lại sẽ mất: {priceLabel(voucherFaceValue - appliedVoucher.discount)}.
+                    </>
+                  )}
                 </p>
               )}
               {voucherCode && !appliedVoucher && (

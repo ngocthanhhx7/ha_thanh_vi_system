@@ -13,20 +13,28 @@ import {
   flipCard,
   presence,
   consumeCollection,
-  shuffledBoard,
 } from './gameRules.js';
+import { startMemory, redeemMemory } from './memoryRules.js';
 export type GameAction =
   | { kind: 'state' }
   | { kind: 'enter' }
   | { kind: 'visit'; page: 'products' | 'about' }
   | { kind: 'presence'; token?: string }
-  | { kind: 'flip'; index: number; requestId: string }
+  | { kind: 'startMemory'; round: number; requestId: string }
+  | { kind: 'flip'; index: number; requestId: string; round: number }
+  | { kind: 'redeemMemory'; requestId: string }
   | { kind: 'memoryReward'; round: number }
   | { kind: 'draw'; requestId: string }
   | { kind: 'redeem'; tier: 9 | 10 };
 export class GameService {
   constructor(private readonly random: (max: number) => number = randomInt) {}
-  async act(userId: string, action: GameAction, now = Date.now()) {
+  async act(userId: string, action: GameAction, at?: number) {
+    const now = at ?? Date.now();
+    if (action.kind === 'memoryReward')
+      throw new CustomerError(
+        409,
+        'Game lật thẻ đã chuyển sang tích điểm. Vui lòng tải lại trang.',
+      );
     if (mongoose.connection.readyState !== 1)
       throw new CustomerError(503, 'Trò chơi tạm thời chưa sẵn sàng.');
     if (action.kind === 'state') {
@@ -35,8 +43,9 @@ export class GameService {
         GameStock.findById('banh-cha').lean(),
       ]);
       const data = existing?.data || newGame(now);
-      refreshGame(data, now);
-      return { state: publicGame(data, stock?.issued || 0) };
+      const readNow = at ?? Date.now();
+      refreshGame(data, readNow);
+      return { state: publicGame(data, stock?.issued || 0, readNow) };
     }
     const drawRoll =
       action.kind === 'draw'
@@ -69,13 +78,14 @@ export class GameService {
       }
     }
     const key =
-      action.kind === 'flip' || action.kind === 'draw'
+      action.kind === 'flip' ||
+      action.kind === 'draw' ||
+      action.kind === 'startMemory' ||
+      action.kind === 'redeemMemory'
         ? `${action.kind}:${action.requestId}`
-        : action.kind === 'memoryReward'
-          ? `memory:${action.round}`
-          : action.kind === 'redeem'
-            ? `redeem:${action.tier}`
-            : undefined;
+        : action.kind === 'redeem'
+          ? `redeem:${action.tier}`
+          : undefined;
     const session = await mongoose.startSession();
     let result: Record<string, unknown> = {};
     try {
@@ -88,40 +98,41 @@ export class GameService {
         if (!doc)
           throw new CustomerError(409, 'Vui lòng vào trò chơi trước khi thực hiện thao tác.');
         const data = doc.data;
-        refreshGame(data, now);
         const receipt = key
           ? await GameReceipt.findOne({ userId, key }).session(session).lean()
           : null;
+        // Retry callbacks may run well after request arrival. Evaluate deadlines,
+        // point expiry and the Vietnam day after obtaining the serialized state.
+        const actionNow = at ?? Date.now();
+        refreshGame(data, actionNow);
         const extra: Record<string, unknown> = receipt?.result || {};
         let rewardTier: 'memory' | 9 | 10 | undefined;
+        let rewardPoints = 0;
         if (!receipt) {
           switch (action.kind) {
             case 'enter':
-              enterGame(data, now);
+              enterGame(data, actionNow);
               break;
             case 'visit':
-              if (!data[action.page]) {
-                data[action.page] = true;
-                data.attempts++;
-              }
+              // Legacy clients may still send visits, but pair-attempt grants are retired.
               break;
             case 'presence':
-              presence(data, action.token, now);
+              presence(data, action.token, actionNow);
               extra.token = data.presenceToken;
               break;
-            case 'flip':
-              flipCard(data, action.index, now);
+            case 'startMemory':
+              startMemory(data, action.round, actionNow);
               break;
-            case 'memoryReward':
-              if (action.round !== data.round || data.matched.length !== 20)
-                throw new CustomerError(409, 'Hoàn thành bàn thẻ trước khi nhận thưởng.');
+            case 'flip':
+              if (action.round !== data.round)
+                throw new CustomerError(409, 'Ván đã thay đổi. Tải lại tiến độ.');
+              flipCard(data, action.index, actionNow);
+              if (data.memoryProgress?.status === 'won')
+                extra.pointsAwarded = data.memoryProgress.lastPoints;
+              break;
+            case 'redeemMemory':
+              rewardPoints = redeemMemory(data, actionNow);
               rewardTier = 'memory';
-              data.round++;
-              data.board = shuffledBoard();
-              data.matched = [];
-              data.firstIndex = null;
-              data.mismatch = [];
-              data.mismatchUntil = 0;
               break;
             case 'draw': {
               if (data.draws < 1) throw new CustomerError(409, 'Bạn đã hết lượt rút hôm nay.');
@@ -151,7 +162,7 @@ export class GameService {
             const code = `HTVG${randomUUID().replaceAll('-', '').slice(0, 16).toUpperCase()}`;
             const name =
               rewardTier === 'memory'
-                ? 'Lật thẻ làm bánh · giảm 30.000đ'
+                ? `Lật thẻ · ${rewardPoints.toLocaleString('vi-VN')}đ · tối đa 10% đơn`
                 : rewardTier === 9
                   ? 'Bộ 9 nguyên liệu · giảm 30.000đ'
                   : 'Bộ 10 thẻ · giảm 50% tối đa 100.000đ';
@@ -161,11 +172,12 @@ export class GameService {
                   code,
                   name,
                   type: rewardTier === 10 ? 'percent' : 'fixed',
-                  value: rewardTier === 10 ? 50 : 30000,
+                  value: rewardTier === 'memory' ? rewardPoints : rewardTier === 10 ? 50 : 30000,
                   maxDiscount: rewardTier === 10 ? 100000 : 0,
+                  ...(rewardTier === 'memory' ? { orderPercentCap: 10 } : {}),
                   minOrder: 0,
-                  startsAt: new Date(now),
-                  expiresAt: new Date(now + 30 * 86400000),
+                  startsAt: new Date(actionNow),
+                  expiresAt: new Date(actionNow + 30 * 86400000),
                   distribution: 'targeted',
                   totalLimit: 1,
                   perUserLimit: 1,
@@ -204,7 +216,7 @@ export class GameService {
         doc.markModified('data');
         await doc.save({ session });
         const stock = await GameStock.findById('banh-cha').session(session).lean();
-        result = { state: publicGame(data, stock?.issued || 0), ...extra };
+        result = { state: publicGame(data, stock?.issued || 0, at ?? Date.now()), ...extra };
       });
     } finally {
       await session.endSession();

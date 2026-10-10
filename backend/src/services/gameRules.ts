@@ -1,5 +1,6 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { CustomerError } from '../utils/customerSecurity.js';
+import { flipMemory, publicMemory, refreshMemory, type MemoryProgress } from './memoryRules.js';
 export const INGREDIENTS = [
   'flour',
   'sticky-rice',
@@ -13,6 +14,7 @@ export const INGREDIENTS = [
 ] as const;
 export const CARDS = [...INGREDIENTS, 'banh-cha'];
 export type GameData = {
+  memoryProgress?: MemoryProgress;
   day: string;
   welcome: boolean;
   enteredDay: string;
@@ -70,6 +72,7 @@ export function newGame(now: number): GameData {
   };
 }
 export function refreshGame(data: GameData, now: number) {
+  refreshMemory(data, now);
   if (data.day !== gameDay(now)) {
     data.day = gameDay(now);
     data.draws = 0;
@@ -84,24 +87,7 @@ export function refreshGame(data: GameData, now: number) {
   }
 }
 export function flipCard(data: GameData, index: number, now: number) {
-  if (!Number.isInteger(index) || index < 0 || index >= 20)
-    throw new CustomerError(400, 'Thẻ không hợp lệ.');
-  if (data.mismatchUntil > now) throw new CustomerError(409, 'Chờ hai thẻ úp lại.');
-  if (data.matched.includes(index) || data.firstIndex === index)
-    throw new CustomerError(409, 'Hãy chọn một thẻ khác.');
-  if (data.firstIndex === null) {
-    if (data.attempts < 1) throw new CustomerError(409, 'Bạn đã hết lượt lật.');
-    data.attempts--;
-    data.firstIndex = index;
-    return;
-  }
-  const first = data.firstIndex;
-  data.firstIndex = null;
-  if (data.board[first] === data.board[index]) data.matched.push(first, index);
-  else {
-    data.mismatch = [first, index];
-    data.mismatchUntil = now + 1600;
-  }
+  flipMemory(data, index, now);
 }
 export function presence(data: GameData, token: string | undefined, now: number) {
   if (!token || token !== data.presenceToken) {
@@ -129,26 +115,9 @@ export function consumeCollection(data: GameData, tier: 9 | 10) {
   if (tier === 9) data.redeemed9 = true;
   else data.redeemed10 = true;
 }
-export function publicGame(data: GameData, issued: number) {
+export function publicGame(data: GameData, issued: number, now = Date.now()) {
   return {
-    memory: {
-      round: data.round,
-      attempts: data.attempts,
-      firstIndex: data.firstIndex,
-      mismatchUntil: data.mismatchUntil ? new Date(data.mismatchUntil).toISOString() : null,
-      complete: data.matched.length === 20,
-      cards: data.board.map((id, index) => ({
-        index,
-        cardId: index === data.firstIndex || data.mismatch.includes(index) ? id : null,
-        matched: data.matched.includes(index),
-      })),
-      missions: {
-        welcome: data.welcome,
-        daily: data.enteredDay === data.day,
-        products: data.products,
-        about: data.about,
-      },
-    },
+    memory: publicMemory(data, now),
     collection: {
       day: data.day,
       draws: data.draws,
@@ -166,13 +135,8 @@ export function publicGame(data: GameData, issued: number) {
 
 export function enterGame(data: GameData, now: number) {
   refreshGame(data, now);
-  if (!data.welcome) {
-    data.welcome = true;
-    data.attempts += 3;
-  }
   if (data.enteredDay !== data.day) {
     data.enteredDay = data.day;
-    data.attempts++;
     data.draws++;
   }
 }

@@ -21,11 +21,19 @@ export function assertReviewAllowed(
     throw new CustomerError(409, 'Chỉ đánh giá sản phẩm trong đơn đã giao.');
 }
 export function discountFor(
-  v: { type: string; value: number; maxDiscount: number; minOrder: number },
+  v: {
+    type: string;
+    value: number;
+    maxDiscount: number;
+    minOrder: number;
+    orderPercentCap?: number;
+  },
   subtotal: number,
 ) {
   if (!Number.isSafeInteger(subtotal) || subtotal < 0 || subtotal < v.minOrder)
     throw new CustomerError(409, 'Đơn hàng chưa đạt giá trị tối thiểu của voucher.');
   const raw = v.type === 'percent' ? Math.floor((subtotal * v.value) / 100) : v.value;
-  return Math.min(subtotal, v.maxDiscount > 0 ? Math.min(raw, v.maxDiscount) : raw);
+  const orderCap =
+    v.orderPercentCap === undefined ? subtotal : Math.floor((subtotal * v.orderPercentCap) / 100);
+  return Math.min(subtotal, orderCap, v.maxDiscount > 0 ? Math.min(raw, v.maxDiscount) : raw);
 }

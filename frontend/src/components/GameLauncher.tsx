@@ -13,8 +13,7 @@ export function GameLauncher() {
   }, []);
   useEffect(() => {
     const products = pathname === '/san-pham' || pathname.startsWith('/san-pham/');
-    const about = pathname === '/ve-chung-toi';
-    if (!products && !about) return;
+    if (!products) return;
     let active = true;
     let token: string | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -46,12 +45,10 @@ export function GameLauncher() {
         if (active && ++failures <= 3) timer = setTimeout(heartbeat, 5000 * failures);
       }
     }
-    void gameApi
-      .visit(products ? 'products' : 'about')
-      .then(() => {
-        if (active && products) void heartbeat();
-      })
-      .catch(() => undefined);
+    // Allow an effect cleanup (including Strict Mode) to cancel the first request.
+    queueMicrotask(() => {
+      if (active) void heartbeat();
+    });
     return () => {
       active = false;
       clearTimeout(timer);

@@ -9,7 +9,7 @@ export function createGameRouter(service = new GameService()) {
   router.use(
     '/games',
     requireRole('customer'),
-    rateLimit({ windowMs: 60000, limit: 90, standardHeaders: 'draft-8', legacyHeaders: false }),
+    rateLimit({ windowMs: 60000, limit: 180, standardHeaders: 'draft-8', legacyHeaders: false }),
   );
   const handler =
     (action: (body: unknown) => GameAction): RequestHandler =>
@@ -60,8 +60,26 @@ export function createGameRouter(service = new GameService()) {
     handler((body) => ({
       kind: 'flip',
       ...z
-        .object({ index: z.number().int().min(0).max(19), requestId: z.string().uuid() })
+        .object({
+          index: z.number().int().min(0).max(19),
+          requestId: z.string().uuid(),
+          round: z.number().int().positive(),
+        })
         .parse(body),
+    })),
+  );
+  router.post(
+    '/games/memory/start',
+    handler((body) => ({
+      kind: 'startMemory',
+      ...z.object({ round: z.number().int().positive(), requestId: z.string().uuid() }).parse(body),
+    })),
+  );
+  router.post(
+    '/games/memory/redeem',
+    handler((body) => ({
+      kind: 'redeemMemory',
+      ...z.object({ requestId: z.string().uuid() }).parse(body),
     })),
   );
   router.post(
@@ -84,10 +102,6 @@ export function createGameRouter(service = new GameService()) {
       kind: 'redeem',
       ...z.object({ tier: z.union([z.literal(9), z.literal(10)]) }).parse(body),
     })),
-  );
-  router.post(
-    '/games/enter',
-    handler(() => ({ kind: 'enter' })),
   );
   return router;
 }

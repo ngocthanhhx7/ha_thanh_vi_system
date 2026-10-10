@@ -16,6 +16,9 @@ import {
 import './games.css';
 
 type PairView = { round: number; indices: number[]; ready: number[]; matched: boolean };
+const number = (value: number) => value.toLocaleString('vi-VN');
+const date = (value: string) =>
+  new Date(value).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 
 export function Games() {
   const [state, setState] = useState<GameState | null>(null);
@@ -46,6 +49,11 @@ export function Games() {
   const [tab, setTab] = useState<'memory' | 'collection'>('memory');
   const [section, setSection] = useState<'missions' | 'rewards'>('missions');
   const [confirm, setConfirm] = useState<9 | 10 | null>(null);
+  const [confirmPoints, setConfirmPoints] = useState<number | null>(null);
+  const [pointReward, setPointReward] = useState(false);
+  const [clockNow, setClockNow] = useState(Date.now);
+  const serverOffset = useRef(0);
+  const expiredRefresh = useRef<number | null>(null);
   const [drawn, setDrawn] = useState<string | null>(null);
   const [reward, setReward] = useState<GameResult['reward']>();
   const actionLock = useRef(false);
@@ -53,6 +61,12 @@ export function Games() {
   const retries = useRef(new Map<string, string>());
   const { notify } = useNotificationCenter();
   const hasGame = state !== null;
+  const acceptState = useCallback((next: GameState) => {
+    const now = Date.now();
+    serverOffset.current = Date.parse(next.memory.serverNow) - now;
+    setClockNow(now);
+    setState(next);
+  }, []);
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -71,34 +85,37 @@ export function Games() {
       void image.decode().catch(() => undefined);
     }
   }, [hasGame, tab]);
-  const refresh = useCallback(async (enter = false) => {
-    if (actionLock.current || pairRef.current) return;
-    const version = ++requestVersion.current;
-    try {
-      const result = await (enter ? gameApi.enter() : gameApi.state());
-      if (version !== requestVersion.current) return;
-      if (result.state.memory.mismatchUntil) {
-        const indices = result.state.memory.cards
-          .filter((card) => card.cardId)
-          .map((card) => card.index);
-        if (indices.length === 2) {
-          setTab('memory');
-          showPair({ round: result.state.memory.round, indices, ready: [], matched: false });
+  const refresh = useCallback(
+    async (enter = false) => {
+      if (actionLock.current || pairRef.current) return;
+      const version = ++requestVersion.current;
+      try {
+        const result = await (enter ? gameApi.enter() : gameApi.state());
+        if (version !== requestVersion.current) return;
+        if (result.state.memory.mismatchUntil) {
+          const indices = result.state.memory.cards
+            .filter((card) => card.cardId)
+            .map((card) => card.index);
+          if (indices.length === 2) {
+            setTab('memory');
+            showPair({ round: result.state.memory.round, indices, ready: [], matched: false });
+          }
         }
+        acceptState(result.state);
+        setGuest(false);
+        setError('');
+      } catch (reason) {
+        if (version !== requestVersion.current) return;
+        if (reason instanceof GameApiError && reason.status === 401) {
+          setGuest(true);
+          setState(null);
+        } else setError(reason instanceof Error ? reason.message : 'Chưa tải được trò chơi.');
+      } finally {
+        if (version === requestVersion.current) setLoading(false);
       }
-      setState(result.state);
-      setGuest(false);
-      setError('');
-    } catch (reason) {
-      if (version !== requestVersion.current) return;
-      if (reason instanceof GameApiError && reason.status === 401) {
-        setGuest(true);
-        setState(null);
-      } else setError(reason instanceof Error ? reason.message : 'Chưa tải được trò chơi.');
-    } finally {
-      if (version === requestVersion.current) setLoading(false);
-    }
-  }, []);
+    },
+    [acceptState],
+  );
   useEffect(() => {
     void refresh(true);
     const visible = () => {
@@ -115,6 +132,9 @@ export function Games() {
       setDrawn(null);
       setReward(undefined);
       setConfirm(null);
+      setConfirmPoints(null);
+      setPointReward(false);
+      expiredRefresh.current = null;
       setState(null);
       setQueuedIndex(null);
       setPendingIndex(null);
@@ -191,6 +211,7 @@ export function Games() {
       }
       if (
         index !== undefined &&
+        (result.state.memory.cards[index]?.cardId || result.state.memory.cards[index]?.matched) &&
         before?.memory.firstIndex !== null &&
         before?.memory.firstIndex !== undefined
       ) {
@@ -201,10 +222,12 @@ export function Games() {
           matched: result.state.memory.cards[index].matched,
         });
       }
-      setState(result.state);
+      acceptState(result.state);
       setConfirm(null);
+      setConfirmPoints(null);
       if (result.card) setDrawn(result.card);
       if (result.reward) {
+        setPointReward(key === 'redeem-memory');
         setReward(result.reward);
         notify({
           title: 'Quà đã vào ví ưu đãi!',
@@ -235,6 +258,12 @@ export function Games() {
   async function flip(index: number, current = state) {
     if (!current) return;
     const memory = current.memory;
+    if (
+      memory.status !== 'playing' ||
+      !memory.deadline ||
+      Date.parse(memory.deadline) <= Date.now() + serverOffset.current
+    )
+      return;
     if (actionLock.current) {
       if (
         flipInFlight.current !== null &&
@@ -251,7 +280,7 @@ export function Games() {
     const expectedVersion = requestVersion.current + 1;
     const result = await action(
       `flip-${memory.round}-${index}`,
-      (id) => gameApi.flip(index, id),
+      (id) => gameApi.flip(index, id, memory.round),
       index,
       current,
     );
@@ -270,6 +299,39 @@ export function Games() {
     }
   }
   const memory = state?.memory;
+  const seconds = memory?.deadline
+    ? Math.max(0, Math.ceil((Date.parse(memory.deadline) - clockNow - serverOffset.current) / 1000))
+    : 60;
+  useEffect(() => {
+    if (memory?.status !== 'playing') return;
+    const timer = window.setInterval(() => setClockNow(Date.now()), 250);
+    return () => clearInterval(timer);
+  }, [memory?.status, memory?.round]);
+  useEffect(() => {
+    if (
+      memory?.status !== 'playing' ||
+      seconds > 0 ||
+      busy ||
+      expiredRefresh.current === memory.round
+    )
+      return;
+    expiredRefresh.current = memory.round;
+    void refresh();
+  }, [memory?.status, memory?.round, seconds, busy, refresh]);
+  useEffect(() => {
+    if (!memory?.soonestExpiry || busy) return;
+    const delay = Math.max(0, Date.parse(memory.soonestExpiry) - Date.now() - serverOffset.current);
+    // A timeout cannot exceed a signed 32-bit delay; longer lots are checked by the minute refresh.
+    if (delay > 2147483647) return;
+    const timer = setTimeout(() => void refresh(), delay);
+    return () => clearTimeout(timer);
+  }, [memory?.soonestExpiry, busy, refresh]);
+  useEffect(() => {
+    if (confirmPoints !== null && memory && confirmPoints !== memory.points) {
+      setConfirmPoints(null);
+      setError('Số điểm còn hạn đã thay đổi. Hãy kiểm tra số dư trước khi đổi thưởng.');
+    }
+  }, [confirmPoints, memory]);
   const collection = state?.collection;
   const matched = memory?.cards.filter((card) => card.matched).length || 0;
   const unique = gameCards.filter(([id]) => (collection?.inventory[id] || 0) > 0).length;
@@ -308,7 +370,7 @@ export function Games() {
         >
           <Layers3 size={20} />
           <span>
-            Lật thẻ làm bánh<small>Ghép đôi · Nhận 30.000đ</small>
+            Lật thẻ làm bánh<small>Ghép đôi · Tích điểm đổi quà</small>
           </span>
         </button>
         <button
@@ -344,8 +406,8 @@ export function Games() {
             Đăng nhập để chơi <ArrowRight size={16} />
           </Link>
           <p className="games-note">
-            Lật thẻ: 3 lượt chào mừng + 1 lượt mỗi ngày. Sưu tập: 1 thẻ mỗi ngày, thêm 1 lượt khi
-            xem sản phẩm đủ 30 giây.
+            Lật thẻ: 3 ván mỗi ngày, mỗi ván 60 giây. Sưu tập: 1 thẻ mỗi ngày, thêm 1 lượt khi xem
+            sản phẩm đủ 30 giây.
           </p>
         </section>
       )}
@@ -358,23 +420,71 @@ export function Games() {
                 <h2>Tìm đôi, trọn vị</h2>
               </div>
               <span className="games-counter">
-                <strong>{memory.attempts}</strong> lượt còn lại
+                <strong>{memory.remainingRounds}</strong> ván còn lại hôm nay
               </span>
             </div>
             <div className="games-progress">
               <span>{matched / 2}/10 cặp đã tìm thấy</span>
               <progress value={matched} max={20} aria-label="Tiến độ ghép đôi" />
             </div>
+            <div className="games-round-bar">
+              <div
+                className={`games-timer${memory.status === 'playing' && seconds <= 10 ? ' is-urgent' : ''}`}
+              >
+                <Clock3 size={19} />
+                <span role="timer" aria-label="Thời gian ván chơi" aria-live="off">
+                  {memory.status === 'playing'
+                    ? `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+                    : '60 giây / ván'}
+                </span>
+              </div>
+              {memory.status !== 'playing' && (
+                <button
+                  className="games-button"
+                  disabled={busy || memory.remainingRounds < 1}
+                  onClick={() =>
+                    void action(`start-${memory.round}`, (id) =>
+                      gameApi.startMemory(memory.round, id),
+                    )
+                  }
+                >
+                  {networkBusy
+                    ? 'Đang mở ván…'
+                    : memory.remainingRounds < 1
+                      ? 'Hết ván hôm nay'
+                      : 'Bắt đầu ván 60 giây'}
+                </button>
+              )}
+            </div>
+            {(memory.status === 'won' || memory.status === 'lost') && !pairView && (
+              <div
+                className={`games-round-result${memory.status === 'won' ? ' is-won' : ''}`}
+                role="status"
+              >
+                <strong>
+                  {memory.status === 'won' ? 'Trọn mẻ bánh, thật khéo!' : 'Hết giờ cho mẻ bánh này'}
+                </strong>
+                <p>
+                  {memory.status === 'lost'
+                    ? 'Ván này không có điểm. Ghi nhớ nguyên liệu và thử lại ở ván tiếp theo nhé.'
+                    : memory.wins === 1
+                      ? 'Chiến thắng đầu tiên đã lập kỷ lục của bạn. Từ lần thắng thứ hai, bạn sẽ nhận điểm.'
+                      : memory.lastPoints > 0
+                        ? `Đã cộng ${number(memory.lastPoints)} điểm vào số dư của bạn.`
+                        : 'Bạn đã đạt giới hạn 600 điểm hôm nay. Kỷ lục vẫn được ghi nhận.'}
+                </p>
+              </div>
+            )}
             <p className="games-hint" aria-live="polite">
-              {memory.complete
-                ? 'Bạn đã tìm đủ nguyên liệu! Nhận quà ở bảng nhiệm vụ để mở mẻ bánh mới.'
-                : memory.mismatchUntil
-                  ? 'Chưa cùng nguyên liệu rồi. Ghi nhớ vị trí và thử lại nhé.'
-                  : memory.firstIndex !== null
-                    ? 'Chọn thêm một thẻ để hoàn thành lượt.'
-                    : memory.attempts === 0
-                      ? 'Hết lượt hôm nay? Khám phá nhiệm vụ bên cạnh để nhận thêm.'
-                      : 'Chọn 2 thẻ giống nhau. Mỗi cặp chọn dùng 1 lượt, kể cả khi chưa khớp.'}
+              {memory.status !== 'playing'
+                ? 'Bấm bắt đầu khi sẵn sàng. Ghép đủ 10 cặp trong 60 giây để thắng.'
+                : seconds === 0
+                  ? 'Đã hết 60 giây. Đang xác nhận kết quả ván chơi…'
+                  : memory.mismatchUntil
+                    ? 'Chưa cùng nguyên liệu rồi. Ghi nhớ vị trí và thử lại nhé.'
+                    : memory.firstIndex !== null
+                      ? 'Chọn thêm một thẻ để hoàn thành lượt.'
+                      : 'Chọn 2 thẻ giống nhau. Bạn được chọn nhiều cặp trong thời gian ván chơi.'}
             </p>
             <div className="games-memory-grid">
               {memory.cards.map((card) => (
@@ -396,7 +506,8 @@ export function Games() {
                     card.matched ||
                     !!card.cardId ||
                     !!memory.mismatchUntil ||
-                    (memory.attempts === 0 && memory.firstIndex === null)
+                    memory.status !== 'playing' ||
+                    seconds === 0
                   }
                   label={
                     card.matched
@@ -410,54 +521,63 @@ export function Games() {
               ))}
             </div>
             <p className="games-note">
-              <Clock3 size={14} /> Vị trí được giữ suốt ván. Lượt chưa dùng được giữ qua ngày và mẻ
-              bánh mới.
+              <Clock3 size={14} /> Vị trí giữ suốt ván. Đồng hồ tiếp tục chạy khi bạn chuyển trang.
+              Ván mới làm mới lúc 00:00 GMT+7.
             </p>
+            {memory.bestMs !== null && (
+              <p className="games-personal-best">
+                Kỷ lục cá nhân:{' '}
+                <strong>
+                  {(memory.bestMs / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 2 })}{' '}
+                  giây
+                </strong>
+              </p>
+            )}
           </section>
           <aside className="games-sidebar">
-            <h2>Nhiệm vụ của bạn</h2>
-            <span className="games-eyebrow">HẰNG NGÀY</span>
-            <Mission
-              title="Ghé chơi mỗi ngày"
-              detail="+1 lượt · Làm mới lúc 00:00 GMT+7"
-              done={memory.missions.daily}
-            />
-            <span className="games-eyebrow">MỘT LẦN DUY NHẤT</span>
-            <Mission
-              title="Lời chào đầu tiên"
-              detail="+3 lượt khi mở game lần đầu"
-              done={memory.missions.welcome}
-            />
-            <Mission
-              title="Ghé quầy bánh"
-              detail="+1 lượt · Khám phá sản phẩm"
-              done={memory.missions.products}
-              to="/san-pham"
-            />
-            <Mission
-              title="Làm quen Hà Thành Vị"
-              detail="+1 lượt · Đọc câu chuyện chúng tôi"
-              done={memory.missions.about}
-              to="/ve-chung-toi"
-            />
-            <div className="games-prize">
+            <h2>Đổi thưởng từ điểm</h2>
+            <div className="games-prize games-points-prize">
               <Ticket />
-              <span>HOÀN THÀNH MẺ BÁNH</span>
-              <strong>30.000đ</strong>
-              <p>Giảm trực tiếp mọi mặt hàng, đơn từ 0đ. Có hiệu lực 30 ngày.</p>
+              <span>ĐIỂM CÒN HẠN CỦA BẠN</span>
+              <strong className="games-point-balance">
+                {number(memory.points)} <small>điểm</small>
+              </strong>
+              <p>
+                1 điểm = 1đ ưu đãi. Từ 3.000 điểm, đổi toàn bộ số dư thành một voucher riêng cho
+                bạn.
+              </p>
+              <dl className="games-points-details">
+                <div>
+                  <dt>Nhận hôm nay</dt>
+                  <dd>{number(memory.earnedToday)} / 600 điểm</dd>
+                </div>
+                <div>
+                  <dt>Hạn điểm gần nhất</dt>
+                  <dd>{memory.soonestExpiry ? date(memory.soonestExpiry) : 'Chưa có điểm'}</dd>
+                </div>
+              </dl>
               <button
                 className="games-button"
-                disabled={!memory.complete || busy}
-                onClick={() =>
-                  void action(`reward-${memory.round}`, () => gameApi.memoryReward(memory.round))
-                }
+                disabled={memory.points < 3000 || busy}
+                onClick={() => setConfirmPoints(memory.points)}
               >
-                {networkBusy && pendingIndex === null
-                  ? 'Đang nhận thưởng…'
-                  : pairView
-                    ? 'Đang xem kết quả…'
-                    : 'Nhận thưởng & chơi ván mới'}
+                {memory.points < 3000 ? 'Chưa đủ 3.000 điểm' : 'Đổi toàn bộ điểm'}
               </button>
+              <p className="games-note">
+                Voucher hạn 30 ngày, giảm tối đa 10% giá trị hàng trong đơn. Phần chưa dùng sẽ mất
+                sau khi dùng voucher.
+              </p>
+            </div>
+            <div className="games-point-rules">
+              <h3>Chơi khéo, gom điểm</h3>
+              <p>
+                Ván thắng đầu tiên lập kỷ lục. Từ lần thắng thứ hai: +200 điểm; phá kỷ lục cá nhân:
+                thêm 50 điểm.
+              </p>
+              <p>
+                Tổng tối đa 600 điểm/ngày, kể cả thưởng kỷ lục. Mỗi đợt điểm hết hạn sau 90 ngày.
+                Điểm chỉ đổi ưu đãi mua hàng.
+              </p>
             </div>
           </aside>
         </div>
@@ -607,9 +727,20 @@ export function Games() {
       <details className="games-rules">
         <summary>Luật chơi & những điều cần biết</summary>
         <p>
-          Lật thẻ: 20 thẻ tạo thành 10 cặp. Mỗi lượt chọn hai thẻ, đúng thì cặp biến mất, sai thì úp
-          lại. Ghép hết bàn và nhận thưởng để bắt đầu ván mới. Các nhiệm vụ một lần không được cấp
-          lại.
+          Lật thẻ: 3 ván mỗi ngày GMT+7, mỗi ván 60 giây từ lúc bắt đầu, không giới hạn lần chọn
+          cặp. Bàn 20 thẻ tạo thành 10 cặp: đúng thì cặp biến mất, sai thì úp lại. Ghép hết bàn
+          trước khi hết giờ để thắng. Tải lại hoặc ẩn trang không gia hạn đồng hồ.
+        </p>
+        <p>
+          Ván thắng đầu tiên của tài khoản không có điểm. Từ ván thắng thứ hai nhận 200 điểm; thắng
+          nhanh hơn kỷ lục cá nhân được thêm 50 điểm. Tổng điểm nhận tối đa 600/ngày, nên ván cuối
+          có thể được ít điểm hơn khi chạm giới hạn.
+        </p>
+        <p>
+          Mỗi đợt điểm hết hạn sau 90 ngày. Từ 3.000 điểm còn hạn có thể đổi toàn bộ thành voucher,
+          1 điểm = 1đ. Voucher dùng một lần, giảm bằng giá trị đã đổi nhưng tối đa 10% giá trị hàng
+          trong đơn; phần giá trị chưa dùng sẽ mất, không hoàn lại điểm. Điểm không rút tiền mặt
+          hoặc chuyển cho người khác.
         </p>
         <p>
           Sưu tập: mỗi ngày một lượt rút và thêm một lượt khi xem trang sản phẩm đủ 30 giây. Ngày
@@ -622,6 +753,34 @@ export function Games() {
           đổi được một lần.
         </p>
       </details>
+      {confirmPoints !== null && (
+        <Modal
+          title="Đổi điểm lấy ưu đãi?"
+          onClose={() => {
+            if (!busy) setConfirmPoints(null);
+          }}
+        >
+          <div className="games-dialog">
+            <p>
+              Đổi toàn bộ <strong>{number(confirmPoints)} điểm còn hạn</strong> thành voucher giá
+              trị <strong>{number(confirmPoints)}đ</strong>. Điểm sẽ được trừ ngay; điểm hết hạn
+              trước lúc đổi không được tính.
+            </p>
+            <p>
+              Voucher riêng cho tài khoản, dùng một lần trong 30 ngày, mọi mặt hàng và đơn từ 0đ.
+              Mức giảm thực tế không vượt 10% giá trị hàng trong đơn.{' '}
+              <strong>Phần chưa dùng sẽ mất</strong> sau khi dùng voucher.
+            </p>
+            <button
+              className="games-button"
+              disabled={busy}
+              onClick={() => void action('redeem-memory', (id) => gameApi.redeemMemory(id))}
+            >
+              {busy ? 'Đang đổi…' : 'Xác nhận đổi điểm'}
+            </button>
+          </div>
+        </Modal>
+      )}
       {confirm && (
         <Modal
           title="Đổi thẻ lấy ưu đãi?"
@@ -670,6 +829,11 @@ export function Games() {
               Mã ưu đãi của riêng bạn: <strong>{reward.code}</strong>
             </p>
             <p>Áp dụng mọi mặt hàng, đơn từ 0đ. Có hiệu lực 30 ngày kể từ lúc nhận.</p>
+            {pointReward && (
+              <p>
+                Giảm tối đa 10% giá trị hàng trong đơn. Phần chưa dùng sẽ mất sau khi dùng voucher.
+              </p>
+            )}
             <Link className="games-button" to="/tai-khoan?section=vouchers">
               Xem ví ưu đãi <ArrowRight size={16} />
             </Link>

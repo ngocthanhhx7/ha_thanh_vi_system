@@ -35,3 +35,24 @@ test('reviews require owner, delivered state and purchased product', () => {
   assert.throws(() => assertReviewAllowed({ ...order, status: 'shipping' }, 'alice', 'cake'));
   assert.throws(() => assertReviewAllowed(order, 'alice', 'other'));
 });
+test('point vouchers cap the actual discount at 10% of merchandise subtotal', () => {
+  const pointsVoucher = {
+    type: 'fixed',
+    value: 3000,
+    maxDiscount: 0,
+    minOrder: 0,
+    orderPercentCap: 10,
+  };
+  assert.equal(discountFor(pointsVoucher, 10000), 1000);
+  assert.equal(discountFor(pointsVoucher, 30000), 3000);
+  assert.equal(discountFor(pointsVoucher, 50000), 3000);
+  assert.equal(discountFor(pointsVoucher, 10009), 1000);
+  assert.equal(discountFor(pointsVoucher, 0), 0);
+  assert.equal(discountFor(pointsVoucher, 9), 0);
+  assert.equal(discountFor({ ...pointsVoucher, maxDiscount: 500 }, 10000), 500);
+  // A normal voucher keeps its original fixed discount without this optional cap.
+  assert.equal(
+    discountFor({ type: 'fixed', value: 3000, maxDiscount: 0, minOrder: 0 }, 10000),
+    3000,
+  );
+});

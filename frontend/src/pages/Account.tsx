@@ -678,6 +678,12 @@ export function Account() {
                               ? ' · Tối đa ' + priceLabel(voucher.maxDiscount)
                               : ''}
                           </p>
+                          {voucher.orderPercentCap !== undefined && (
+                            <p>
+                              Giảm tối đa {voucher.orderPercentCap}% giá trị hàng trong đơn. Dùng
+                              một lần; phần giá trị chưa dùng hết sẽ mất, không hoàn lại thành điểm.
+                            </p>
+                          )}
                           <p className="account-voucher-code">{voucher.code}</p>
                           <small>
                             {voucherDateLabel(voucher.startsAt)} –{' '}

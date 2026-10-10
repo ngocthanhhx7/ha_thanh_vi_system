@@ -2,6 +2,8 @@
 
 ## Quy tắc nghiệp vụ
 
+- Voucher đổi điểm lật thẻ có `orderPercentCap: 10`: mức giảm là số nhỏ hơn giữa giá trị mã và 10% giá trị hàng trong đơn (làm tròn xuống đồng). Đơn từ 0đ, mã dùng một lần; phần chưa dùng mất khi sử dụng. Báo giá trả điều kiện này để checkout giải thích kể cả khi ví chưa tải được. Voucher cũ không có trường này giữ cách tính hiện có.
+
 - `CustomerVoucher` là cấu hình chiến dịch và các điều kiện áp dụng; `CustomerWallet` là quyền nhận riêng của một khách. Một khách chỉ có một bản ghi ví cho mỗi voucher nhờ khóa duy nhất `(userId, voucherId)`.
 - Mã công khai (`code`) có thể nhập thẳng ở thanh toán; khách cũng có thể lưu mã vào ví trước. Việc claim lặp lại là idempotent.
 - Ưu đãi tự động (`automatic`) dành cho khách hàng đang hoạt động. Ví đồng bộ quyền nhận khi khách mở ví; khách mới cũng nhận được ở lần mở ví đầu tiên. Hệ thống gửi thông báo khi chiến dịch được tạo.

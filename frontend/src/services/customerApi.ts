@@ -87,6 +87,7 @@ export type VoucherWalletItem = {
   value: number;
   minOrder: number;
   maxDiscount?: number;
+  orderPercentCap?: number;
   startsAt: string;
   expiresAt: string;
   status: 'available' | 'scheduled' | 'reserved' | 'used' | 'exhausted' | 'expired' | 'inactive';
@@ -343,11 +344,13 @@ export const customerApi = {
   claimVoucher: (code: string) =>
     customerRequest<unknown>('/account/vouchers/claim', 'POST', { code }),
   quoteVoucher: (code: string, items: CartItem[]) =>
-    customerRequest<{ discount: number; subtotal: number; code: string }>(
-      '/account/vouchers/quote',
-      'POST',
-      { code, items },
-    ),
+    customerRequest<{
+      discount: number;
+      subtotal: number;
+      code: string;
+      orderPercentCap?: number;
+      voucherValue?: number;
+    }>('/account/vouchers/quote', 'POST', { code, items }),
   productReviews: (id: string) =>
     customerRequest<{ reviews: ProductReview[] }>(
       '/products/' + encodeURIComponent(id) + '/reviews',

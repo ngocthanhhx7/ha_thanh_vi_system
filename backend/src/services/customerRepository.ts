@@ -46,6 +46,7 @@ type VoucherRecord = {
   value: number;
   minOrder: number;
   maxDiscount: number;
+  orderPercentCap?: number;
   startsAt: Date;
   expiresAt: Date;
   distribution: 'automatic' | 'code' | 'targeted';
@@ -255,6 +256,9 @@ export class CustomerRepository {
         value: voucher.value,
         minOrder: voucher.minOrder,
         maxDiscount: voucher.maxDiscount,
+        ...(voucher.orderPercentCap === undefined
+          ? {}
+          : { orderPercentCap: voucher.orderPercentCap }),
         startsAt: voucher.startsAt,
         expiresAt: voucher.expiresAt,
         status,
@@ -315,7 +319,14 @@ export class CustomerRepository {
       voucher.reservations.filter((item) => item.userId === userId).length >= voucher.perUserLimit
     )
       throw new CustomerError(409, 'Voucher đã hết lượt sử dụng.');
-    return { code: voucher.code, discount, subtotal };
+    return {
+      code: voucher.code,
+      discount,
+      subtotal,
+      ...(voucher.orderPercentCap === undefined
+        ? {}
+        : { orderPercentCap: voucher.orderPercentCap, voucherValue: voucher.value }),
+    };
   }
   async reserve(code: string, userId: string, subtotal: number, orderId: string) {
     const { voucher, discount } = await this.validVoucher(code, userId, subtotal);

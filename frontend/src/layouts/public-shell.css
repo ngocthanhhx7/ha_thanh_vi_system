@@ -2,6 +2,48 @@ body {
   background-color: var(--cream);
   background-image: radial-gradient(ellipse at 94% 9%, #d9bd8621, transparent 430px);
 }
+/* The game room fills the visible viewport; the board owns the remaining space. */
+.game-shell {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.game-shell > .announcement,
+.game-shell > .closing-strip,
+.game-shell > footer,
+.game-shell > .vi-chat-widget {
+  display: none;
+}
+.game-shell > .header {
+  flex: none;
+  height: 64px;
+  padding-inline: 24px;
+}
+.game-shell .brand,
+.game-shell .brand img {
+  width: 86px;
+  height: 52px;
+}
+.game-shell > main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.game-shell .page-entry {
+  height: 100%;
+}
+@media (max-width: 760px), (max-height: 500px) {
+  .game-shell > .header {
+    height: 52px;
+    padding-inline: 14px;
+  }
+  .game-shell .brand,
+  .game-shell .brand img {
+    width: 72px;
+    height: 44px;
+  }
+}
 .page-entry {
   animation: page-enter 220ms ease-out;
 }

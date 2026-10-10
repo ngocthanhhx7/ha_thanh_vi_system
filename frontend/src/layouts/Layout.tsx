@@ -51,6 +51,7 @@ export function Layout() {
     cart,
   } = useShop();
   const location = useLocation();
+  const isGames = /^\/tro-choi\/?$/.test(location.pathname);
   const navigate = useNavigate();
   const [panel, setPanel] = useState<'menu' | 'search' | 'cart' | null>(null);
   const [query, setQuery] = useState('');
@@ -126,7 +127,7 @@ export function Layout() {
   }
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
   return (
-    <>
+    <div className={isGames ? 'public-layout game-shell' : 'public-layout'}>
       <a className="skip-link" href="#main-content">
         Đến nội dung chính
       </a>
@@ -436,6 +437,6 @@ export function Layout() {
           {panel === 'cart' && <CartContents />}
         </Modal>
       )}
-    </>
+    </div>
   );
 }

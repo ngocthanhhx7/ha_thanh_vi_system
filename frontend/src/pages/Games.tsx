@@ -1,6 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Check, Clock3, Gift, Layers3, Sparkles, Ticket } from 'lucide-react';
+import {
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  Clock3,
+  Gift,
+  Layers3,
+  Sparkles,
+  Ticket,
+  Maximize2,
+  Minimize2,
+  CircleHelp,
+} from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { useNotificationCenter } from '../components/NotificationCenter';
 import { MemoryCard } from '../components/MemoryCard';
@@ -50,6 +62,70 @@ export function Games() {
   const [section, setSection] = useState<'missions' | 'rewards'>('missions');
   const [confirm, setConfirm] = useState<9 | 10 | null>(null);
   const [confirmPoints, setConfirmPoints] = useState<number | null>(null);
+  const [pointsOpen, setPointsOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [roundDetailsOpen, setRoundDetailsOpen] = useState(false);
+  const [boardExpanded, setBoardExpanded] = useState(false);
+  const boardRef = useRef<HTMLElement>(null);
+  const roomRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const changed = () => setBoardExpanded(document.fullscreenElement === roomRef.current);
+    document.addEventListener('fullscreenchange', changed);
+    return () => document.removeEventListener('fullscreenchange', changed);
+  }, []);
+  useEffect(() => {
+    if (!boardExpanded) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const before = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const keyboard = (event: KeyboardEvent) => {
+      if (roomRef.current?.querySelector('dialog[open]')) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setBoardExpanded(false);
+        if (document.fullscreenElement === roomRef.current)
+          void document.exitFullscreen().catch(() => {});
+      }
+      if (event.key === 'Tab') {
+        const buttons = Array.from(
+          boardRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]') || [],
+        );
+        const first = buttons[0];
+        const last = buttons[buttons.length - 1];
+        if (!buttons.includes(document.activeElement as HTMLElement)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first)?.focus();
+        } else if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', keyboard);
+    return () => {
+      document.body.style.overflow = before;
+      document.removeEventListener('keydown', keyboard);
+      previousFocus?.focus();
+    };
+  }, [boardExpanded]);
+  async function toggleBoardSize() {
+    if (boardExpanded) {
+      if (document.fullscreenElement === roomRef.current)
+        await document.exitFullscreen().catch(() => {});
+      setBoardExpanded(false);
+      return;
+    }
+    setBoardExpanded(true);
+    // Keep the viewport overlay if the browser cannot grant native fullscreen.
+    try {
+      await roomRef.current?.requestFullscreen?.();
+    } catch {
+      /* Viewport fallback stays active. */
+    }
+  }
   const [pointReward, setPointReward] = useState(false);
   const [clockNow, setClockNow] = useState(Date.now);
   const serverOffset = useRef(0);
@@ -133,6 +209,8 @@ export function Games() {
       setReward(undefined);
       setConfirm(null);
       setConfirmPoints(null);
+      setPointsOpen(false);
+      setRoundDetailsOpen(false);
       setPointReward(false);
       expiredRefresh.current = null;
       setState(null);
@@ -333,12 +411,29 @@ export function Games() {
     }
   }, [confirmPoints, memory]);
   const collection = state?.collection;
+  const roundDescription = !memory
+    ? ''
+    : memory.status === 'lost'
+      ? 'Ván này không có điểm. Ghi nhớ nguyên liệu và thử lại ở ván tiếp theo nhé.'
+      : memory.wins === 1
+        ? 'Chiến thắng đầu tiên đã lập kỷ lục của bạn. Từ lần thắng thứ hai, bạn sẽ nhận điểm.'
+        : memory.lastPoints > 0
+          ? `Đã cộng ${number(memory.lastPoints)} điểm vào số dư của bạn.`
+          : 'Bạn đã đạt giới hạn 600 điểm hôm nay. Kỷ lục vẫn được ghi nhận.';
   const matched = memory?.cards.filter((card) => card.matched).length || 0;
   const unique = gameCards.filter(([id]) => (collection?.inventory[id] || 0) > 0).length;
   const canRedeem = (tier: 9 | 10) =>
     gameCards.slice(0, tier).every(([id]) => (collection?.inventory[id] || 0) >= 1);
+  const errorNotice = error && (
+    <div className="games-error" role="alert">
+      {error}{' '}
+      <button onClick={() => void refresh()} disabled={busy}>
+        Tải lại tiến độ
+      </button>
+    </div>
+  );
   return (
-    <div className="games-page">
+    <div ref={roomRef} className={`games-page${tab === 'memory' ? ' games-memory-page' : ''}`}>
       <header className="games-intro">
         <div>
           <span className="games-eyebrow">GÓC VUI HÀ THÀNH</span>
@@ -362,36 +457,63 @@ export function Games() {
           </span>
         </div>
       </header>
-      <div className="games-switch" role="group" aria-label="Chọn trò chơi">
-        <button
-          disabled={loading || busy}
-          aria-pressed={tab === 'memory'}
-          onClick={() => setTab('memory')}
-        >
-          <Layers3 size={20} />
-          <span>
-            Lật thẻ làm bánh<small>Ghép đôi · Tích điểm đổi quà</small>
-          </span>
-        </button>
-        <button
-          disabled={loading || busy}
-          aria-pressed={tab === 'collection'}
-          onClick={() => setTab('collection')}
-        >
-          <Sparkles size={20} />
-          <span>
-            Sưu tập hương vị<small>Gom thẻ · Đổi quà</small>
-          </span>
-        </button>
-      </div>
-      {error && (
-        <div className="games-error" role="alert">
-          {error}{' '}
-          <button onClick={() => void refresh()} disabled={busy}>
-            Tải lại tiến độ
+      <div className="games-toolbar">
+        <Link className="games-room-back" to="/" aria-label="Về trang chủ">
+          <ArrowLeft size={19} />
+        </Link>
+        <div className="games-switch" role="group" aria-label="Chọn trò chơi">
+          <button
+            aria-label="Lật thẻ làm bánh"
+            disabled={loading || busy}
+            aria-pressed={tab === 'memory'}
+            onClick={() => setTab('memory')}
+          >
+            <Layers3 size={20} />
+            <span>
+              <span className="games-switch-title">Lật thẻ làm bánh</span>
+              <span className="games-switch-short">Lật thẻ</span>
+              <small>Ghép đôi · Tích điểm đổi quà</small>
+            </span>
+          </button>
+          <button
+            aria-label="Sưu tập hương vị"
+            disabled={loading || busy}
+            aria-pressed={tab === 'collection'}
+            onClick={() => setTab('collection')}
+          >
+            <Sparkles size={20} />
+            <span>
+              <span className="games-switch-title">Sưu tập hương vị</span>
+              <span className="games-switch-short">Sưu tập</span>
+              <small>Gom thẻ · Đổi quà</small>
+            </span>
           </button>
         </div>
-      )}
+        <div className="games-toolbar-actions">
+          {memory && tab === 'memory' && (
+            <button
+              className="games-rewards-toggle"
+              onClick={() => setPointsOpen(true)}
+              aria-label="Đổi thưởng từ điểm"
+            >
+              <Ticket size={18} />
+              <span className="games-point-balance">
+                {number(memory.points)} <small>điểm</small>
+              </span>
+              <span className="games-rewards-label">Đổi thưởng</span>
+            </button>
+          )}
+          <button
+            className="games-rules-toggle"
+            aria-label="Luật chơi & những điều cần biết"
+            onClick={() => setRulesOpen(true)}
+          >
+            <CircleHelp size={18} />
+            <span>Luật chơi</span>
+          </button>
+        </div>
+      </div>
+      {!(memory && tab === 'memory') && errorNotice}
       {loading && (
         <p className="games-loading" role="status">
           Đang mở hộp thẻ của bạn…
@@ -413,48 +535,68 @@ export function Games() {
       )}
       {state && tab === 'memory' && memory && (
         <div className="games-layout">
-          <section className="games-board-panel" aria-label="Bàn lật thẻ">
+          <section
+            ref={boardRef}
+            className={`games-board-panel${boardExpanded ? ' is-expanded' : ''}`}
+            aria-label="Bàn lật thẻ"
+          >
+            {errorNotice}
             <div className="games-panel-heading">
               <div>
                 <span className="games-eyebrow">MẺ BÁNH SỐ {memory.round}</span>
                 <h2>Tìm đôi, trọn vị</h2>
               </div>
-              <span className="games-counter">
-                <strong>{memory.remainingRounds}</strong> ván còn lại hôm nay
-              </span>
-            </div>
-            <div className="games-progress">
-              <span>{matched / 2}/10 cặp đã tìm thấy</span>
-              <progress value={matched} max={20} aria-label="Tiến độ ghép đôi" />
-            </div>
-            <div className="games-round-bar">
-              <div
-                className={`games-timer${memory.status === 'playing' && seconds <= 10 ? ' is-urgent' : ''}`}
-              >
-                <Clock3 size={19} />
-                <span role="timer" aria-label="Thời gian ván chơi" aria-live="off">
-                  {memory.status === 'playing'
-                    ? `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
-                    : '60 giây / ván'}
+              <div className="games-board-heading-tools">
+                <span className="games-counter">
+                  <strong>{memory.remainingRounds}</strong> ván còn lại hôm nay
                 </span>
-              </div>
-              {memory.status !== 'playing' && (
                 <button
-                  className="games-button"
-                  disabled={busy || memory.remainingRounds < 1}
-                  onClick={() =>
-                    void action(`start-${memory.round}`, (id) =>
-                      gameApi.startMemory(memory.round, id),
-                    )
-                  }
+                  className="games-expand-button"
+                  onClick={() => void toggleBoardSize()}
+                  aria-label={boardExpanded ? 'Thu nhỏ bàn thẻ' : 'Phóng to bàn thẻ'}
+                  title={boardExpanded ? 'Thu nhỏ bàn thẻ (Esc)' : 'Phóng to bàn thẻ'}
                 >
-                  {networkBusy
-                    ? 'Đang mở ván…'
-                    : memory.remainingRounds < 1
-                      ? 'Hết ván hôm nay'
-                      : 'Bắt đầu ván 60 giây'}
+                  {boardExpanded ? <Minimize2 size={19} /> : <Maximize2 size={19} />}
                 </button>
-              )}
+              </div>
+            </div>
+            <div className="games-board-status">
+              <div className="games-progress">
+                <span>
+                  {matched / 2}/10
+                  <span className="games-progress-description"> cặp đã tìm thấy</span>
+                </span>
+                <progress value={matched} max={20} aria-label="Tiến độ ghép đôi" />
+              </div>
+              <div className="games-round-bar">
+                <div
+                  className={`games-timer${memory.status === 'playing' && seconds <= 10 ? ' is-urgent' : ''}`}
+                >
+                  <Clock3 size={19} />
+                  <span role="timer" aria-label="Thời gian ván chơi" aria-live="off">
+                    {memory.status === 'playing'
+                      ? `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+                      : '01:00'}
+                  </span>
+                </div>
+                {memory.status !== 'playing' && (
+                  <button
+                    className="games-button"
+                    disabled={busy || memory.remainingRounds < 1}
+                    onClick={() =>
+                      void action(`start-${memory.round}`, (id) =>
+                        gameApi.startMemory(memory.round, id),
+                      )
+                    }
+                  >
+                    {networkBusy
+                      ? 'Đang mở ván…'
+                      : memory.remainingRounds < 1
+                        ? 'Hết ván hôm nay'
+                        : 'Bắt đầu ván 60 giây'}
+                  </button>
+                )}
+              </div>
             </div>
             {(memory.status === 'won' || memory.status === 'lost') && !pairView && (
               <div
@@ -462,20 +604,22 @@ export function Games() {
                 role="status"
               >
                 <strong>
-                  {memory.status === 'won' ? 'Trọn mẻ bánh, thật khéo!' : 'Hết giờ cho mẻ bánh này'}
-                </strong>
-                <p>
                   {memory.status === 'lost'
-                    ? 'Ván này không có điểm. Ghi nhớ nguyên liệu và thử lại ở ván tiếp theo nhé.'
+                    ? 'Hết giờ cho mẻ bánh này'
                     : memory.wins === 1
-                      ? 'Chiến thắng đầu tiên đã lập kỷ lục của bạn. Từ lần thắng thứ hai, bạn sẽ nhận điểm.'
-                      : memory.lastPoints > 0
-                        ? `Đã cộng ${number(memory.lastPoints)} điểm vào số dư của bạn.`
-                        : 'Bạn đã đạt giới hạn 600 điểm hôm nay. Kỷ lục vẫn được ghi nhận.'}
-                </p>
+                      ? 'Thắng ván · Đã lập kỷ lục'
+                      : `Thắng ván · +${number(memory.lastPoints)} điểm`}
+                </strong>
+                <p className="visually-hidden">{roundDescription}</p>
+                <button className="games-result-details" onClick={() => setRoundDetailsOpen(true)}>
+                  Chi tiết
+                </button>
               </div>
             )}
-            <p className="games-hint" aria-live="polite">
+            <p
+              className={`games-hint${memory.status === 'won' || memory.status === 'lost' ? ' games-hint-ended' : ''}`}
+              aria-live="polite"
+            >
               {memory.status !== 'playing'
                 ? 'Bấm bắt đầu khi sẵn sàng. Ghép đủ 10 cặp trong 60 giây để thắng.'
                 : seconds === 0
@@ -486,39 +630,41 @@ export function Games() {
                       ? 'Chọn thêm một thẻ để hoàn thành lượt.'
                       : 'Chọn 2 thẻ giống nhau. Bạn được chọn nhiều cặp trong thời gian ván chơi.'}
             </p>
-            <div className="games-memory-grid">
-              {memory.cards.map((card) => (
-                <MemoryCard
-                  key={`${memory.round}-${card.index}`}
-                  card={card}
-                  face={card.cardId || revealedFaces.current[card.index] || null}
-                  displayPair={
-                    pairView?.round === memory.round && pairView.indices.includes(card.index)
-                  }
-                  onRevealed={() => cardRevealed(card.index)}
-                  pending={pendingIndex === card.index || queuedIndex === card.index}
-                  disabled={
-                    (busy &&
-                      (pendingIndex === null ||
-                        memory.firstIndex !== null ||
-                        queuedIndex !== null)) ||
-                    pendingIndex === card.index ||
-                    card.matched ||
-                    !!card.cardId ||
-                    !!memory.mismatchUntil ||
-                    memory.status !== 'playing' ||
-                    seconds === 0
-                  }
-                  label={
-                    card.matched
-                      ? `Ô ${card.index + 1}, đã ghép`
-                      : card.cardId
-                        ? gameCardName(card.cardId)
-                        : `Lật thẻ ${card.index + 1}`
-                  }
-                  onClick={() => void flip(card.index)}
-                />
-              ))}
+            <div className="games-memory-space">
+              <div className="games-memory-grid">
+                {memory.cards.map((card) => (
+                  <MemoryCard
+                    key={`${memory.round}-${card.index}`}
+                    card={card}
+                    face={card.cardId || revealedFaces.current[card.index] || null}
+                    displayPair={
+                      pairView?.round === memory.round && pairView.indices.includes(card.index)
+                    }
+                    onRevealed={() => cardRevealed(card.index)}
+                    pending={pendingIndex === card.index || queuedIndex === card.index}
+                    disabled={
+                      (busy &&
+                        (pendingIndex === null ||
+                          memory.firstIndex !== null ||
+                          queuedIndex !== null)) ||
+                      pendingIndex === card.index ||
+                      card.matched ||
+                      !!card.cardId ||
+                      !!memory.mismatchUntil ||
+                      memory.status !== 'playing' ||
+                      seconds === 0
+                    }
+                    label={
+                      card.matched
+                        ? `Ô ${card.index + 1}, đã ghép`
+                        : card.cardId
+                          ? gameCardName(card.cardId)
+                          : `Lật thẻ ${card.index + 1}`
+                    }
+                    onClick={() => void flip(card.index)}
+                  />
+                ))}
+              </div>
             </div>
             <p className="games-note">
               <Clock3 size={14} /> Vị trí giữ suốt ván. Đồng hồ tiếp tục chạy khi bạn chuyển trang.
@@ -534,52 +680,6 @@ export function Games() {
               </p>
             )}
           </section>
-          <aside className="games-sidebar">
-            <h2>Đổi thưởng từ điểm</h2>
-            <div className="games-prize games-points-prize">
-              <Ticket />
-              <span>ĐIỂM CÒN HẠN CỦA BẠN</span>
-              <strong className="games-point-balance">
-                {number(memory.points)} <small>điểm</small>
-              </strong>
-              <p>
-                1 điểm = 1đ ưu đãi. Từ 3.000 điểm, đổi toàn bộ số dư thành một voucher riêng cho
-                bạn.
-              </p>
-              <dl className="games-points-details">
-                <div>
-                  <dt>Nhận hôm nay</dt>
-                  <dd>{number(memory.earnedToday)} / 600 điểm</dd>
-                </div>
-                <div>
-                  <dt>Hạn điểm gần nhất</dt>
-                  <dd>{memory.soonestExpiry ? date(memory.soonestExpiry) : 'Chưa có điểm'}</dd>
-                </div>
-              </dl>
-              <button
-                className="games-button"
-                disabled={memory.points < 3000 || busy}
-                onClick={() => setConfirmPoints(memory.points)}
-              >
-                {memory.points < 3000 ? 'Chưa đủ 3.000 điểm' : 'Đổi toàn bộ điểm'}
-              </button>
-              <p className="games-note">
-                Voucher hạn 30 ngày, giảm tối đa 10% giá trị hàng trong đơn. Phần chưa dùng sẽ mất
-                sau khi dùng voucher.
-              </p>
-            </div>
-            <div className="games-point-rules">
-              <h3>Chơi khéo, gom điểm</h3>
-              <p>
-                Ván thắng đầu tiên lập kỷ lục. Từ lần thắng thứ hai: +200 điểm; phá kỷ lục cá nhân:
-                thêm 50 điểm.
-              </p>
-              <p>
-                Tổng tối đa 600 điểm/ngày, kể cả thưởng kỷ lục. Mỗi đợt điểm hết hạn sau 90 ngày.
-                Điểm chỉ đổi ưu đãi mua hàng.
-              </p>
-            </div>
-          </aside>
         </div>
       )}
       {state && tab === 'collection' && collection && (
@@ -724,35 +824,103 @@ export function Games() {
           </aside>
         </div>
       )}
-      <details className="games-rules">
-        <summary>Luật chơi & những điều cần biết</summary>
-        <p>
-          Lật thẻ: 3 ván mỗi ngày GMT+7, mỗi ván 60 giây từ lúc bắt đầu, không giới hạn lần chọn
-          cặp. Bàn 20 thẻ tạo thành 10 cặp: đúng thì cặp biến mất, sai thì úp lại. Ghép hết bàn
-          trước khi hết giờ để thắng. Tải lại hoặc ẩn trang không gia hạn đồng hồ.
-        </p>
-        <p>
-          Ván thắng đầu tiên của tài khoản không có điểm. Từ ván thắng thứ hai nhận 200 điểm; thắng
-          nhanh hơn kỷ lục cá nhân được thêm 50 điểm. Tổng điểm nhận tối đa 600/ngày, nên ván cuối
-          có thể được ít điểm hơn khi chạm giới hạn.
-        </p>
-        <p>
-          Mỗi đợt điểm hết hạn sau 90 ngày. Từ 3.000 điểm còn hạn có thể đổi toàn bộ thành voucher,
-          1 điểm = 1đ. Voucher dùng một lần, giảm bằng giá trị đã đổi nhưng tối đa 10% giá trị hàng
-          trong đơn; phần giá trị chưa dùng sẽ mất, không hoàn lại điểm. Điểm không rút tiền mặt
-          hoặc chuyển cho người khác.
-        </p>
-        <p>
-          Sưu tập: mỗi ngày một lượt rút và thêm một lượt khi xem trang sản phẩm đủ 30 giây. Ngày
-          mới bắt đầu lúc 00:00 GMT+7. Bánh chả chỉ phát 10 thẻ toàn hệ thống, không bổ sung sau khi
-          đổi; mỗi tài khoản chỉ được phát tối đa một thẻ.
-        </p>
-        <p>
-          Ưu đãi được cấp riêng cho tài khoản, dùng một lần, có hiệu lực 30 ngày từ khi nhận. Đổi bộ
-          9 trừ một bản mỗi nguyên liệu; đổi bộ 10 trừ một bản của cả 10 loại. Mỗi mốc sưu tập chỉ
-          đổi được một lần.
-        </p>
-      </details>
+      {pointsOpen && memory && (
+        <Modal title="Đổi thưởng từ điểm" onClose={() => setPointsOpen(false)}>
+          <div className="games-points-content">
+            <div className="games-prize games-points-prize">
+              <Ticket />
+              <span>ĐIỂM CÒN HẠN CỦA BẠN</span>
+              <strong className="games-points-total">
+                {number(memory.points)} <small>điểm</small>
+              </strong>
+              <p>
+                1 điểm = 1đ ưu đãi. Từ 3.000 điểm, đổi toàn bộ số dư thành một voucher riêng cho
+                bạn.
+              </p>
+              <dl className="games-points-details">
+                <div>
+                  <dt>Nhận hôm nay</dt>
+                  <dd>{number(memory.earnedToday)} / 600 điểm</dd>
+                </div>
+                <div>
+                  <dt>Hạn điểm gần nhất</dt>
+                  <dd>{memory.soonestExpiry ? date(memory.soonestExpiry) : 'Chưa có điểm'}</dd>
+                </div>
+              </dl>
+              <button
+                className="games-button"
+                disabled={memory.points < 3000 || busy}
+                onClick={() => {
+                  setPointsOpen(false);
+                  setConfirmPoints(memory.points);
+                }}
+              >
+                {memory.points < 3000 ? 'Chưa đủ 3.000 điểm' : 'Đổi toàn bộ điểm'}
+              </button>
+              <p className="games-note">
+                Voucher hạn 30 ngày, giảm tối đa 10% giá trị hàng trong đơn. Phần chưa dùng sẽ mất
+                sau khi dùng voucher.
+              </p>
+            </div>
+            <div className="games-point-rules">
+              <h3>Chơi khéo, gom điểm</h3>
+              <p>
+                Ván thắng đầu tiên lập kỷ lục. Từ lần thắng thứ hai: +200 điểm; phá kỷ lục cá nhân:
+                thêm 50 điểm.
+              </p>
+              <p>
+                Tổng tối đa 600 điểm/ngày, kể cả thưởng kỷ lục. Mỗi đợt điểm hết hạn sau 90 ngày.
+                Điểm chỉ đổi ưu đãi mua hàng.
+              </p>
+            </div>
+          </div>
+        </Modal>
+      )}
+      {roundDetailsOpen && memory && (
+        <Modal title="Chi tiết ván chơi" onClose={() => setRoundDetailsOpen(false)}>
+          <div className="games-dialog">
+            <p>{roundDescription}</p>
+            {memory.bestMs !== null && (
+              <p>
+                Kỷ lục cá nhân:{' '}
+                {(memory.bestMs / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 2 })} giây.
+              </p>
+            )}
+          </div>
+        </Modal>
+      )}
+      {rulesOpen && (
+        <Modal title="Luật chơi & những điều cần biết" onClose={() => setRulesOpen(false)}>
+          <div className="games-rules">
+            <p>
+              Lật thẻ: 3 ván mỗi ngày GMT+7, mỗi ván 60 giây từ lúc bắt đầu, không giới hạn lần chọn
+              cặp. Bàn 20 thẻ tạo thành 10 cặp: đúng thì cặp biến mất, sai thì úp lại. Ghép hết bàn
+              trước khi hết giờ để thắng. Tải lại hoặc ẩn trang không gia hạn đồng hồ.
+            </p>
+            <p>
+              Ván thắng đầu tiên của tài khoản không có điểm. Từ ván thắng thứ hai nhận 200 điểm;
+              thắng nhanh hơn kỷ lục cá nhân được thêm 50 điểm. Tổng điểm nhận tối đa 600/ngày, nên
+              ván cuối có thể được ít điểm hơn khi chạm giới hạn.
+            </p>
+            <p>
+              Mỗi đợt điểm hết hạn sau 90 ngày. Từ 3.000 điểm còn hạn có thể đổi toàn bộ thành
+              voucher, 1 điểm = 1đ. Voucher dùng một lần, giảm bằng giá trị đã đổi nhưng tối đa 10%
+              giá trị hàng trong đơn; phần giá trị chưa dùng sẽ mất, không hoàn lại điểm. Điểm không
+              rút tiền mặt hoặc chuyển cho người khác.
+            </p>
+            <p>
+              Sưu tập: mỗi ngày một lượt rút và thêm một lượt khi xem trang sản phẩm đủ 30 giây.
+              Ngày mới bắt đầu lúc 00:00 GMT+7. Bánh chả chỉ phát 10 thẻ toàn hệ thống, không bổ
+              sung sau khi đổi; mỗi tài khoản chỉ được phát tối đa một thẻ.
+            </p>
+            <p>
+              Ưu đãi được cấp riêng cho tài khoản, dùng một lần, có hiệu lực 30 ngày từ khi nhận.
+              Đổi bộ 9 trừ một bản mỗi nguyên liệu; đổi bộ 10 trừ một bản của cả 10 loại. Mỗi mốc
+              sưu tập chỉ đổi được một lần.
+            </p>
+          </div>
+        </Modal>
+      )}
       {confirmPoints !== null && (
         <Modal
           title="Đổi điểm lấy ưu đãi?"

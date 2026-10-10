@@ -55,7 +55,7 @@ export function GameLauncher() {
       document.removeEventListener('visibilitychange', visibility);
     };
   }, [pathname, session]);
-  if (pathname === '/tro-choi' || pathname.startsWith('/thanh-toan')) return null;
+  if (/^\/tro-choi\/?$/.test(pathname) || pathname.startsWith('/thanh-toan')) return null;
   return (
     <Link
       className="game-launcher"

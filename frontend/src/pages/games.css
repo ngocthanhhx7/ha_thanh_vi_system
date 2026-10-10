@@ -7,6 +7,36 @@
   padding: 56px 48px 72px;
   color: #513a30;
 }
+.games-toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.games-room-back {
+  display: none;
+}
+.games-rewards-toggle,
+.games-rules-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 7px 12px;
+  border: 1px solid var(--game-line);
+  border-radius: 12px;
+  color: var(--game-wine);
+  background: #fffaf1;
+  font-size: 12px;
+}
+.games-points-content .games-prize {
+  margin-top: 0;
+}
+.games-points-total {
+  font-size: 38px;
+}
 .games-page button,
 .games-page a {
   -webkit-tap-highlight-color: transparent;
@@ -987,5 +1017,461 @@
 @media (max-width: 600px) {
   .games-round-bar .games-button {
     width: 100%;
+  }
+}
+
+/* Viewport-sized memory board. Card dimensions depend on both available axes. */
+.games-memory-page {
+  height: 100%;
+  max-width: 1440px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 24px max(12px, env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+.games-memory-page .games-intro {
+  flex: none;
+  min-height: 0;
+  padding: 0;
+}
+.games-memory-page .games-intro h1 {
+  font-size: 22px;
+  letter-spacing: -0.3px;
+  margin: 0;
+  line-height: 1.2;
+}
+.games-memory-page .games-intro h1 br,
+.games-memory-page .games-intro .games-eyebrow,
+.games-memory-page .games-intro p,
+.games-memory-page .games-intro-art {
+  display: none;
+}
+.games-memory-page .games-intro em::before {
+  content: ' ';
+}
+.games-memory-page .games-toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.games-memory-page .games-switch {
+  flex: 1;
+  max-width: 620px;
+  margin: 0;
+  padding: 4px;
+  border-radius: 13px;
+}
+.games-memory-page .games-switch button {
+  padding: 7px 12px;
+  min-height: 40px;
+  font-size: 13px;
+  gap: 8px;
+}
+.games-memory-page .games-switch small {
+  display: none;
+}
+.games-memory-page .games-toolbar-actions {
+  margin: 0 0 0 auto;
+}
+.games-memory-page .games-point-balance {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.games-memory-page .games-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+.games-memory-page .games-board-panel {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 20px;
+  gap: 8px;
+  border-radius: 18px;
+}
+.games-memory-page .games-panel-heading {
+  flex: none;
+  align-items: center;
+}
+.games-memory-page .games-panel-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.games-memory-page .games-panel-heading h2 {
+  font-size: 23px;
+  letter-spacing: -0.4px;
+}
+.games-memory-page .games-counter {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
+  background: transparent;
+  font-size: 11px;
+  padding: 0;
+  white-space: nowrap;
+}
+.games-memory-page .games-counter strong {
+  display: inline;
+  font-size: 18px;
+}
+.games-memory-page .games-board-status {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 24px;
+}
+.games-memory-page .games-progress {
+  flex: 1;
+  margin: 0;
+  font-size: 11px;
+}
+.games-memory-page .games-progress progress {
+  height: 5px;
+}
+.games-memory-page .games-round-bar {
+  flex: none;
+  margin: 0;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.games-memory-page .games-timer {
+  padding: 8px 10px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.games-memory-page .games-round-bar .games-button {
+  width: auto;
+  padding: 9px 14px;
+  min-height: 40px;
+  font-size: 12px;
+}
+.games-memory-page .games-hint {
+  flex: none;
+  min-height: 0;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.games-memory-space {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+.games-memory-page .games-memory-grid {
+  --columns: 5;
+  --rows: 4;
+  --gap: 10px;
+  --card-width: min(
+    calc((100cqw - (var(--columns) - 1) * var(--gap)) / var(--columns)),
+    calc((100cqh - (var(--rows) - 1) * var(--gap)) / var(--rows) * 2 / 3)
+  );
+  width: calc(var(--card-width) * var(--columns) + (var(--columns) - 1) * var(--gap));
+  height: calc(var(--card-width) * 1.5 * var(--rows) + (var(--rows) - 1) * var(--gap));
+  max-width: none;
+  margin: 0;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  gap: var(--gap);
+}
+.games-memory-page .games-memory-card {
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+.games-memory-page .games-board-panel > .games-note {
+  display: none;
+}
+.games-memory-page .games-personal-best {
+  flex: none;
+  margin: 0;
+  font-size: 11px;
+  text-align: center;
+}
+.games-memory-page .games-round-result {
+  flex: none;
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.games-result-details {
+  border: 0;
+  padding: 4px;
+  font-size: 11px;
+  background: transparent;
+  color: inherit;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+.games-memory-page .games-hint-ended {
+  display: none;
+}
+.games-memory-page .games-error {
+  flex: none;
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+.games-memory-page .games-guest {
+  margin-block: auto;
+  padding: 24px 16px;
+}
+.games-memory-page .games-guest h2 {
+  font-size: 25px;
+}
+.games-memory-page .games-rules {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .games-memory-page {
+    padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+    gap: 7px;
+  }
+  .games-memory-page .games-intro h1 {
+    font-size: 19px;
+  }
+  .games-memory-page .games-toolbar {
+    display: grid;
+    gap: 6px;
+  }
+  .games-memory-page .games-toolbar-actions {
+    margin: 0;
+    justify-content: space-between;
+  }
+  .games-memory-page .games-switch {
+    width: 100%;
+  }
+  .games-memory-page .games-switch button {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  .games-memory-page .games-board-panel {
+    padding: 10px;
+    gap: 6px;
+  }
+  .games-memory-page .games-panel-heading > div {
+    gap: 7px;
+  }
+  .games-memory-page .games-panel-heading .games-eyebrow {
+    display: none;
+  }
+  .games-memory-page .games-panel-heading h2 {
+    font-size: 19px;
+  }
+  .games-memory-page .games-counter {
+    font-size: 10px;
+  }
+  .games-memory-page .games-board-status {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .games-memory-page .games-progress {
+    flex-basis: 80px;
+  }
+  .games-memory-page .games-round-bar {
+    gap: 4px;
+  }
+  .games-memory-page .games-timer {
+    font-size: 12px;
+    gap: 4px;
+    padding: 7px 5px;
+  }
+  .games-memory-page .games-round-bar .games-button {
+    font-size: 11px;
+    padding: 8px;
+  }
+  .games-memory-page .games-memory-grid {
+    --gap: 6px;
+  }
+}
+@media (max-height: 500px) and (min-width: 600px) {
+  .games-memory-page {
+    padding: 5px 12px;
+    gap: 5px;
+  }
+  .games-memory-page .games-intro {
+    display: none;
+  }
+  .games-memory-page .games-toolbar {
+    display: flex;
+  }
+  .games-memory-page .games-toolbar-actions {
+    margin-left: auto;
+  }
+  .games-memory-page .games-switch {
+    max-width: 440px;
+  }
+  .games-memory-page .games-board-panel {
+    padding: 7px 10px;
+    gap: 4px;
+  }
+  .games-memory-page .games-panel-heading {
+    min-height: 20px;
+  }
+  .games-memory-page .games-panel-heading h2 {
+    font-size: 16px;
+  }
+  .games-memory-page .games-panel-heading .games-eyebrow {
+    display: none;
+  }
+  .games-memory-page .games-memory-grid {
+    --columns: 10;
+    --rows: 2;
+    --gap: 5px;
+  }
+}
+
+.games-board-heading-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.games-expand-button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--game-line);
+  border-radius: 10px;
+  background: #fffaf1;
+  color: var(--game-wine);
+  flex: none;
+}
+@media (min-width: 1100px) {
+  .games-memory-page .games-memory-grid {
+    --columns: 10;
+    --rows: 2;
+  }
+}
+@media (max-width: 760px) and (min-height: 501px) {
+  .games-memory-page {
+    min-height: 720px;
+    overflow: visible;
+  }
+  .games-memory-page .games-memory-grid {
+    --columns: 4;
+    --rows: 5;
+  }
+  .games-memory-page .games-board-status {
+    flex-wrap: nowrap;
+  }
+  .games-memory-page .games-progress {
+    flex: none;
+  }
+  .games-memory-page .games-progress-description,
+  .games-memory-page .games-progress progress {
+    display: none;
+  }
+  .games-memory-page .games-round-bar {
+    flex: 1;
+    justify-content: space-between;
+  }
+  .games-memory-page .games-board-heading-tools {
+    gap: 5px;
+  }
+  .games-memory-page .games-panel-heading h2 {
+    font-size: 16px;
+  }
+  .games-memory-page .games-personal-best {
+    display: none;
+  }
+  .games-memory-page .games-counter {
+    flex-direction: column;
+    gap: 0;
+    font-size: 9px;
+  }
+}
+.games-memory-page .games-board-panel.is-expanded {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  z-index: 100;
+  border-radius: 0;
+  background: #fffaf1;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+.games-memory-page .games-board-panel.is-expanded .games-memory-grid {
+  --card-width: min(
+    calc((100cqw - (var(--columns) - 1) * var(--gap)) / var(--columns)),
+    calc((100cqh - (var(--rows) - 1) * var(--gap)) / var(--rows) * 2 / 3)
+  );
+}
+.games-board-panel::backdrop {
+  background: #fffaf1;
+}
+@media (max-height: 500px) and (min-width: 600px) {
+  .game-shell > .header {
+    display: none;
+  }
+  .games-memory-page .games-personal-best {
+    display: none;
+  }
+  .games-memory-page .games-room-back {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    color: var(--game-wine);
+    flex: none;
+  }
+}
+
+.games-switch-short {
+  display: none;
+}
+@media (max-width: 760px) and (min-height: 501px) {
+  .games-memory-page .games-intro {
+    display: none;
+  }
+  .games-memory-page .games-toolbar {
+    display: flex;
+    gap: 8px;
+  }
+  .games-memory-page .games-switch {
+    min-width: 0;
+  }
+  .games-memory-page .games-switch-title {
+    display: none;
+  }
+  .games-memory-page .games-switch-short {
+    display: inline;
+  }
+  .games-memory-page .games-switch button {
+    gap: 5px;
+    padding-inline: 6px;
+  }
+  .games-memory-page .games-toolbar-actions {
+    gap: 6px;
+  }
+  .games-memory-page .games-rewards-label,
+  .games-memory-page .games-point-balance small,
+  .games-memory-page .games-rules-toggle > span {
+    display: none;
+  }
+  .games-memory-page .games-rewards-toggle {
+    padding-inline: 8px;
+    gap: 5px;
+  }
+  .games-memory-page .games-rules-toggle {
+    width: 40px;
+    padding: 0;
   }
 }

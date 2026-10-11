@@ -12,6 +12,7 @@ coverage/
 *.pfx
 .local/
 assets/originals/
+frontend/public/brand/video/*.mov
 .DS_Store
 Thumbs.db
 .idea/

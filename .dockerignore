@@ -20,6 +20,7 @@
 .kilo
 skills
 assets/originals
+frontend/public/brand/video/*.mov
 backend/uploads
 playwright-report
 test-results

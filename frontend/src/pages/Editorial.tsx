@@ -1,7 +1,9 @@
-import { ArrowRight, Flower2, Gift, Heart } from 'lucide-react';
+import { ArrowDown, ArrowRight, Flower2, Gift, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useShop } from '../hooks/useShop';
+import { StoryFilm } from '../components/StoryFilm';
 import './editorial-public.css';
+import './story-public.css';
 
 const storyChapters = [
   {
@@ -58,49 +60,33 @@ export function Story() {
 
   return (
     <div className="public-editorial public-editorial--story">
-      <section className="editorial-hero" aria-labelledby="story-title">
-        <div className="editorial-hero__copy">
-          <p className="public-eyebrow">CÂU CHUYỆN HÀ THÀNH VỊ</p>
-          <h1 id="story-title">
-            Hà{' '}Nội trong ký{' '}ức.
-            <br />
-            <em>
-              Thân{' '}thương trong từng{' '}vị.
-            </em>
-          </h1>
-          <p className="editorial-hero__description">{site.story}</p>
-          <div className="editorial-actions">
-            <Link className="editorial-button" to="/san-pham">
-              Khám phá thức quà <ArrowRight size={18} aria-hidden="true" />
-            </Link>
-            <Link className="editorial-text-link" to="/lien-he">
-              Kết nối với chúng mình <ArrowRight size={17} aria-hidden="true" />
-            </Link>
+      <section className="story-opening" aria-labelledby="story-title">
+        <div className="story-opening__intro">
+          <div>
+            <p className="public-eyebrow">CÂU CHUYỆN HÀ THÀNH VỊ</p>
+            <h1 id="story-title">
+              Hà{' '}Nội trong ký{' '}ức.
+              <br />
+              <em>
+                Thân{' '}thương trong từng{' '}vị.
+              </em>
+            </h1>
           </div>
-          <div className="editorial-handnote">
-            <img src="/brand/ornament.webp" alt="" aria-hidden="true" />
-            <span>Mời bạn, một chút vị xưa.</span>
+          <div>
+            <p className="story-opening__description">{site.story}</p>
+            <a className="story-opening__reading-link" href="#story-chapters">
+              Đọc tiếp câu chuyện <ArrowDown size={17} aria-hidden="true" />
+            </a>
           </div>
         </div>
-        <div className="editorial-hero__visual">
-          <div className="editorial-hero__frame">
-            <img
-              src="/brand/gift.webp"
-              alt="Bốn nhân vật làm bánh quây quanh logo Hà Thành Vị"
-              width="700"
-              height="700"
-              fetchPriority="high"
-            />
-          </div>
-          <div className="editorial-hero__seal" aria-hidden="true">
-            <img src="/brand/ornament.webp" alt="" />
-            <span>Vị xưa · Tình mới</span>
-          </div>
-          <p className="editorial-hero__caption">Một thức quà nhỏ, một câu chuyện dài.</p>
+        <div className="story-opening__film-label" aria-hidden="true">
+          <span>MỘT THƯỚC PHIM · MỘT CHÚT VỊ XƯA</span>
+          <span>HÀ NỘI TRONG NHỮNG ĐIỀU THÂN QUEN</span>
         </div>
+        <StoryFilm />
       </section>
 
-      <section className="story-section" aria-labelledby="story-chapters-title">
+      <section className="story-section" id="story-chapters" aria-labelledby="story-chapters-title">
         <div className="editorial-section-heading">
           <div>
             <p className="public-eyebrow">NHỮNG ĐIỀU CHÚNG MÌNH MUỐN KỂ</p>

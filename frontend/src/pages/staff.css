@@ -33,7 +33,7 @@
   font-size: 12px;
 }
 .staff-overview-kpis strong {
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 32px;
   font-weight: 500;
 }
@@ -57,7 +57,7 @@
 .staff-overview-chart h2,
 .staff-overview-shortcuts h2 {
   margin: 0 0 15px;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 18px;
   font-weight: 500;
 }
@@ -971,7 +971,7 @@
 .admin-account-form-heading h3 {
   margin: 0;
   color: #542e2a;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: clamp(20px, 2vw, 26px);
   font-weight: 500;
 }
@@ -1399,7 +1399,7 @@
 }
 .admin-account-form-heading h3 {
   color: #46372d;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 18px;
   font-weight: 500;
 }
@@ -1656,7 +1656,7 @@
 .order-queue-heading h2 {
   margin: 0;
   color: #542e2a;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: clamp(21px, 2.2vw, 27px);
   font-weight: 500;
 }
@@ -1865,7 +1865,7 @@
 .order-queue-detail .staff-order-heading h2 {
   margin: 0;
   color: #542e2a;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: clamp(20px, 2vw, 27px);
   font-weight: 500;
 }

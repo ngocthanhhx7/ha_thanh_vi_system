@@ -28,7 +28,7 @@
   gap: 3px;
 }
 .workspace-brand strong {
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 16px;
   letter-spacing: 0.02em;
 }
@@ -194,7 +194,7 @@
 }
 .workspace-section-heading h2 {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 24px;
   font-weight: 500;
 }
@@ -374,7 +374,7 @@
 .workspace-log-heading h2 {
   margin: 0;
   color: #542e2a;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 23px;
   font-weight: 500;
 }

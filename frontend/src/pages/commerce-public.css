@@ -54,7 +54,7 @@
 .htv-commerce-public .commerce-intro h1 {
   margin: 0;
   color: var(--commerce-wine);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: clamp(2.25rem, 5vw, 3.75rem);
   font-weight: 500;
   letter-spacing: -0.035em;
@@ -173,7 +173,7 @@
   margin-bottom: 1rem;
   padding: 0;
   color: var(--commerce-wine-dark);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 600;
   line-height: 1.3;
@@ -287,7 +287,7 @@
 .htv-commerce-public .retrieval-key h2 {
   margin: 0 0 0.2rem;
   color: var(--commerce-wine-dark);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: 1.55rem;
   font-weight: 600;
   line-height: 1.25;
@@ -442,7 +442,7 @@
 .htv-order-page .order-summary-panel > h3 {
   margin: 1.5rem 0 0.65rem;
   color: var(--commerce-wine-dark);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: 1.3rem;
 }
 
@@ -459,7 +459,7 @@
 
 .htv-order-page .shipping-timeline h3 {
   color: var(--commerce-wine-dark);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: 1.25rem;
 }
 
@@ -578,7 +578,7 @@
 .htv-payment-result .payment-result-status {
   margin-top: 0;
   color: var(--commerce-wine-dark);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-size: clamp(1.25rem, 2.5vw, 1.7rem);
   line-height: 1.35;
 }

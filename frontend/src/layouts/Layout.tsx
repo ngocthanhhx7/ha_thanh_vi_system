@@ -10,6 +10,7 @@ import {
   Bell,
   Gift,
   Headphones,
+  House,
   LogOut,
   MapPin,
   MessageCircle,
@@ -232,6 +233,16 @@ export function Layout() {
                     {accountUser.role !== 'customer' && (
                       <div className="account-dropdown-group">
                         <span>Công việc</span>
+                        <Link
+                          to={
+                            accountUser.role === 'admin'
+                              ? '/admin?tab=overview'
+                              : '/quan-tri?tab=dashboard'
+                          }
+                          onClick={() => setAccountMenuOpen(false)}
+                        >
+                          <House size={18} /> Dashboard
+                        </Link>
                         <Link to="/quan-tri?tab=orders" onClick={() => setAccountMenuOpen(false)}>
                           <Package size={18} /> Đơn hàng
                         </Link>

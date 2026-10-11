@@ -1417,6 +1417,19 @@
 .games-board-panel::backdrop {
   background: #fffaf1;
 }
+.games-memory-page .games-memory-grid.is-five-pairs {
+  --columns: 5;
+  --rows: 2;
+}
+@media (max-width: 760px) and (min-height: 501px) {
+  .games-memory-page .games-memory-grid.is-five-pairs {
+    --columns: 3;
+    --rows: 4;
+  }
+  .games-memory-grid.is-five-pairs > :last-child {
+    grid-column: 2;
+  }
+}
 @media (max-height: 500px) and (min-width: 600px) {
   .game-shell > .header {
     display: none;

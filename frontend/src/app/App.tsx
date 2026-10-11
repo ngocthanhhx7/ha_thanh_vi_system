@@ -10,6 +10,16 @@ import { PageLoading } from '../components/PageLoading';
 function RoutedApp() {
   const location = useLocation();
 
+  if (/^\/story\/video\/?$/.test(location.pathname)) {
+    return (
+      <AppErrorBoundary resetKey={location.key}>
+        <Suspense fallback={<PageLoading />}>
+          <AppRoutes />
+        </Suspense>
+      </AppErrorBoundary>
+    );
+  }
+
   return (
     <>
       <ApiErrorRedirector />

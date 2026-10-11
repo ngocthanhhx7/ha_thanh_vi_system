@@ -13,7 +13,9 @@ ffmpeg -ss 55 -i 'frontend/public/brand/video/1010(3).mov' -frames:v 1 -vf 'scal
 
 `StoryFilm` reserves the original aspect ratio and initially has no media source. Activating its button starts playback inside the user gesture, enabling sound on mobile without autoplay. Native controls provide play/pause, seeking, sound and fullscreen; `playsInline` keeps the initial viewing experience in-page on phones. The download menu is suppressed where the browser supports `controlsList`, without promising download prevention.
 
-Failed media requests keep the frame in place and offer retry. Playback pauses when the film leaves the viewport, the tab becomes hidden or the route unmounts. Returning to the film does not restart it automatically. Floating game/chat launchers are hidden while the film is visible; an already-open chat stays accessible.
+Failed media requests keep the frame in place and offer retry. Playback pauses when the film leaves the viewport, the tab becomes hidden or the route unmounts. Returning to the film does not restart it automatically. Floating game/chat launchers remain available on the Story page, including while its film is visible.
+
+`/story/video` is a separate full-viewport player outside the public layout and shop/notification providers. It attempts autoplay with sound, falls back to muted autoplay when blocked, and offers a manual Play button if the browser blocks both. A sound toggle, native controls and Home link remain available. Only the actual media `ended` event redirects to `/` with history replacement; errors and buffering never trigger this redirect. This route makes no shop or authentication API requests.
 
 No API, CMS schema or database changes are required. Caddy's existing static file handler supports `video/mp4`, byte ranges and seven-day caching under `/brand/`; versioned filenames avoid stale replacement media. Browser regression coverage is in `tests/e2e/story-video.spec.ts`.
 

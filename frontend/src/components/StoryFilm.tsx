@@ -18,7 +18,6 @@ export function StoryFilm() {
       if (document.hidden) video.pause();
     };
     const observer = new IntersectionObserver(([entry]) => {
-      video.closest('.story-film')?.setAttribute('data-in-view', String(entry.isIntersecting));
       if (!entry.isIntersecting) video.pause();
     });
     observer.observe(video);

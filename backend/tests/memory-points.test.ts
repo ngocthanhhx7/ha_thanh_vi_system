@@ -11,6 +11,29 @@ import {
 import { startMemory, redeemMemory, memoryPoints } from '../src/services/memoryRules.js';
 
 const now = Date.parse('2026-10-10T08:00:00Z');
+
+test('new rounds select five distinct random types, paired twice, and last exactly 120 seconds', () => {
+  const selections = new Set<string>();
+  for (let i = 0; i < 30; i++) {
+    const data = newGame(now);
+    enterGame(data, now);
+    startMemory(data, data.round, now);
+    assert.equal(data.board.length, 10);
+    const types = [...new Set(data.board)];
+    assert.equal(types.length, 5);
+    for (const type of types) {
+      assert.ok(CARDS.includes(type));
+      assert.equal(data.board.filter((card) => card === type).length, 2);
+    }
+    selections.add(types.sort().join(','));
+    assert.equal(data.memoryProgress!.deadline, now + 120000);
+    refreshGame(data, now + 119999);
+    assert.equal(data.memoryProgress!.status, 'playing');
+    refreshGame(data, now + 120000);
+    assert.equal(data.memoryProgress!.status, 'lost');
+  }
+  assert.ok(selections.size > 1);
+});
 test('memory entry no longer grants pair attempts or exposes missions', () => {
   const data = newGame(now);
   enterGame(data, now);
@@ -40,7 +63,7 @@ test('legacy migration preserves collection and never creates points from attemp
 function win(data: ReturnType<typeof newGame>, start: number, elapsed: number) {
   startMemory(data, data.round, start);
   // Use the actual shuffled positions, without relying on a predictable board.
-  for (const id of CARDS) {
+  for (const id of new Set(data.board)) {
     const indices = data.board.flatMap((card, index) => (card === id ? [index] : []));
     flipCard(data, indices[0], start + elapsed - 1);
     flipCard(data, indices[1], start + elapsed);
@@ -60,11 +83,11 @@ test('three timed starts per day, reload and midnight never extend a live deadli
   refreshGame(data, deadline);
   assert.equal(data.memoryProgress!.status, 'lost');
   for (let i = 0; i < 3; i++) {
-    const start = deadline + i * 60000;
+    const start = deadline + i * 120000;
     startMemory(data, data.round, start);
-    refreshGame(data, start + 60000);
+    refreshGame(data, start + 120000);
   }
-  assert.throws(() => startMemory(data, data.round, deadline + 180000), /3 ván/);
+  assert.throws(() => startMemory(data, data.round, deadline + 360000), /3 ván/);
   startMemory(data, data.round, midnight + 86400000);
   assert.equal(data.memoryProgress!.started, 1);
 });
@@ -94,10 +117,10 @@ test('last match at exact deadline cannot win or grant points', () => {
   const data = newGame(now);
   enterGame(data, now);
   startMemory(data, data.round, now);
-  data.matched = Array.from({ length: 18 }, (_, i) => i);
-  data.board[19] = data.board[18];
-  flipCard(data, 18, now + 59999);
-  assert.throws(() => flipCard(data, 19, now + 60000), /hết giờ/);
+  data.matched = Array.from({ length: 8 }, (_, i) => i);
+  data.board[9] = data.board[8];
+  flipCard(data, 8, now + 119999);
+  assert.throws(() => flipCard(data, 9, now + 120000), /hết giờ/);
   assert.equal(data.memoryProgress!.status, 'lost');
   assert.equal(data.memoryProgress!.wins, 0);
   assert.equal(memoryPoints(data.memoryProgress!), 0);

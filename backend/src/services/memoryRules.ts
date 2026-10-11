@@ -40,6 +40,13 @@ export function refreshMemory(data: GameData, now: number): MemoryProgress {
     data.matched = [];
   }
   const memory = data.memoryProgress;
+  if (memory.status === 'idle' && data.board.length !== 10) {
+    data.board = shuffledBoard();
+    data.matched = [];
+    data.firstIndex = null;
+    data.mismatch = [];
+    data.mismatchUntil = 0;
+  }
   const day = gameDay(now);
   if (memory.day < day) {
     memory.day = day;
@@ -67,7 +74,7 @@ export function startMemory(data: GameData, round: number, now: number) {
   memory.started++;
   memory.status = 'playing';
   memory.startedAt = now;
-  memory.deadline = now + 60000;
+  memory.deadline = now + 120000;
   memory.lastPoints = 0;
   data.round++;
   data.board = shuffledBoard();
@@ -84,7 +91,7 @@ export function flipMemory(data: GameData, index: number, now: number) {
       409,
       memory.status === 'lost' ? 'Ván chơi đã hết giờ.' : 'Bắt đầu một ván để lật thẻ.',
     );
-  if (!Number.isInteger(index) || index < 0 || index >= 20)
+  if (!Number.isInteger(index) || index < 0 || index >= data.board.length)
     throw new CustomerError(400, 'Thẻ không hợp lệ.');
   if (data.mismatchUntil > now) throw new CustomerError(409, 'Chờ hai thẻ úp lại.');
   if (data.matched.includes(index) || data.firstIndex === index)
@@ -101,7 +108,7 @@ export function flipMemory(data: GameData, index: number, now: number) {
     return;
   }
   data.matched.push(first, index);
-  if (data.matched.length !== 20) return;
+  if (data.matched.length !== data.board.length) return;
   const elapsed = now - memory.startedAt;
   const record = memory.bestMs !== null && elapsed < memory.bestMs;
   memory.wins++;

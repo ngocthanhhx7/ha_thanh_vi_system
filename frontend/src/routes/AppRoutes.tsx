@@ -8,6 +8,9 @@ import { Contact } from '../pages/Contact';
 import { CartPage, Checkout } from '../pages/Checkout';
 import { OrderPage, OrderLookup, PaymentResult } from '../pages/Orders';
 import { ErrorPage } from '../pages/ErrorPage';
+const StoryVideo = lazy(() =>
+  import('../pages/StoryVideo').then((module) => ({ default: module.StoryVideo })),
+);
 const Games = lazy(() => import('../pages/Games').then((module) => ({ default: module.Games })));
 const News = lazy(() => import('../pages/News').then((module) => ({ default: module.News })));
 const Admin = lazy(() => import('../pages/Admin').then((module) => ({ default: module.Admin })));
@@ -26,6 +29,7 @@ const AccountAppeal = lazy(() =>
 export function AppRoutes() {
   return (
     <Routes>
+      <Route path="story/video" element={<StoryVideo />} />
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="cau-chuyen" element={<Story />} />

@@ -39,7 +39,13 @@ export type GameData = {
 };
 export const gameDay = (now: number) => new Date(now + 7 * 3600000).toISOString().slice(0, 10);
 export function shuffledBoard() {
-  const result = [...CARDS, ...CARDS];
+  const choices = [...CARDS];
+  for (let i = choices.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [choices[i], choices[j]] = [choices[j], choices[i]];
+  }
+  const selected = choices.slice(0, 5);
+  const result = [...selected, ...selected];
   for (let i = result.length - 1; i > 0; i--) {
     const j = randomInt(i + 1);
     [result[i], result[j]] = [result[j], result[i]];

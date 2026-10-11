@@ -2,13 +2,6 @@
   margin: 0;
 }
 
-/* Keep floating launchers off the artwork and native playback controls. */
-body:has(.story-film[data-in-view='true']) .game-launcher,
-body:has(.story-film[data-in-view='true']) .vi-chat-widget:not(.is-open) {
-  visibility: hidden;
-  pointer-events: none;
-}
-
 .story-film__frame {
   position: relative;
   isolation: isolate;

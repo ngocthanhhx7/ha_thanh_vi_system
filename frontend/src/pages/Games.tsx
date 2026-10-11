@@ -379,7 +379,7 @@ export function Games() {
   const memory = state?.memory;
   const seconds = memory?.deadline
     ? Math.max(0, Math.ceil((Date.parse(memory.deadline) - clockNow - serverOffset.current) / 1000))
-    : 60;
+    : 120;
   useEffect(() => {
     if (memory?.status !== 'playing') return;
     const timer = window.setInterval(() => setClockNow(Date.now()), 250);
@@ -528,7 +528,7 @@ export function Games() {
             Đăng nhập để chơi <ArrowRight size={16} />
           </Link>
           <p className="games-note">
-            Lật thẻ: 3 ván mỗi ngày, mỗi ván 60 giây. Sưu tập: 1 thẻ mỗi ngày, thêm 1 lượt khi xem
+            Lật thẻ: 3 ván mỗi ngày, mỗi ván 120 giây. Sưu tập: 1 thẻ mỗi ngày, thêm 1 lượt khi xem
             sản phẩm đủ 30 giây.
           </p>
         </section>
@@ -563,10 +563,10 @@ export function Games() {
             <div className="games-board-status">
               <div className="games-progress">
                 <span>
-                  {matched / 2}/10
+                  {matched / 2}/{memory.cards.length / 2}
                   <span className="games-progress-description"> cặp đã tìm thấy</span>
                 </span>
-                <progress value={matched} max={20} aria-label="Tiến độ ghép đôi" />
+                <progress value={matched} max={memory.cards.length} aria-label="Tiến độ ghép đôi" />
               </div>
               <div className="games-round-bar">
                 <div
@@ -576,7 +576,7 @@ export function Games() {
                   <span role="timer" aria-label="Thời gian ván chơi" aria-live="off">
                     {memory.status === 'playing'
                       ? `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
-                      : '01:00'}
+                      : '02:00'}
                   </span>
                 </div>
                 {memory.status !== 'playing' && (
@@ -593,7 +593,7 @@ export function Games() {
                       ? 'Đang mở ván…'
                       : memory.remainingRounds < 1
                         ? 'Hết ván hôm nay'
-                        : 'Bắt đầu ván 60 giây'}
+                        : 'Bắt đầu ván 120 giây'}
                   </button>
                 )}
               </div>
@@ -621,9 +621,9 @@ export function Games() {
               aria-live="polite"
             >
               {memory.status !== 'playing'
-                ? 'Bấm bắt đầu khi sẵn sàng. Ghép đủ 10 cặp trong 60 giây để thắng.'
+                ? 'Bấm bắt đầu khi sẵn sàng. Ghép đủ 5 cặp trong 120 giây để thắng.'
                 : seconds === 0
-                  ? 'Đã hết 60 giây. Đang xác nhận kết quả ván chơi…'
+                  ? 'Đã hết 120 giây. Đang xác nhận kết quả ván chơi…'
                   : memory.mismatchUntil
                     ? 'Chưa cùng nguyên liệu rồi. Ghi nhớ vị trí và thử lại nhé.'
                     : memory.firstIndex !== null
@@ -631,7 +631,9 @@ export function Games() {
                       : 'Chọn 2 thẻ giống nhau. Bạn được chọn nhiều cặp trong thời gian ván chơi.'}
             </p>
             <div className="games-memory-space">
-              <div className="games-memory-grid">
+              <div
+                className={`games-memory-grid${memory.cards.length === 10 ? ' is-five-pairs' : ''}`}
+              >
                 {memory.cards.map((card) => (
                   <MemoryCard
                     key={`${memory.round}-${card.index}`}
@@ -893,9 +895,9 @@ export function Games() {
         <Modal title="Luật chơi & những điều cần biết" onClose={() => setRulesOpen(false)}>
           <div className="games-rules">
             <p>
-              Lật thẻ: 3 ván mỗi ngày GMT+7, mỗi ván 60 giây từ lúc bắt đầu, không giới hạn lần chọn
-              cặp. Bàn 20 thẻ tạo thành 10 cặp: đúng thì cặp biến mất, sai thì úp lại. Ghép hết bàn
-              trước khi hết giờ để thắng. Tải lại hoặc ẩn trang không gia hạn đồng hồ.
+              Lật thẻ: 3 ván mỗi ngày GMT+7, mỗi ván 120 giây từ lúc bắt đầu, không giới hạn lần
+              chọn cặp. Bàn 10 thẻ gồm 5 cặp ngẫu nhiên: đúng thì cặp biến mất, sai thì úp lại. Ghép
+              hết bàn trước khi hết giờ để thắng. Tải lại hoặc ẩn trang không gia hạn đồng hồ.
             </p>
             <p>
               Ván thắng đầu tiên của tài khoản không có điểm. Từ ván thắng thứ hai nhận 200 điểm;

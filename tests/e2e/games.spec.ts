@@ -23,7 +23,7 @@ function state() {
       round: 1,
       status: 'playing' as 'idle' | 'playing' | 'won' | 'lost',
       remainingRounds: 3,
-      deadline: new Date(Date.now() + 60000).toISOString() as string | null,
+      deadline: new Date(Date.now() + 120000).toISOString() as string | null,
       serverNow: new Date().toISOString(),
       bestMs: null as number | null,
       lastPoints: 0,
@@ -34,7 +34,7 @@ function state() {
       firstIndex: null as number | null,
       mismatchUntil: null,
       complete: false,
-      cards: Array.from({ length: 20 }, (_, index) => ({
+      cards: Array.from({ length: 10 }, (_, index) => ({
         index,
         cardId: null as string | null,
         matched: false,
@@ -80,12 +80,12 @@ for (const viewport of [
     await page.route('**/api/games**', (route) => {
       if (route.request().url().endsWith('/memory/start')) {
         current.memory.status = 'playing';
-        current.memory.deadline = new Date(Date.now() + 60000).toISOString();
+        current.memory.deadline = new Date(Date.now() + 120000).toISOString();
       }
       return route.fulfill(json({ state: current }));
     });
     await page.goto(viewport.width === 360 ? '/tro-choi/' : '/tro-choi');
-    await expect(page.locator('.games-memory-card')).toHaveCount(20);
+    await expect(page.locator('.games-memory-card')).toHaveCount(10);
     const bounds = await page.locator('.games-memory-card').evaluateAll((cards) =>
       cards.map((card) => {
         const box = card.getBoundingClientRect();
@@ -112,7 +112,7 @@ for (const viewport of [
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
     ).toBeTruthy();
     const start = await page
-      .getByRole('button', { name: 'Bắt đầu ván 60 giây', exact: true })
+      .getByRole('button', { name: 'Bắt đầu ván 120 giây', exact: true })
       .boundingBox();
     expect(start!.y + start!.height).toBeLessThanOrEqual(viewport.height);
     await page.screenshot({ path: test.info().outputPath('memory-screen.png') });
@@ -124,8 +124,8 @@ for (const viewport of [
       .click();
     await expect(page.getByRole('dialog')).toContainText('3 ván mỗi ngày');
     await page.getByRole('button', { name: 'Đóng', exact: true }).click();
-    await page.getByRole('button', { name: 'Bắt đầu ván 60 giây', exact: true }).click();
-    await expect(page.getByRole('timer')).toContainText('01:00');
+    await page.getByRole('button', { name: 'Bắt đầu ván 120 giây', exact: true }).click();
+    await expect(page.getByRole('timer')).toContainText('02:00');
     if (viewport.height > 700 || viewport.width > 760)
       expect(
         await page.locator('#main-content').evaluate((el) => el.scrollHeight <= el.clientHeight),
@@ -159,14 +159,14 @@ test('memory can expand its board and escape back without changing the round', a
   expect(board!.y).toBe(0);
   expect(board!.width).toBe(viewport.width);
   expect(board!.height).toBe(viewport.height);
-  await expect(page.locator('.games-memory-card')).toHaveCount(20);
+  await expect(page.locator('.games-memory-card')).toHaveCount(10);
   await expect(page.getByRole('button', { name: 'Bột mì', exact: true })).toBeVisible();
   await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Thu nhỏ bàn thẻ', exact: true })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Phóng to bàn thẻ', exact: true })).toBeVisible();
-  await expect(page.locator('.games-memory-card')).toHaveCount(20);
+  await expect(page.locator('.games-memory-card')).toHaveCount(10);
   await expect(page.getByRole('button', { name: 'Bột mì', exact: true })).toBeVisible();
 });
 test('native fullscreen keeps round details accessible and restores the board on exit', async ({
@@ -186,7 +186,7 @@ test('native fullscreen keeps round details accessible and restores the board on
   await page.getByRole('button', { name: 'Đóng', exact: true }).click();
   await page.getByRole('button', { name: 'Thu nhỏ bàn thẻ', exact: true }).click();
   await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
-  await expect(page.locator('.games-memory-card')).toHaveCount(20);
+  await expect(page.locator('.games-memory-card')).toHaveCount(10);
 });
 test('expanded memory board shows request errors and recovers keyboard focus after a card is disabled', async ({
   page,
@@ -203,7 +203,7 @@ test('expanded memory board shows request errors and recovers keyboard focus aft
   });
   await page.goto('/tro-choi');
   await page.getByRole('button', { name: 'Phóng to bàn thẻ', exact: true }).click();
-  const last = page.getByRole('button', { name: 'Lật thẻ 20', exact: true });
+  const last = page.getByRole('button', { name: 'Lật thẻ 10', exact: true });
   await last.focus();
   await page.keyboard.press('Enter');
   const alert = page.getByRole('region', { name: 'Bàn lật thẻ' }).getByRole('alert');
@@ -250,7 +250,7 @@ test('memory starts a timed round, disables expired cards and has no mission gra
       current.memory.remainingRounds = 2;
       current.memory.serverNow = new Date(await page.evaluate(() => Date.now())).toISOString();
       current.memory.deadline = new Date(
-        Date.parse(current.memory.serverNow) + 60000,
+        Date.parse(current.memory.serverNow) + 120000,
       ).toISOString();
     }
     current.memory.serverNow = new Date(await page.evaluate(() => Date.now())).toISOString();
@@ -266,11 +266,11 @@ test('memory starts a timed round, disables expired cards and has no mission gra
   await expect(page.getByRole('button', { name: 'Đổi thưởng từ điểm' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Nhiệm vụ của bạn' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Lật thẻ 1', exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: 'Bắt đầu ván 60 giây', exact: true }).click();
-  await expect(page.getByRole('timer')).toContainText('01:00');
+  await page.getByRole('button', { name: 'Bắt đầu ván 120 giây', exact: true }).click();
+  await expect(page.getByRole('timer')).toContainText('02:00');
   await expect(page.locator('.games-counter')).toContainText('2');
   await expect(page.getByRole('button', { name: 'Lật thẻ 1', exact: true })).toBeEnabled();
-  await page.clock.runFor(61000);
+  await page.clock.runFor(121000);
   await expect(page.getByRole('button', { name: 'Lật thẻ 1', exact: true })).toBeDisabled();
   await expect(page.locator('.games-round-result')).toContainText('Hết giờ');
   expect(starts).toBe(1);
@@ -414,7 +414,7 @@ test('memory includes its round in selections and hides a matched pair after vie
     await r.fulfill(json({ state: current }));
   });
   await page.goto('/tro-choi');
-  await expect(page.locator('.games-memory-card')).toHaveCount(20);
+  await expect(page.locator('.games-memory-card')).toHaveCount(10);
   await page.getByRole('button', { name: 'Lật thẻ 1', exact: true }).click();
   await expect(page.locator('.games-counter')).toContainText('3');
   await expect(page.getByRole('button', { name: 'Bột mì', exact: true })).toBeDisabled();
@@ -432,7 +432,7 @@ test('memory includes its round in selections and hides a matched pair after vie
   expect(await second.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.95);
   await expect.poll(() => second.evaluate((el) => Number(getComputedStyle(el).opacity))).toBe(0);
   await expect(page.locator('.games-counter')).toContainText('3');
-  await expect(page.locator('.games-progress')).toContainText('1/10');
+  await expect(page.locator('.games-progress')).toContainText('1/5');
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
   ).toBeTruthy();

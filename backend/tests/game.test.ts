@@ -443,11 +443,11 @@ test('new round starts are idempotent, old round flips and legacy fixed rewards 
   await assert.rejects(svc.act(id, { kind: 'memoryReward', round: 2 }, now));
   assert.equal(await CustomerWallet.countDocuments({ userId: id }), 0);
   await assert.rejects(
-    svc.act(id, { kind: 'flip', round: 2, index: 0, requestId: randomUUID() }, now + 60000),
+    svc.act(id, { kind: 'flip', round: 2, index: 0, requestId: randomUUID() }, now + 120000),
   );
-  await svc.act(id, { kind: 'state' }, now + 60000);
+  await svc.act(id, { kind: 'state' }, now + 120000);
   data = (await GameState.findById(id))!.data;
-  assert.equal(data.memoryProgress!.deadline, now + 60000);
+  assert.equal(data.memoryProgress!.deadline, now + 120000);
 });
 
 test('last pair grants timed win points atomically once, without creating a fixed reward', async () => {

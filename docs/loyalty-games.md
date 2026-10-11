@@ -4,7 +4,7 @@ Luật sưu tập: [thiết kế ban đầu](superpowers/specs/2026-10-08-loyalt
 
 ## Lật thẻ tích điểm (10/10/2026)
 
-- Không còn nhiệm vụ cấp lượt và mã thưởng cố định 30.000đ. Mỗi ngày GMT+7 có 3 ván, mỗi ván 60 giây từ lúc Bắt đầu; chọn cặp không giới hạn. Hết giờ không nhận điểm. Tải lại/ẩn trang không dừng hoặc gia hạn đồng hồ.
+- Không còn nhiệm vụ cấp lượt và mã thưởng cố định 30.000đ. Mỗi ngày GMT+7 có 3 ván, mỗi ván 120 giây từ lúc Bắt đầu; chọn cặp không giới hạn. Mỗi ván mới chọn ngẫu nhiên 5 loại trong 10 loại thẻ, mỗi loại xuất hiện hai lần (10 thẻ, 5 cặp). Hết giờ không nhận điểm. Tải lại/ẩn trang không dừng hoặc gia hạn đồng hồ. Ván cũ đang chạy giữ bàn và hạn giờ đã cấp; ván tiếp theo áp dụng luật mới.
 - Ván thắng đầu tiên suốt chương trình của tài khoản thiết lập kỷ lục, không có điểm. Các ván thắng tiếp theo cộng 200, thêm 50 khi phá kỷ lục; tổng cấp trong ngày không quá 600, kể cả thưởng thêm. Ván cuối có thể nhận phần còn lại của giới hạn (ví dụ 100).
 - 1 điểm = 1đ, mỗi đợt điểm hết hạn sau 90 ngày. Đủ 3.000 điểm còn hạn có thể đổi toàn bộ số dư thành voucher cá nhân dùng một lần, mọi mặt hàng, đơn từ 0đ, hiệu lực 30 ngày.
 - Mức giảm thực tế không vượt 10% giá trị hàng trong đơn: voucher 3.200đ trên đơn 20.000đ giảm 2.000đ. Phần 1.200đ còn dư mất sau khi sử dụng, không trả về điểm. Ví và checkout giải thích trước khi đặt đơn.

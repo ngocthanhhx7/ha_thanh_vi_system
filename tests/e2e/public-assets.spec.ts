@@ -75,77 +75,65 @@ test('responsive hero and launcher download derivatives without preloading the h
   expect(images).not.toContain('/brand/game/cards/card-back.webp');
 });
 
-test('square home product photos keep their artwork and switch automatically', async ({ page }) => {
+test('square photos change after two seconds with no control row and the note beside the copy', async ({
+  page,
+}) => {
   await page.goto('/');
   const root = page.locator('.home-product-carousel');
   await root.scrollIntoViewIfNeeded();
+  await root
+    .locator('img')
+    .nth(1)
+    .evaluate((image: HTMLImageElement) => image.decode());
   const frame = await root.locator('.hero-photo').boundingBox();
-  expect(frame).not.toBeNull();
   expect(Math.abs(frame!.width - frame!.height)).toBeLessThan(2);
-  await expect(root.locator('img')).toHaveCount(4);
-  await expect
-    .poll(() =>
-      root
-        .locator('img')
-        .first()
-        .evaluate((img: HTMLImageElement) => img.naturalWidth),
-    )
-    .toBeGreaterThan(0);
-  await expect(root.locator('.home-product-carousel-name')).toHaveText('Vị truyền thống');
-  await expect(root.locator('.home-product-carousel-name')).toHaveText('Vị matcha', {
-    timeout: 10000,
+  await expect(root.getByRole('button')).toHaveCount(0);
+  await expect(page.locator('.home-product-carousel-controls')).toHaveCount(0);
+  await expect(page.locator('.hero-copy .hero-note')).toContainText('Một chút vị xưa,');
+  await expect(page.locator('.hero-visual .hero-note')).toHaveCount(0);
+  const start = Date.now();
+  await expect(root.locator('img.is-active')).toHaveAttribute('alt', /Vị matcha/, {
+    timeout: 3500,
   });
+  expect(Date.now() - start).toBeLessThan(3500);
   await expect(root.locator('img.is-active')).toHaveCSS('opacity', '1');
-  await expect(root.locator('img.is-active')).toHaveCSS('object-fit', 'contain');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({
-    path: test.info().outputPath('home-square-products.png'),
+    path: test.info().outputPath('home-two-second-products.png'),
     fullPage: true,
   });
 });
 
-test('visitors can choose and pause product photos with the keyboard', async ({ page }) => {
+test('hover pauses the product photos and leaving resumes autoplay', async ({ page }) => {
   await page.goto('/');
   const root = page.locator('.home-product-carousel');
-  await root.getByRole('button', { name: 'Xem vị socola' }).focus();
-  await page.keyboard.press('Enter');
-  await expect(root.locator('.home-product-carousel-name')).toHaveText('Vị socola');
-  await root.getByRole('button', { name: 'Tạm dừng chuyển ảnh sản phẩm' }).click();
-  await page.locator('.hero-copy h1').click();
-  await page.waitForTimeout(5500);
-  await expect(root.locator('.home-product-carousel-name')).toHaveText('Vị socola');
-  await root.getByRole('button', { name: 'Tiếp tục chuyển ảnh sản phẩm' }).click();
-  await page.locator('.hero-copy h1').click();
-  await root.scrollIntoViewIfNeeded();
+  await root.hover();
+  const active = await root.locator('img.is-active').getAttribute('src');
+  await page.waitForTimeout(2600);
+  await expect(root.locator('img.is-active')).toHaveAttribute('src', active!);
   await page.mouse.move(0, 0);
-  await expect(root.locator('.home-product-carousel-name')).toHaveText('Hộp bánh mix vị', {
-    timeout: 10000,
+  await expect(root.locator('img.is-active')).not.toHaveAttribute('src', active!, {
+    timeout: 3500,
   });
 });
 
-test('reduced motion disables autoplay while manual product selection still works', async ({
-  page,
-}) => {
+test('reduced motion keeps a static product photo without autoplay', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   const root = page.locator('.home-product-carousel');
   await root.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(5500);
-  await expect(root.locator('.home-product-carousel-name')).toHaveText('Vị truyền thống');
-  await root.getByRole('button', { name: 'Xem vị matcha' }).click();
-  await expect(root.locator('.home-product-carousel-name')).toHaveText('Vị matcha');
+  await page.waitForTimeout(2600);
+  await expect(root.locator('img.is-active')).toHaveAttribute('alt', /Vị truyền thống/);
   await expect(root.locator('img.is-active')).toHaveCSS('opacity', '1');
 });
 
-test('an unavailable product photo never replaces the current photo with a blank slide', async ({
-  page,
-}) => {
+test('an unavailable product photo is skipped during autoplay', async ({ page }) => {
   await page.route('**/brand/product/matcha-*.webp', (route) => route.abort());
   await page.goto('/');
   const root = page.locator('.home-product-carousel');
   await root.scrollIntoViewIfNeeded();
-  await expect(root.getByRole('button', { name: 'Xem vị matcha' })).toBeDisabled();
-  await expect(root.locator('.home-product-carousel-name')).toHaveText('Vị truyền thống');
-  await root.getByRole('button', { name: 'Xem vị socola' }).click();
-  await expect(root.locator('.home-product-carousel-name')).toHaveText('Vị socola');
+  await expect(root.locator('img.is-active')).toHaveAttribute('alt', /Vị socola/, {
+    timeout: 6000,
+  });
+  await expect(root.locator('img.is-active')).toHaveCSS('opacity', '1');
 });

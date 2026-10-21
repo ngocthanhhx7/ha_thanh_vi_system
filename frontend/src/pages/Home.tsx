@@ -52,17 +52,6 @@ export function Home() {
               Câu chuyện của chúng mình
             </Link>
           </div>
-          <div className="hero-signature">
-            <img src="/brand/ornament.webp" alt="" />
-            <span>
-              VỊ XƯA TINH HOA
-              <br />
-              <strong>TRONG TỪNG CHIẾC BÁNH</strong>
-            </span>
-          </div>
-        </div>
-        <div className="hero-visual">
-          <HomeProductCarousel />
           <div className="hero-note">
             <img
               src="/brand/artisan-rolling.webp"
@@ -77,6 +66,9 @@ export function Home() {
               </strong>
             </div>
           </div>
+        </div>
+        <div className="hero-visual">
+          <HomeProductCarousel />
         </div>
         <a className="scroll-cue" href="#loi-ngo">
           <ArrowDown size={16} />

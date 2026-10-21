@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import { Pause, Play } from 'lucide-react';
 
 gsap.registerPlugin(useGSAP);
 
@@ -16,9 +15,7 @@ export function HomeProductCarousel() {
   const root = useRef<HTMLDivElement>(null);
   const images = useRef<(HTMLImageElement | null)[]>([]);
   const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
   const [pageVisible, setPageVisible] = useState(!document.hidden);
   const [reduced, setReduced] = useState(
@@ -26,7 +23,7 @@ export function HomeProductCarousel() {
   );
   const [failed, setFailed] = useState<number[]>([]);
   const [requested, setRequested] = useState<number | null>(null);
-  const running = !paused && !hovered && !focused && visible && pageVisible && !reduced;
+  const running = !hovered && visible && pageVisible && !reduced;
 
   useEffect(() => {
     if (failed.includes(active)) {
@@ -57,7 +54,7 @@ export function HomeProductCarousel() {
         .map((_, i) => (active + i + 1) % slides.length)
         .find((i) => !failed.includes(i) && i !== active);
       if (next !== undefined) setRequested(next);
-    }, 5000);
+    }, 2000);
     return () => window.clearTimeout(timer);
   }, [running, active, failed]);
 
@@ -103,10 +100,6 @@ export function HomeProductCarousel() {
       aria-label="Các hương vị bánh chả Hà Thành Vị"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onFocusCapture={() => setFocused(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
-      }}
     >
       <div className="hero-photo" aria-live="off">
         {slides.map((slide, index) => (
@@ -131,32 +124,6 @@ export function HomeProductCarousel() {
             }
           />
         ))}
-      </div>
-      <div className="home-product-carousel-controls">
-        <div className="home-product-carousel-dots" role="group" aria-label="Chọn hương vị">
-          {slides.map((slide, index) => (
-            <button
-              key={slide.id}
-              type="button"
-              aria-label={`Xem ${slide.name.toLowerCase()}`}
-              aria-pressed={index === active}
-              disabled={failed.includes(index)}
-              onClick={() => setRequested(index)}
-            >
-              <span />
-            </button>
-          ))}
-        </div>
-        <span className="home-product-carousel-name">{slides[active].name}</span>
-        <button
-          className="home-product-carousel-toggle"
-          type="button"
-          aria-pressed={paused}
-          aria-label={paused ? 'Tiếp tục chuyển ảnh sản phẩm' : 'Tạm dừng chuyển ảnh sản phẩm'}
-          onClick={() => setPaused((value) => !value)}
-        >
-          {paused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}
-        </button>
       </div>
     </div>
   );

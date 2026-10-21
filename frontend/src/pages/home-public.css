@@ -78,60 +78,23 @@
   width: fit-content;
   max-width: 100%;
   min-width: 0;
-  margin-top: 12px;
-  border-radius: 2px;
-  background: #fffaf0ef;
-  box-shadow: 0 20px 50px #43241d1c;
-  backdrop-filter: blur(12px);
+  margin-top: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 12px;
+  min-height: 80px;
+}
+.home-hero .hero-note img {
+  width: 80px;
+  height: 80px;
 }
 .home-hero .scroll-cue {
   bottom: 23px;
 }
 .home-product-carousel {
   min-width: 0;
-}
-.home-product-carousel-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 48px;
-  color: var(--red);
-}
-.home-product-carousel-dots {
-  display: flex;
-}
-.home-product-carousel-controls button {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 44px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-.home-product-carousel-dots button span {
-  width: 7px;
-  height: 7px;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-}
-.home-product-carousel-dots button[aria-pressed='true'] span {
-  background: currentColor;
-}
-.home-product-carousel-controls button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-.home-product-carousel-controls button:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: -3px;
-}
-.home-product-carousel-name {
-  flex: 1;
-  min-width: 0;
-  font-size: clamp(10px, 1vw, 12px);
 }
 .home-values-ribbon {
   --home-values-ribbon-control-space: calc(40px + 2 * clamp(14px, 3vw, 42px));

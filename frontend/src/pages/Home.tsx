@@ -3,6 +3,7 @@ import { ArrowDown, ArrowRight, Flower2, Gift, Coffee, Pause, Play } from 'lucid
 import { Link } from 'react-router-dom';
 import { useShop } from '../hooks/useShop';
 import { ProductCard, TextLink } from '../components/ProductCard';
+import { HomeProductCarousel } from '../components/HomeProductCarousel';
 import './home-critical-fonts.css';
 import './home-public.css';
 // Decode the inline faces before the first hero layout, rather than swapping from an OS font.
@@ -61,23 +62,7 @@ export function Home() {
           </div>
         </div>
         <div className="hero-visual">
-          <div className="hero-photo">
-            <img
-              src="/brand/pastry.webp"
-              srcSet="/brand/pastry-640.webp 640w, /brand/pastry-960.webp 960w, /brand/pastry-1280.webp 1280w, /brand/pastry.webp 1500w"
-              sizes="(max-width: 640px) 560px, (max-width: 850px) 610px, (max-width: 1100px) 705px, 915px"
-              alt="Minh họa bánh chả vàng giòn bên chén trà sen"
-              width="1500"
-              height="1000"
-              fetchPriority="high"
-              loading="eager"
-            />
-          </div>
-          <div className="round-seal">
-            <span>HÀ NỘI</span>
-            <Flower2 size={31} />
-            <span>TRONG TỪNG VỊ</span>
-          </div>
+          <HomeProductCarousel />
           <div className="hero-note">
             <img
               src="/brand/artisan-rolling.webp"

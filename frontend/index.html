@@ -44,11 +44,10 @@
         const hero = document.createElement('link');
         hero.rel = 'preload';
         hero.as = 'image';
-        hero.href = '/brand/pastry.webp';
+        hero.href = '/brand/product/traditional-1080.webp';
         hero.imageSrcset =
-          '/brand/pastry-640.webp 640w, /brand/pastry-960.webp 960w, /brand/pastry-1280.webp 1280w, /brand/pastry.webp 1500w';
-        hero.imageSizes =
-          '(max-width: 640px) 560px, (max-width: 850px) 610px, (max-width: 1100px) 705px, 915px';
+          '/brand/product/traditional-640.webp 640w, /brand/product/traditional-1080.webp 1080w';
+        hero.imageSizes = '(max-width: 640px) calc(100vw - 54px), (max-width: 1600px) 44vw, 680px';
         hero.fetchPriority = 'high';
         document.head.append(hero);
       }

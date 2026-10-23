@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim AS build
+FROM node:22.23.4-bookworm-slim AS build
 WORKDIR /app
 ENV HUSKY=0
 COPY package.json package-lock.json ./
@@ -11,7 +11,7 @@ RUN npm run build
 FROM build AS production-dependencies
 RUN npm prune --omit=dev --ignore-scripts
 
-FROM node:22-bookworm-slim AS api
+FROM node:22.23.4-bookworm-slim AS api
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=production-dependencies /app/node_modules ./node_modules

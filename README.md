@@ -4,7 +4,7 @@ Website thương hiệu và thương mại điện tử của Công ty TNHH Hà 
 
 ## Chạy dự án
 
-Yêu cầu Node.js 22.12 trở lên, npm và MongoDB. Frontend React + TypeScript + Vite; backend Node.js + Express + Mongoose.
+Môi trường production và CI sử dụng Node.js 22.23.4 LTS (bản vá bảo mật ngày 21/10/2026), npm và MongoDB. Frontend React + TypeScript + Vite; backend Node.js + Express + Mongoose.
 
 ```sh
 npm ci

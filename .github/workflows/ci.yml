@@ -12,7 +12,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22.23.4'
           cache: npm
       - run: npm ci
       - run: npm run verify
@@ -27,6 +27,7 @@ jobs:
           docker compose -f compose.production.yml config --quiet
           docker build --target api -t htv-api:ci .
           docker build --target web -t htv-web:ci .
+          docker run --rm htv-api:ci node -e "if(process.version!=='v22.23.4')process.exit(1);console.log(process.version)"
           docker run --rm htv-web:ci caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
       - name: Upload browser test report on failure
         if: failure()

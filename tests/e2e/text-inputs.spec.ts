@@ -117,7 +117,20 @@ test('catalog and news searches preserve multiword queries', async ({ page }) =>
   await page.goto('/san-pham');
   await enterText(page, page.getByRole('searchbox', { name: 'Tìm trong bộ sưu tập' }));
   await page.goto('/tin-tuc');
-  await enterText(page, page.getByRole('searchbox', { name: 'Tìm bài viết' }));
+  const field = page.getByRole('searchbox', { name: 'Tìm bài viết' });
+  await enterText(page, field);
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('Một hộp bánh');
+  await field.press('Home');
+  await page.keyboard.insertText('Tìm ');
+  await expect(field).toHaveValue('Tìm Một hộp bánh');
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('Tìm Một hộp bánh');
+  await page.getByRole('button', { name: 'Xóa từ khóa', exact: true }).click();
+  await expect(field).toHaveValue('');
+  await field.pressSequentially('tra sen');
+  await expect(field).toHaveValue('tra sen');
+  await page.getByRole('button', { name: 'Trà & cốm', exact: true }).click();
+  await expect(field).toHaveValue('tra sen');
+  await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('tra sen');
 });
 
 test('chat draft preserves spaces and Shift+Enter without sending', async ({ page }) => {

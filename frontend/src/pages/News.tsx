@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowRight, ArrowUpRight, BookOpen, Search, X } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigationType, useSearchParams } from 'react-router-dom';
 import {
   newsArticles,
   newsCategories,
@@ -74,7 +74,19 @@ function ArticleCard({ article, featured = false }: { article: NewsArticle; feat
 
 export function News() {
   const [params, setParams] = useSearchParams();
-  const query = params.get('q') ?? '';
+  const urlQuery = params.get('q') ?? '';
+  const [query, setQuery] = useState(urlQuery);
+  const pendingQuery = useRef<string | null>(null);
+  const navigationType = useNavigationType();
+  useEffect(() => {
+    // Router transitions can lag behind typing. Do not restore an older query mid-edit.
+    if (navigationType !== 'POP' && pendingQuery.current !== null) {
+      if (urlQuery === pendingQuery.current) pendingQuery.current = null;
+      return;
+    }
+    pendingQuery.current = null;
+    setQuery(urlQuery);
+  }, [urlQuery, navigationType]);
   const categoryParam = params.get('chu-de') ?? 'all';
   const category = newsCategories.some((entry) => entry.id === categoryParam)
     ? categoryParam
@@ -95,7 +107,15 @@ export function News() {
   const cards = featured ? matches.slice(1) : matches;
 
   function updateFilter(key: string, value: string) {
+    if (key === 'q') {
+      setQuery(value);
+      pendingQuery.current = value;
+    }
     const next = new URLSearchParams(params);
+    if (key !== 'q') {
+      if (query) next.set('q', query);
+      else next.delete('q');
+    }
     if (!value || (key === 'chu-de' && value === 'all')) next.delete(key);
     else next.set(key, value);
     setParams(next, { replace: true, preventScrollReset: true });
@@ -230,7 +250,11 @@ export function News() {
             <p>Thử một từ khóa khác hoặc khám phá lại tất cả câu chuyện.</p>
             <button
               type="button"
-              onClick={() => setParams({}, { replace: true, preventScrollReset: true })}
+              onClick={() => {
+                setQuery('');
+                pendingQuery.current = '';
+                setParams({}, { replace: true, preventScrollReset: true });
+              }}
             >
               Xóa bộ lọc <ArrowRight size={16} aria-hidden="true" />
             </button>

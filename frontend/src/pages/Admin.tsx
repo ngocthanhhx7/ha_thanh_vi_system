@@ -769,6 +769,9 @@ function ProductEditor({
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState<Product>(value);
+  const [packageContentsText, setPackageContentsText] = useState(
+    () => value.packageContents?.join('\n') ?? '',
+  );
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -782,7 +785,16 @@ function ProductEditor({
     setBusy(true);
     setError('');
     try {
-      await onSave(draft, create);
+      await onSave(
+        {
+          ...draft,
+          packageContents: packageContentsText
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean),
+        },
+        create,
+      );
     } catch (reason) {
       setError(errorMessage(reason));
     } finally {
@@ -897,16 +909,8 @@ function ProductEditor({
             Trong pack có gì? (mỗi dòng một món và số lượng)
             <textarea
               rows={4}
-              value={draft.packageContents?.join('\n') || ''}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  packageContents: event.target.value
-                    .split('\n')
-                    .map((line) => line.trim())
-                    .filter(Boolean),
-                })
-              }
+              value={packageContentsText}
+              onChange={(event) => setPackageContentsText(event.target.value)}
             />
           </label>
           <ProductIngredientSelector

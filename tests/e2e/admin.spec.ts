@@ -128,6 +128,84 @@ test('admin creates with uploaded image, reads detail, edits and confirms deleti
   expect(deleted).toBe(true);
   await expect(productRow()).toHaveCount(0);
 });
+for (const create of [true, false]) {
+  test(`package contents preserves typing and normalizes only on ${create ? 'create' : 'edit'}`, async ({
+    page,
+  }) => {
+    let product = { ...content.products[0], ingredientIds: [], packageContents: ['Món cũ'] };
+    let rejectSave = true;
+    const payloads: unknown[] = [];
+    await page.route('**/api/admin/products**', (route) => {
+      const method = route.request().method();
+      if (method === 'POST' || method === 'PATCH') {
+        const body = route.request().postDataJSON();
+        payloads.push(body.packageContents);
+        if (rejectSave) return route.fulfill(json({ message: 'Chưa lưu được. Thử lại.' }, 503));
+        product = body;
+        return route.fulfill(json(product, method === 'POST' ? 201 : 200));
+      }
+      if (new URL(route.request().url()).pathname.endsWith('/' + product.id))
+        return route.fulfill(json(product));
+      return route.fulfill(json({ products: [product], total: 1, page: 1, limit: 25 }));
+    });
+    await page.goto('/admin?tab=products');
+    if (create) {
+      await page.getByRole('button', { name: 'Thêm sản phẩm', exact: true }).click();
+      await page.getByLabel(/^Mã sản phẩm/).fill('pack-moi');
+      await page.getByLabel(/^Đường dẫn sản phẩm/).fill('pack-moi');
+      await page.getByLabel('Tên sản phẩm', { exact: true }).fill('Pack mới');
+      await page.getByLabel('Mô tả', { exact: true }).fill('Pack bánh thử nghiệm');
+      await page.getByLabel('Quy cách', { exact: true }).fill('300g');
+      await page.getByLabel('Hương vị', { exact: true }).fill('Matcha');
+      await page.getByLabel('Đường dẫn ảnh sản phẩm', { exact: true }).fill(product.image);
+    } else {
+      await page.getByRole('button', { name: 'Xem / sửa', exact: true }).click();
+    }
+    const field = page.getByRole('textbox', { name: /^Trong pack có gì\?/ });
+    await expect(field).toHaveValue(create ? '' : 'Món cũ');
+    await field.fill('');
+    await field.pressSequentially('1');
+    await field.press('Space');
+    await expect(field).toHaveValue('1 ');
+    await field.pressSequentially('hop 300g');
+    await field.press('Enter');
+    await expect(field).toHaveValue('1 hop 300g\n');
+    await field.press('Enter');
+    await page.keyboard.insertText('  2 túi bánh – Vị Matcha Trứng Muối  ');
+    const draft = '1 hop 300g\n\n  2 túi bánh – Vị Matcha Trứng Muối  ';
+    await expect(field).toHaveValue(draft);
+    // An unrelated field change must not rebuild the textarea from a normalized array.
+    await page.getByLabel('Thông tin dị ứng', { exact: true }).fill('Có bột mì');
+    await expect(field).toHaveValue(draft);
+    const save = () =>
+      page.getByRole('button', { name: create ? 'Tạo sản phẩm' : 'Lưu sản phẩm', exact: true });
+    await save().click();
+    await expect(page.getByRole('alert')).toContainText('Chưa lưu được');
+    await expect(field).toHaveValue(draft);
+    expect(payloads).toEqual([['1 hop 300g', '2 túi bánh – Vị Matcha Trứng Muối']]);
+    rejectSave = false;
+    await save().click();
+    await expect(page.locator('.admin-feedback[role="status"]')).toContainText(
+      create ? 'Đã thêm sản phẩm' : 'Đã lưu sản phẩm',
+    );
+    await page.getByRole('button', { name: 'Xem / sửa', exact: true }).click();
+    await expect(field).toHaveValue('1 hop 300g\n2 túi bánh – Vị Matcha Trứng Muối');
+    // Paste with Windows line endings, and whitespace-only content to clear an optional list.
+    await field.fill('  1 hộp bánh  \r\n\r\n  2 túi trà  \r\n');
+    await page.getByRole('button', { name: 'Lưu sản phẩm', exact: true }).click();
+    await expect(page.locator('.admin-feedback[role="status"]')).toContainText('Đã lưu sản phẩm');
+    expect(payloads.at(-1)).toEqual(['1 hộp bánh', '2 túi trà']);
+    await page.getByRole('button', { name: 'Xem / sửa', exact: true }).click();
+    await expect(field).toHaveValue('1 hộp bánh\n2 túi trà');
+    await field.fill(' \n  \n');
+    await page.getByRole('button', { name: 'Lưu sản phẩm', exact: true }).click();
+    await expect(page.locator('.admin-feedback[role="status"]')).toContainText('Đã lưu sản phẩm');
+    expect(payloads.at(-1)).toEqual([]);
+    await page.getByRole('button', { name: 'Xem / sửa', exact: true }).click();
+    await expect(field).toHaveValue('');
+  });
+}
+
 test('admin statistics applies date filters and reports failures without stale totals', async ({
   page,
 }) => {

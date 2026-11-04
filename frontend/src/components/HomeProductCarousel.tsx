@@ -6,7 +6,7 @@ gsap.registerPlugin(useGSAP);
 
 const slides = [
   { id: 'traditional', name: 'Vị truyền thống' },
-  { id: 'matcha', name: 'Vị matcha' },
+  { id: 'matcha-salted-egg', name: 'Vị matcha trứng muối' },
   { id: 'chocolate', name: 'Vị socola' },
   { id: 'mix', name: 'Hộp bánh mix vị' },
 ];

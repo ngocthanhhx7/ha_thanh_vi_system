@@ -2,7 +2,7 @@
   --reviews-gutter: clamp(24px, 5vw, 70px);
   max-width: 1380px;
   margin: 0 auto clamp(48px, 6vw, 84px);
-  padding-block: clamp(30px, 4vw, 54px) 24px;
+  padding-block: clamp(30px, 4vw, 54px);
   border-block: 1px solid var(--border);
   background: var(--paper);
 }
@@ -17,14 +17,17 @@
 
 .home-reviews-header h2 {
   margin: 0;
-  max-width: 21ch;
-  font-size: clamp(32px, 4vw, 54px);
+  font-size: clamp(28px, 3.8vw, 54px);
   line-height: 1.12;
   text-wrap: balance;
 }
 
+.home-reviews-header em {
+  white-space: nowrap;
+}
+
 .home-reviews-controls {
-  display: flex;
+  display: none;
   gap: 8px;
   flex: none;
 }
@@ -55,18 +58,11 @@
 
 .home-reviews-list {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: calc((100% - 18px) / 2);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   margin: 0;
-  padding: 4px var(--reviews-gutter) 12px;
+  padding: 0 var(--reviews-gutter);
   list-style: none;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: var(--reviews-gutter);
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: #ae8e6b transparent;
 }
 
 .home-reviews-list:focus-visible {
@@ -78,8 +74,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: clamp(18px, 3vw, 34px);
-  scroll-snap-align: start;
+  padding: clamp(18px, 2vw, 28px);
   background: #fffaf1;
   border: 1px solid var(--border);
   border-top: 2px solid var(--gold);
@@ -96,7 +91,7 @@
   margin: 0;
   flex: 1;
   font-family: var(--font-display);
-  font-size: clamp(16px, 1.45vw, 20px);
+  font-size: clamp(16px, 1.35vw, 19px);
   line-height: 1.65;
   hanging-punctuation: first;
 }
@@ -124,15 +119,22 @@
   color: var(--red);
 }
 
-.home-review-byline span,
-.home-reviews-note {
+.home-review-byline span {
   color: var(--muted);
   font-size: 0.875rem;
   line-height: 1.5;
 }
 
-.home-reviews-note {
-  margin: 12px var(--reviews-gutter) 0;
+.home-review-byline small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+@media (min-width: 960px) {
+  .home-reviews-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 680px) {
@@ -142,9 +144,28 @@
     margin-bottom: 14px;
   }
 
+  .home-reviews-controls {
+    display: flex;
+  }
+
   .home-reviews-list {
+    grid-template-columns: none;
+    grid-auto-flow: column;
     grid-auto-columns: calc(100% - 6px);
     gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--reviews-gutter);
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+
+  .home-reviews-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-review {
+    scroll-snap-align: start;
   }
 }
 

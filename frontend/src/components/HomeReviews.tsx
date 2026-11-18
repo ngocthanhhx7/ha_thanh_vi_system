@@ -136,14 +136,15 @@ export function HomeReviews() {
                 decoding="async"
               />
               <div>
-                <strong>{review.name}</strong>
+                <strong>
+                  {review.name} <small>(minh họa)</small>
+                </strong>
                 <span>{review.product}</span>
               </div>
             </div>
           </li>
         ))}
       </ul>
-      <p className="home-reviews-note">Tên và ảnh đại diện dùng để minh họa.</p>
     </section>
   );
 }

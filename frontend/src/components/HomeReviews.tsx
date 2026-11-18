@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import './home-reviews.css';
 
 const reviews = [
@@ -55,22 +55,20 @@ const reviews = [
 
 export function HomeReviews() {
   const track = useRef<HTMLUListElement>(null);
-  const [edges, setEdges] = useState({ start: true, end: false });
+  const [activePage, setActivePage] = useState(0);
+  const pageCount = Math.ceil(reviews.length / 2);
 
-  function updateEdges(list: HTMLUListElement) {
-    const start = list.scrollLeft <= 1;
-    const end = list.scrollWidth - list.clientWidth - list.scrollLeft <= 1;
-    setEdges((previous) =>
-      previous.start === start && previous.end === end ? previous : { start, end },
-    );
+  function syncPage(list: HTMLUListElement) {
+    const maxOffset = list.scrollWidth - list.clientWidth;
+    if (maxOffset > 0) {
+      setActivePage(Math.round((list.scrollLeft / maxOffset) * (pageCount - 1)));
+    }
   }
 
-  function move(direction: -1 | 1) {
+  function goToPage(page: number) {
     const list = track.current;
-    if (!list) return;
-    const [first, second] = Array.from(list.children);
-    const step = second.getBoundingClientRect().left - first.getBoundingClientRect().left;
-    list.scrollBy({ left: direction * step });
+    if (list)
+      list.scrollTo({ left: ((list.scrollWidth - list.clientWidth) * page) / (pageCount - 1) });
   }
 
   return (
@@ -79,26 +77,6 @@ export function HomeReviews() {
         <h2 id="home-reviews-title">
           Khách hàng nói gì về <em>Hà Thành Vị?</em>
         </h2>
-        <div className="home-reviews-controls">
-          <button
-            type="button"
-            aria-label="Đánh giá trước"
-            aria-controls="home-reviews-list"
-            aria-disabled={edges.start}
-            onClick={() => !edges.start && move(-1)}
-          >
-            <ChevronLeft size={20} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-label="Đánh giá tiếp theo"
-            aria-controls="home-reviews-list"
-            aria-disabled={edges.end}
-            onClick={() => !edges.end && move(1)}
-          >
-            <ChevronRight size={20} aria-hidden="true" />
-          </button>
-        </div>
       </header>
       <ul
         id="home-reviews-list"
@@ -107,7 +85,7 @@ export function HomeReviews() {
         aria-label="Sáu đánh giá"
         tabIndex={0}
         ref={track}
-        onScroll={(event) => updateEdges(event.currentTarget)}
+        onScroll={(event) => syncPage(event.currentTarget)}
       >
         {reviews.map((review) => (
           <li className="home-review" key={review.id}>
@@ -145,6 +123,18 @@ export function HomeReviews() {
           </li>
         ))}
       </ul>
+      <div className="home-reviews-pagination" role="group" aria-label="Chuyển nhóm đánh giá">
+        {Array.from({ length: pageCount }, (_, page) => (
+          <button
+            key={page}
+            type="button"
+            aria-label={`Nhóm đánh giá ${page + 1} trên ${pageCount}`}
+            aria-controls="home-reviews-list"
+            aria-current={activePage === page ? 'true' : undefined}
+            onClick={() => goToPage(page)}
+          />
+        ))}
+      </div>
     </section>
   );
 }

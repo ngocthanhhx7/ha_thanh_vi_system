@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Star } from 'lucide-react';
 import './home-reviews.css';
 
@@ -53,26 +53,57 @@ const reviews = [
   },
 ];
 
+const pageCount = Math.ceil(reviews.length / 2);
+
+function scrollToPage(list: HTMLUListElement, page: number, behavior: ScrollBehavior = 'auto') {
+  list.scrollTo({
+    left: (-(list.scrollWidth - list.clientWidth) * page) / (pageCount - 1),
+    behavior,
+  });
+}
+
 export function HomeReviews() {
+  const section = useRef<HTMLElement>(null);
   const track = useRef<HTMLUListElement>(null);
   const [activePage, setActivePage] = useState(0);
-  const pageCount = Math.ceil(reviews.length / 2);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    const root = section.current;
+    const list = track.current;
+    if (!root || !list || paused) return;
+    const autoplay = matchMedia('(min-width: 681px) and (prefers-reduced-motion: no-preference)');
+    let visible = false;
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+    });
+    observer.observe(list);
+    const timer = window.setInterval(() => {
+      if (!autoplay.matches || !visible || document.hidden || root.matches(':hover, :focus-within'))
+        return;
+      const next = (activePage + 1) % pageCount;
+      scrollToPage(list, next, next === 0 ? 'instant' : 'auto');
+    }, 7000);
+    return () => {
+      observer.disconnect();
+      window.clearInterval(timer);
+    };
+  }, [activePage, paused]);
 
   function syncPage(list: HTMLUListElement) {
     const maxOffset = list.scrollWidth - list.clientWidth;
-    if (maxOffset > 0) {
-      setActivePage(Math.round((list.scrollLeft / maxOffset) * (pageCount - 1)));
+    if (maxOffset > 0 && getComputedStyle(list).direction === 'rtl') {
+      setActivePage(Math.round((Math.abs(list.scrollLeft) / maxOffset) * (pageCount - 1)));
     }
   }
 
   function goToPage(page: number) {
     const list = track.current;
-    if (list)
-      list.scrollTo({ left: ((list.scrollWidth - list.clientWidth) * page) / (pageCount - 1) });
+    if (list) scrollToPage(list, page);
   }
 
   return (
-    <section className="home-reviews" aria-labelledby="home-reviews-title">
+    <section className="home-reviews" aria-labelledby="home-reviews-title" ref={section}>
       <header className="home-reviews-header">
         <h2 id="home-reviews-title">
           Khách hàng nói gì về <em>Hà Thành Vị?</em>
@@ -87,8 +118,12 @@ export function HomeReviews() {
         ref={track}
         onScroll={(event) => syncPage(event.currentTarget)}
       >
-        {reviews.map((review) => (
-          <li className="home-review" key={review.id}>
+        {reviews.map((review, index) => (
+          <li
+            className="home-review"
+            key={review.id}
+            style={{ '--review-column': index % 2 === 0 ? index + 2 : index } as CSSProperties}
+          >
             <div
               className="home-review-stars"
               role="img"
@@ -134,6 +169,14 @@ export function HomeReviews() {
             onClick={() => goToPage(page)}
           />
         ))}
+        <button
+          className="home-reviews-autoplay"
+          type="button"
+          aria-controls="home-reviews-list"
+          onClick={() => setPaused((value) => !value)}
+        >
+          {paused ? 'Tiếp tục tự chạy' : 'Tạm dừng tự chạy'}
+        </button>
       </div>
     </section>
   );

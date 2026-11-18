@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useRef, type KeyboardEvent, type PointerEvent } from 'react';
 import { Star } from 'lucide-react';
 import './home-reviews.css';
 
 const reviews = [
   {
     id: 'traditional',
-    name: 'Mai Anh',
     product: 'Bánh chả truyền thống',
     rating: 5,
     quote:
@@ -13,7 +12,6 @@ const reviews = [
   },
   {
     id: 'chocolate',
-    name: 'Minh Khang',
     product: 'Bánh chả socola trứng muối',
     rating: 5,
     quote:
@@ -21,7 +19,6 @@ const reviews = [
   },
   {
     id: 'matcha',
-    name: 'Khánh Linh',
     product: 'Bánh chả matcha trứng muối',
     rating: 4,
     quote:
@@ -29,7 +26,6 @@ const reviews = [
   },
   {
     id: 'standard',
-    name: 'Thu Hà',
     product: 'Bộ quà Nhã Sắc Hà Thành',
     rating: 5,
     quote:
@@ -37,7 +33,6 @@ const reviews = [
   },
   {
     id: 'premium',
-    name: 'Tuấn Minh',
     product: 'Bộ quà Nhã Vị Kinh Kỳ',
     rating: 5,
     quote:
@@ -45,7 +40,6 @@ const reviews = [
   },
   {
     id: 'shopping',
-    name: 'Phương Thảo',
     product: 'Trải nghiệm mua hàng',
     rating: 4,
     quote:
@@ -53,77 +47,64 @@ const reviews = [
   },
 ];
 
-const pageCount = Math.ceil(reviews.length / 2);
-
-function scrollToPage(list: HTMLUListElement, page: number, behavior: ScrollBehavior = 'auto') {
-  list.scrollTo({
-    left: (-(list.scrollWidth - list.clientWidth) * page) / (pageCount - 1),
-    behavior,
-  });
-}
-
 export function HomeReviews() {
-  const section = useRef<HTMLElement>(null);
-  const track = useRef<HTMLUListElement>(null);
-  const [activePage, setActivePage] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const drag = useRef<{ pointer: number; x: number; scrollLeft: number } | null>(null);
 
-  useEffect(() => {
-    const root = section.current;
-    const list = track.current;
-    if (!root || !list || paused) return;
-    const autoplay = matchMedia('(min-width: 681px) and (prefers-reduced-motion: no-preference)');
-    let visible = false;
-    const observer = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-    });
-    observer.observe(list);
-    const timer = window.setInterval(() => {
-      if (!autoplay.matches || !visible || document.hidden || root.matches(':hover, :focus-within'))
-        return;
-      const next = (activePage + 1) % pageCount;
-      scrollToPage(list, next, next === 0 ? 'instant' : 'auto');
-    }, 7000);
-    return () => {
-      observer.disconnect();
-      window.clearInterval(timer);
-    };
-  }, [activePage, paused]);
+  function startDrag(event: PointerEvent<HTMLUListElement>) {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    const list = event.currentTarget;
+    event.preventDefault();
+    list.setPointerCapture(event.pointerId);
+    drag.current = { pointer: event.pointerId, x: event.clientX, scrollLeft: list.scrollLeft };
+    list.classList.add('is-dragging');
+  }
 
-  function syncPage(list: HTMLUListElement) {
-    const maxOffset = list.scrollWidth - list.clientWidth;
-    if (maxOffset > 0 && getComputedStyle(list).direction === 'rtl') {
-      setActivePage(Math.round((Math.abs(list.scrollLeft) / maxOffset) * (pageCount - 1)));
+  function moveDrag(event: PointerEvent<HTMLUListElement>) {
+    const start = drag.current;
+    if (start?.pointer !== event.pointerId) return;
+    event.currentTarget.scrollLeft = start.scrollLeft + start.x - event.clientX;
+  }
+
+  function finishDrag(event: PointerEvent<HTMLUListElement>) {
+    if (drag.current?.pointer !== event.pointerId) return;
+    drag.current = null;
+    event.currentTarget.classList.remove('is-dragging');
+  }
+
+  function scrollWithKeyboard(event: KeyboardEvent<HTMLUListElement>) {
+    const list = event.currentTarget;
+    if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      list.scrollTo({ left: event.key === 'Home' ? 0 : list.scrollWidth });
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      const [first, second] = list.children;
+      const step = second.getBoundingClientRect().left - first.getBoundingClientRect().left;
+      list.scrollBy({ left: event.key === 'ArrowLeft' ? -step : step });
     }
   }
 
-  function goToPage(page: number) {
-    const list = track.current;
-    if (list) scrollToPage(list, page);
-  }
-
   return (
-    <section className="home-reviews" aria-labelledby="home-reviews-title" ref={section}>
+    <section className="home-reviews" aria-labelledby="home-reviews-title">
       <header className="home-reviews-header">
         <h2 id="home-reviews-title">
           Khách hàng nói gì về <em>Hà Thành Vị?</em>
         </h2>
       </header>
       <ul
-        id="home-reviews-list"
         className="home-reviews-list"
         role="list"
         aria-label="Sáu đánh giá"
         tabIndex={0}
-        ref={track}
-        onScroll={(event) => syncPage(event.currentTarget)}
+        onKeyDown={scrollWithKeyboard}
+        onPointerDown={startDrag}
+        onPointerMove={moveDrag}
+        onPointerUp={finishDrag}
+        onPointerCancel={finishDrag}
+        onLostPointerCapture={finishDrag}
       >
-        {reviews.map((review, index) => (
-          <li
-            className="home-review"
-            key={review.id}
-            style={{ '--review-column': index % 2 === 0 ? index + 2 : index } as CSSProperties}
-          >
+        {reviews.map((review) => (
+          <li className="home-review" key={review.id}>
             <div
               className="home-review-stars"
               role="img"
@@ -147,37 +128,13 @@ export function HomeReviews() {
                 alt=""
                 loading="lazy"
                 decoding="async"
+                draggable={false}
               />
-              <div>
-                <strong>
-                  {review.name} <small>(minh họa)</small>
-                </strong>
-                <span>{review.product}</span>
-              </div>
+              <strong>{review.product}</strong>
             </div>
           </li>
         ))}
       </ul>
-      <div className="home-reviews-pagination" role="group" aria-label="Chuyển nhóm đánh giá">
-        {Array.from({ length: pageCount }, (_, page) => (
-          <button
-            key={page}
-            type="button"
-            aria-label={`Nhóm đánh giá ${page + 1} trên ${pageCount}`}
-            aria-controls="home-reviews-list"
-            aria-current={activePage === page ? 'true' : undefined}
-            onClick={() => goToPage(page)}
-          />
-        ))}
-        <button
-          className="home-reviews-autoplay"
-          type="button"
-          aria-controls="home-reviews-list"
-          onClick={() => setPaused((value) => !value)}
-        >
-          {paused ? 'Tiếp tục tự chạy' : 'Tạm dừng tự chạy'}
-        </button>
-      </div>
     </section>
   );
 }

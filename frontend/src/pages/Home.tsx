@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useShop } from '../hooks/useShop';
 import { ProductCard, TextLink } from '../components/ProductCard';
 import { HomeProductCarousel } from '../components/HomeProductCarousel';
+import { HomeReviews } from '../components/HomeReviews';
 import './home-critical-fonts.css';
 import './home-public.css';
 // Decode the inline faces before the first hero layout, rather than swapping from an OS font.
@@ -163,6 +164,7 @@ export function Home() {
           Thông tin bao bì và hình ảnh sản phẩm thực tế sẽ được cập nhật.
         </p>
       </section>
+      <HomeReviews />
       <section className="story-feature home-story-feature">
         <div className="story-feature-art">
           <img
